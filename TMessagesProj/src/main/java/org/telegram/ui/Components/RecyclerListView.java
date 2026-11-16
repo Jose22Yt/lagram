@@ -1512,6 +1512,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
         this.edgeEffectTrackerFactory = new EdgeEffectTrackerFactory();
 
         setEdgeEffectFactory(edgeEffectTrackerFactory);
+        setItemViewCacheSize(6);
         ThemeBind.listGlowColor(this, Theme.key_actionBarDefault, resourcesProvider);
         ThemeBind.listSelectorColor(this, Theme.key_listSelector, resourcesProvider);
 
