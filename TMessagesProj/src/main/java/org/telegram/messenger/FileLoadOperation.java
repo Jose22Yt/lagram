@@ -48,7 +48,7 @@ public class FileLoadOperation {
     public static ImmutableByteArrayOutputStream filesQueueByteBuffer;
     private boolean forceSmallChunk;
     private boolean useDownloadByteBudget;
-    private int downloadConnectionsCount = 2;
+    private int downloadConnectionsCount = 4;
     private boolean paceDocumentRequests;
     private DownloadRequestPacer downloadRequestPacer;
     private final Runnable pacedDownloadRequest = () -> {
@@ -173,7 +173,7 @@ public class FileLoadOperation {
 
     //load small parts for stream
     private int downloadChunkSizeAnimation = 1024 * 128;
-    private int maxDownloadRequestsAnimation = 4;
+    private int maxDownloadRequestsAnimation = 6;
 
     private final static int preloadMaxBytes = 2 * 1024 * 1024;
 
@@ -299,7 +299,7 @@ public class FileLoadOperation {
     }
 
     private void updateParams() {
-        if ((preloadPrefixSize > 0 || MessagesController.getInstance(currentAccount).getfileExperimentalParams) && !forceSmallChunk) {
+        if (!forceSmallChunk) {
             downloadChunkSizeBig = 1024 * 512;
             maxDownloadRequests = 8;
             maxDownloadRequestsBig = 8;
