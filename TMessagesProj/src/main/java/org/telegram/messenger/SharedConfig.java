@@ -1667,7 +1667,17 @@ public class SharedConfig {
                 }
             }
         }
-
+        
+        long ram = -1;
+                try {
+                 ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+                    ((ActivityManager) ApplicationLoader.applicationContext.getSystemService(Context.ACTIVITY_SERVICE)).getMemoryInfo(memoryInfo);
+                    ram = memoryInfo.totalMem;
+                } catch (Exception ignore) {}
+        if (androidVersion >= Build.VERSION_CODES.S && cpuCount >= 8 && ram >= 6L * 1024L * 1024L * 1024L) {
+            return PERFORMANCE_CLASS_HIGH;
+        }
+        
         int totalCpuFreq = 0;
         int freqResolved = 0;
         for (int i = 0; i < cpuCount; i++) {
@@ -1682,13 +1692,6 @@ public class SharedConfig {
             } catch (Throwable ignore) {}
         }
         int maxCpuFreq = freqResolved == 0 ? -1 : (int) Math.ceil(totalCpuFreq / (float) freqResolved);
-
-        long ram = -1;
-        try {
-            ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
-            ((ActivityManager) ApplicationLoader.applicationContext.getSystemService(Context.ACTIVITY_SERVICE)).getMemoryInfo(memoryInfo);
-            ram = memoryInfo.totalMem;
-        } catch (Exception ignore) {}
 
         int performanceClass;
         if (
