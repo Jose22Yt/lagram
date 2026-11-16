@@ -328,7 +328,9 @@ public class MessagesStorage extends BaseController {
             database.executeFast("PRAGMA temp_store = MEMORY").stepThis().dispose();
             database.executeFast("PRAGMA journal_mode = WAL").stepThis().dispose();
             database.executeFast("PRAGMA journal_size_limit = 10485760").stepThis().dispose();
-
+            database.executeFast("PRAGMA synchronous = NORMAL").stepThis().dispose();
+            database.executeFast("PRAGMA cache_size = -16384").stepThis().dispose();
+            database.executeFast("PRAGMA mmap_size = 67108864").stepThis().dispose();
             if (createTable) {
                 if (BuildVars.LOGS_ENABLED) {
                     FileLog.d("create new database");
