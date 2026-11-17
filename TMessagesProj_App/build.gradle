@@ -84,6 +84,7 @@ android {
         standalone {
             debuggable false
             jniDebuggable false
+            matchingFallbacks = ['release']
             signingConfig signingConfigs.release
             applicationIdSuffix ".web"
             minifyEnabled true
