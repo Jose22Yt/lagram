@@ -49,14 +49,14 @@ jobs:
           sed -i "s/public static int APP_ID = .*/public static int APP_ID = ${TG_APP_ID};/" TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
           sed -i "s/public static String APP_HASH = .*/public static String APP_HASH = \"${TG_APP_HASH}\";/" TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
           
-      - name: Build afatDebug APK
+      - name: Build afatStandalone APK
         run: |
           chmod +x gradlew
-          ./gradlew :TMessagesProj_App:assembleAfatDebug -Parm64Only=true --no-daemon --max-workers=4
+          ./gradlew :TMessagesProj_App:assembleAfatStandalone -Parm64Only=true --no-daemon --max-workers=4
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: lagram-debug-apk
-          path: TMessagesProj_App/build/outputs/apk/afat/debug/*.apk
+          name: lagram-standalone-apk
+          path: TMessagesProj_App/build/outputs/apk/afat/standalone/*.apk
           if-no-files-found: error
