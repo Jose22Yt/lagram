@@ -4783,7 +4783,12 @@ public class LocaleController {
     private String getStringV2(String key, @StringRes int stringRes, String fallback) {
         final Context context = ApplicationLoader.applicationContext;
         String value;
-
+        if (stringRes == R.string.AppName) {
+            return "Lagram";
+        }
+        if (stringRes == R.string.AppNameBeta) {
+            return "Lagram Beta";
+        }
         if (BuildVars.USE_CLOUD_STRINGS) {
             value = localizationExternal.getByResNameOrResId(context, key, stringRes);
             if (value != null) {
