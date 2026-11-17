@@ -1473,6 +1473,7 @@ public class LocaleController {
         final String value = getStringV2(key, res, fallback);
         if (value == null) {
             return "LOC_ERR:" + key;
+        }
         if (value.contains("Telegram para Android") || value.contains("Telegram for Android")) {
             return value.replace("Telegram", "Lagram");
         }
