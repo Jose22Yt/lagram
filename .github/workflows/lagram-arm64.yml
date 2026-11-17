@@ -39,15 +39,15 @@ jobs:
 
       - name: Inject Telegram API credentials
         env:
-            TG_APP_ID: ${{ secrets.TELEGRAM_APP_ID }}
+          TG_APP_ID: ${{ secrets.TELEGRAM_APP_ID }}
           TG_APP_HASH: ${{ secrets.TELEGRAM_APP_HASH }}
         run: |
           if [ -z "$TG_APP_ID" ] || [ -z "$TG_APP_HASH" ]; then
-            echo "::error::Faltan los secrets TELEGRAM_APP_ID y TELEGRAM_APP_HASH en Settings -> Secrets -> Actions (obtenlos en https://my.telegram.org)."
+            echo "Missing TELEGRAM_APP_ID or TELEGRAM_APP_HASH secrets"
             exit 1
           fi
-          sed -i "s/public static int APP_ID = .*/public static int APP_ID = $TG_APP_ID;/" TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
-          sed -i "s/public static String APP_HASH = .*/public static String APP_HASH = \"$TG_APP_HASH\";/" TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
+          sed -i "s/public static int APP_ID = .*/public static int APP_ID = ${TG_APP_ID};/" TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
+          sed -i "s/public static String APP_HASH = .*/public static String APP_HASH = \"${TG_APP_HASH}\";/" TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
           
       - name: Build afatDebug APK
         run: |
