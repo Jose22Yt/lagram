@@ -1944,7 +1944,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                     dt = 18;
                 }
                 lastFrameTime = newTime;
-                float duration = preview && open ? 140.0f : 105.0f;
+                float duration = preview && open ? 110.0f : 85.0f;
                 animationProgress += dt / duration;
                 if (animationProgress > 1.0f) {
                     animationProgress = 1.0f;
@@ -2284,7 +2284,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 currentAnimation = new AnimatorSet();
                 currentAnimation.playTogether(animators);
                 currentAnimation.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
-                currentAnimation.setDuration(140);
+                currentAnimation.setDuration(110);
                 currentAnimation.addListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
@@ -2362,7 +2362,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                                     if (delayedAnimationResumed) {
                                         delayedOpenAnimationRunnable.run();
                                     } else {
-                                        AndroidUtilities.runOnUIThread(delayedOpenAnimationRunnable, 140);
+                                        AndroidUtilities.runOnUIThread(delayedOpenAnimationRunnable, 110);
                                     }
                                 }
                             }
