@@ -15135,7 +15135,8 @@ public class ChatActivityEnterView extends FrameLayout implements
         public boolean center;
 
         private final Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-
+        private int lastBackgroundColor;
+        
         public SendButton(Context context, int resId, Theme.ResourcesProvider resourcesProvider) {
             this(context, resId, resourcesProvider, false);
         }
@@ -15671,14 +15672,19 @@ public class ChatActivityEnterView extends FrameLayout implements
                 inactiveDrawable.setColorFilter(new PorterDuffColorFilter(Color.argb(0xb4, Color.red(c), Color.green(c), Color.blue(c)), PorterDuff.Mode.SRC_IN));
                 drawableInverse.setColorFilter(new PorterDuffColorFilter(inverseColor, PorterDuff.Mode.SRC_IN));
             }
+            final int bgColor;
             if (isNewDesignSendButton) {
-                backgroundPaint.setColor(blurredBackgroundDrawable != null ? Theme.multAlpha(Theme.getColor(Theme.key_chat_messagePanelSend, resourcesProvider), 0.52f) : Theme.getColor(Theme.key_chat_messagePanelSend, resourcesProvider));
+                bgColor = blurredBackgroundDrawable != null ? Theme.multAlpha(Theme.getColor(Theme.key_chat_messagePanelSend, resourcesProvider), 0.52f) : Theme.getColor(Theme.key_chat_messagePanelSend, resourcesProvider);
             } else if (shouldDrawBackground()) {
-                backgroundPaint.setColor(getFillColor());
+                bgColor = getFillColor();
             } else {
-                backgroundPaint.setColor(ColorUtils.setAlphaComponent(Color.WHITE, 75));
+                bgColor = ColorUtils.setAlphaComponent(Color.WHITE, 75);
             }
-        }
+            if (bgColor != lastBackgroundColor) {
+                lastBackgroundColor = bgColor;
+                backgroundPaint.setColor(bgColor);
+            }    
+            }
 
         public void setLoading(boolean shown, float progress) {
             if (loadingShown == shown && (!shown || Math.abs(loadingProgress - progress) < 0.01f) && infiniteLoading == Math.abs(progress - INFINITE_LOADING) < 0.01f)
