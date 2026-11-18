@@ -23,6 +23,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.InsetDrawable;
 import android.os.Bundle;
 import android.text.TextPaint;
 import android.text.TextUtils;
@@ -54,6 +55,7 @@ import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarPopupWindow;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.SimpleTextView;
@@ -1535,7 +1537,25 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
             }
             currentConnectionState = ConnectionsManager.getInstance(currentAccount).getConnectionState();
             updateCurrentConnectionState();
-        }
+            if (getParent() instanceof ActionBar) {
+                ActionBar actionBar = (ActionBar) getParent();
+                actionBar.setBackgroundColor(0);
+                boolean dark = Theme.isCurrentThemeDark();
+                if (actionBar.getBackButton() != null) {
+                    actionBar.getBackButton().setBackground(new InsetDrawable(
+                            new LagramGlassPillDrawable().setDarkMode(dark),
+                            dp(6), dp(6), dp(6), dp(6)
+                    ));
+                }
+                ActionBarMenu menu = actionBar.createMenu();
+                if (menu != null) {
+                    menu.setBackground(new InsetDrawable(
+                            new LagramGlassPillDrawable().setDarkMode(dark),
+                            dp(2), dp(6), dp(2), dp(6)
+                    ));
+                }
+            }
+            }
         if (emojiStatusDrawable != null) {
             emojiStatusDrawable.attach();
         }
