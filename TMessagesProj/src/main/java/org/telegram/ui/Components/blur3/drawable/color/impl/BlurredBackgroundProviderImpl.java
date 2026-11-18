@@ -148,13 +148,53 @@ public class BlurredBackgroundProviderImpl {
     }
 
     public static BlurredBackgroundProvider bottomPanelChatActivity(Theme.ResourcesProvider resourcesProvider) {
-        return new BlurredBackgroundProviderBuilder(resourcesProvider)
+        return new BlurredBackgroundProviderBuilder(resourcesProvider) {
+            @Override
+            public int getStrokeColorTop() {
+                return compactGlassStroke(super.getStrokeColorTop(), resourcesProvider);
+            }
+
+            @Override
+            public int getStrokeColorBottom() {
+                return compactGlassStroke(super.getStrokeColorBottom(), resourcesProvider);
+            }
+
+            @Override
+            public int getShadowColor() {
+                return Theme.isCompactMode(resourcesProvider) ? Theme.getColor(Theme.key_chat_compact_glassShadow, resourcesProvider) : super.getShadowColor();
+            }
+
+            @Override
+            public float getShadowRadius() {
+                return Theme.isCompactMode(resourcesProvider) ? dpf2(14) : super.getShadowRadius();
+            }
+
+            @Override
+            public float getShadowDy() {
+                return Theme.isCompactMode(resourcesProvider) ? dpf2(4) : super.getShadowDy();
+            }
+
+            @Override
+            public int getOutlineShadowColor() {
+                return Theme.isCompactMode(resourcesProvider) ? Theme.getColor(Theme.key_chat_compact_glassOutlineShadow, resourcesProvider) : super.getOutlineShadowColor();
+            }
+
+            @Override
+            public int getOutlineColor() {
+                return Theme.isCompactMode(resourcesProvider) ? Theme.getColor(Theme.key_chat_compact_glassOutline, resourcesProvider) : super.getOutlineColor();
+            }
+
+            @Override
+            public float getOutlineWidth() {
+                return Theme.isCompactMode(resourcesProvider) ? dpf2(1) : super.getOutlineWidth();
+            }
+        }
                 .setBackgroundColor((r, isDark) -> {
                     if (!checkBlurEnabled(resourcesProvider)) {
                         return ColorUtils.setAlphaComponent(Theme.getColor(Theme.key_chat_messagePanelBackground, r), 255);
                     }
 
-                    final float alpha = LiteMode.isEnabled(LiteMode.FLAG_LIQUID_GLASS) ? 0.85f : 0.76f;
+                    final float alpha = LiteMode.isEnabled(LiteMode.FLAG_LIQUID_GLASS) ? 0.62f : 0.70f;
                     final int colorBg = Theme.getColor(Theme.key_chat_messagePanelBackground, r);
                     return Theme.multAlpha(colorBg, alpha);
                 })
