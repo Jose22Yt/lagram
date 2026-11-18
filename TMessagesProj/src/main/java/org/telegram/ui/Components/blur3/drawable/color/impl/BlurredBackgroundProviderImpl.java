@@ -158,11 +158,11 @@ public class BlurredBackgroundProviderImpl {
                     final int colorBg = Theme.getColor(Theme.key_chat_messagePanelBackground, r);
                     return Theme.multAlpha(colorBg, alpha);
                 })
-                .setStrokeColorTop(0xFFFFFFFF, 0x28FFFFFF)
-                .setStrokeColorBottom(0xFFFFFFFF, 0x14FFFFFF)
+                .setStrokeColorTop(0xFFFFFFFF, 0x73FFFFFF)
+                .setStrokeColorBottom(0xE6FFFFFF, 0x52FFFFFF)
                 .setShadowColor(0x20000000, 0)
                 //.setShadowLayer(dpf2(10 / 3f), 0, dpf2(2 / 3f))
-                .setStrokeWidth(dpf2(0.5f), dpf2(0.5f))
+                .setStrokeWidth(dpf2(1.15f), dpf2(1.05f))
                 .build();
     }
 
@@ -219,18 +219,17 @@ public class BlurredBackgroundProviderImpl {
                     final int colorBg = Theme.getColor(Theme.key_chat_topPanelBackground, r);
                     return Theme.multAlpha(colorBg, alpha);
                 })
-                .setStrokeColorTop(0xFFFFFFFF, 0x20FFFFFF)
-                .setStrokeColorBottom(0xFFFFFFFF, 0x14FFFFFF)
+                .setStrokeColorTop(0xFFFFFFFF, 0x73FFFFFF)
+                .setStrokeColorBottom(0xE6FFFFFF, 0x52FFFFFF)
                 .setShadowColor(0x20000000, 0)
                 //.setShadowLayer(dpf2(10 / 3f), 0, dpf2(2 / 3f))
-                .setStrokeWidth(dpf2(0.55f), dpf2(0.55f))
+                .setStrokeWidth(dpf2(1.15f), dpf2(1.05f))
                 .build();
     }
 
     // with the design's outline there is no white highlight on the glass
     private static int compactGlassStroke(int color, Theme.ResourcesProvider resourcesProvider) {
-        if (!Theme.isCompactMode(resourcesProvider)) return color;
-        return Color.alpha(Theme.getColor(Theme.key_chat_compact_glassOutline, resourcesProvider)) != 0 ? 0 : color;
+        return color;
     }
 
     public static BlurredBackgroundProvider simpleActionBar(Theme.ResourcesProvider resourcesProvider) {
