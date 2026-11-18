@@ -1589,7 +1589,14 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
         });
         addOnItemTouchListener(new RecyclerListViewItemClickListener(context));
     }
-
+    @Override
+    public void setLayoutManager(LayoutManager layout) {
+        if (layout instanceof LinearLayoutManager) {
+            ((LinearLayoutManager) layout).setInitialPrefetchItemCount(6);
+        }
+        super.setLayoutManager(layout);
+    }
+    
     private Paint backgroundPaint;
     protected void drawSectionBackground(Canvas canvas, int fromAdapterPosition, int toAdapterPosition, int color) {
         drawSectionBackground(canvas, fromAdapterPosition, toAdapterPosition, color, 0, 0);
