@@ -270,15 +270,15 @@ public class ApplicationLoader extends Application {
         }
 
         MediaController.getInstance();
-        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) { //TODO improve account
-            ContactsController.getInstance(a).checkAppAccount();
-            DownloadController.getInstance(a);
-        }
-        BillingController.getInstance().startConnection();
-        // HTML widgets: the isolated engine's process up front, after the app's own start, so that a widget's first
-        // frame does not wait for it.
-        AndroidUtilities.runOnUIThread(() -> Utilities.globalQueue.postRunnable(
-                () -> org.telegram.utils.twidget.WidgetSandboxSession.prewarmEngine(applicationContext)), 3000);
+       for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+           DownloadController.getInstance(a);
+       }
+       AndroidUtilities.runOnUIThread(() -> {
+           for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+               ContactsController.getInstance(a).checkAppAccount();
+           }
+           BillingController.getInstance().startConnection();
+           }, 1200);
     }
 
     public ApplicationLoader() {
