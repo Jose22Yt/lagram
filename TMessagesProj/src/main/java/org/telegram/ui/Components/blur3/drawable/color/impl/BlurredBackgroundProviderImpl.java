@@ -176,7 +176,7 @@ public class BlurredBackgroundProviderImpl {
 
             @Override
             public int getOutlineShadowColor() {
-                return Theme.isCompactMode(resourcesProvider) ? Theme.getColor(Theme.key_chat_compact_glassOutlineShadow, resourcesProvider) : super.getOutlineShadowColor();
+                return Theme.isCompactMode(resourcesProvider) ? Theme.getColor(Theme.key_chat_compact_glassHairline, resourcesProvider) : 0;
             }
 
             @Override
