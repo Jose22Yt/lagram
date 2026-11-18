@@ -15672,7 +15672,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                 drawableInverse.setColorFilter(new PorterDuffColorFilter(inverseColor, PorterDuff.Mode.SRC_IN));
             }
             if (isNewDesignSendButton) {
-                backgroundPaint.setColor(Theme.getColor(Theme.key_chat_messagePanelSend, resourcesProvider));
+                backgroundPaint.setColor(blurredBackgroundDrawable != null ? Theme.multAlpha(Theme.getColor(Theme.key_chat_messagePanelSend, resourcesProvider), 0.52f) : Theme.getColor(Theme.key_chat_messagePanelSend, resourcesProvider));
             } else if (shouldDrawBackground()) {
                 backgroundPaint.setColor(getFillColor());
             } else {
