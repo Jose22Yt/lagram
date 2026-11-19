@@ -77,6 +77,7 @@ import org.telegram.ui.Cells.ChatActionCell;
 import org.telegram.ui.Cells.ChatMessageCell;
 import org.telegram.ui.Cells.CollapseTextCell;
 import org.telegram.ui.Cells.GraySectionCell;
+import org.telegram.ui.Cells.HeaderCell;
 import org.telegram.ui.Cells.ShadowSectionCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Components.blur3.BlurredBackgroundDrawableViewFactory;
@@ -3500,16 +3501,16 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     }
 
     public void setSections() {
-        setSections(dp(12), dp(16), false);
+        setSections(dp(12), dp(18), false);
     }
     public void setSections(boolean topPadding) {
-        setSections(dp(12), dp(16), topPadding);
+        setSections(dp(12), dp(18), topPadding);
     }
     public void setSections(int padding, float roundRadius, boolean topPadding) {
         final Utilities.CallbackReturn<View, Boolean> isSectionView =
                 view -> !(view instanceof TextInfoPrivacyCell || view instanceof ShadowSectionCell ||
                         view instanceof FiltersSetupActivity.HintInnerCell || view instanceof GraySectionCell ||
-                        view instanceof CollapseTextCell) && !Objects.equals(view.getTag(), TAG_NOT_SECTION);
+                        view instanceof HeaderCell || view instanceof CollapseTextCell) && !Objects.equals(view.getTag(), TAG_NOT_SECTION);
         final Pair<Utilities.CallbackReturn<View, Boolean>, Utilities.CallbackReturn<Integer, Boolean>> callbacks =
                 cachedIsViewTypeShadow(this, isSectionView);
         setSections(callbacks.first, callbacks.second, padding, roundRadius, topPadding);
