@@ -259,20 +259,31 @@ public class ApplicationLoader extends Application {
             TLRPC.User user = UserConfig.getInstance(a).getCurrentUser();
             if (user != null) {
                 MessagesController.getInstance(a).putUser(user, true);
-                SendMessagesHelper.getInstance(a).checkUnsentMessages();
             }
         }
 
         ApplicationLoader app = (ApplicationLoader) ApplicationLoader.applicationContext;
-        app.initPushServices();
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d("app initied");
         }
-
-        MediaController.getInstance();
-       for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-           DownloadController.getInstance(a);
-       }
+        AndroidUtilities.runOnUIThread(() -> {
+            MediaController.getInstance();
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                DownloadController.getInstance(a);
+            }
+            }, 400);
+        AndroidUtilities.runOnUIThread(() -> {
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                if (UserConfig.getInstance(a).getCurrentUser() != null) {
+                    SendMessagesHelper.getInstance(a).checkUnsentMessages();
+                }
+            }
+            }, 600);
+        AndroidUtilities.runOnUIThread(() -> {
+            if (app != null) {
+                app.initPushServices();
+            }
+            }, 800);
        AndroidUtilities.runOnUIThread(() -> {
            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
                ContactsController.getInstance(a).checkAppAccount();
