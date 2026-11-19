@@ -75,6 +75,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
 
 
     public boolean drawInputBackground = true;
+    public boolean splitIntoThreePills = false;
     public BlurredBackgroundDrawable blurredBackgroundDrawable;
     private BlurredBackgroundDrawable underKeyboardBackgroundDrawable;
     public void setInputIslandBubbleDrawable(BlurredBackgroundDrawable drawable) {
@@ -266,19 +267,46 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
 
         final int blurTop = getMeasuredHeight() - currentBlurredHeight;
 
-        tmpRect.set(
-            Math.round(inputBubbleOffsetLeft),
-            0,
-            getMeasuredWidth() - Math.round(inputBubbleOffsetRight),
-            inputBubbleHeightRound
-        );
-        tmpRect.inset(0, -dp(7));
-        tmpRect.offset(0, blurTop + (int) bubbleInputTranlationY);
+        if (drawInputBackground && blurredBackgroundDrawable != null) {
+            final int pad = dp(7);
+            final int visL = Math.round(inputBubbleOffsetLeft) + pad;
+            final int visR = getMeasuredWidth() - Math.round(inputBubbleOffsetRight) - pad;
+            final int visT = blurTop + (int) bubbleInputTranslationY;
+            final int visB = visT + inputBubbleHeightRound;
+            final int pillSize = dp(44);
+            final int gap = dp(6);
 
-        blurredBackgroundDrawable.setBounds(tmpRect);
-        if (drawInputBackground)
-            blurredBackgroundDrawable.draw(canvas);
+            if (splitIntoThreePills && (visR - visL) >= dp(160) && inputBubbleHeightRound >= dp(36)) {
+                // Left circular attach pill (anchored at bottom)
+                tmpRect.set(visL, visB - pillSize, visL + pillSize, visB);
+                tmpRect.inset(-pad, -pad);
+                blurredBackgroundDrawable.setBounds(tmpRect);
+                blurredBackgroundDrawable.draw(canvas);
 
+                // Center text input pill (grows upward on multiline)
+                tmpRect.set(visL + pillSize + gap, visT, visR - pillSize - gap, visB);
+                tmpRect.inset(-pad, -pad);
+                blurredBackgroundDrawable.setBounds(tmpRect);
+                blurredBackgroundDrawable.draw(canvas);
+
+                // Right circular voice/send pill (anchored at bottom)
+                tmpRect.set(visR - pillSize, visB - pillSize, visR, visB);
+                tmpRect.inset(-pad, -pad);
+                blurredBackgroundDrawable.setBounds(tmpRect);
+                blurredBackgroundDrawable.draw(canvas);
+            } else {
+                tmpRect.set(
+                    Math.round(inputBubbleOffsetLeft),
+                    0,
+                    getMeasuredWidth() - Math.round(inputBubbleOffsetRight),
+                    inputBubbleHeightRound
+                );
+                tmpRect.inset(0, -pad);
+                tmpRect.offset(0, blurTop + (int) bubbleInputTranslationY);
+                blurredBackgroundDrawable.setBounds(tmpRect);
+                blurredBackgroundDrawable.draw(canvas);
+            }
+        }
         if (needDrawInAppKeyboard) {
             underKeyboardBackgroundDrawable.draw(canvas);
         }
