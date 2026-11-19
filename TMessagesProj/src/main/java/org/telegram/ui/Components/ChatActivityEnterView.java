@@ -184,6 +184,8 @@ import org.telegram.ui.Components.Premium.boosts.BoostRepository;
 import org.telegram.ui.Components.blur3.BlurredBackgroundDrawableViewFactory;
 import org.telegram.ui.Components.blur3.drawable.BlurredBackgroundDrawable;
 import org.telegram.ui.Components.blur3.drawable.color.BlurredBackgroundColorProviderThemed;
+import org.telegram.ui.Components.blur3.drawable.color.BlurredBackgroundProvider;
+import org.telegram.ui.Components.blur3.drawable.color.impl.BlurredBackgroundProviderImpl;
 import org.telegram.ui.Components.chat.SendButtonBlockedByTypingView;
 import org.telegram.ui.Components.chat.layouts.ChatActivitySideControlsButtonsLayout;
 import org.telegram.ui.Components.inset.WindowInsetsInAppController;
@@ -1734,6 +1736,8 @@ public class ChatActivityEnterView extends FrameLayout implements
 
         public void setBlurredBackgroundFactory(BlurredBackgroundDrawableViewFactory factory) {
             useGlassDesign = true;
+lagramGlassFactory = factory;
+            initSeparateGlassPills(null, factory);
 
             if (colorProvider == null) {
                 colorProvider = new BlurredBackgroundColorProviderThemed(resourcesProvider, Theme.key_chat_messagePanelVoiceLockBackground);
@@ -2729,7 +2733,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             }
         };
         frameLayout.setClipChildren(false);
-        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 0, 0, DEFAULT_HEIGHT, 0));
+        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 58 : 0, 0, isChat ? 58 : DEFAULT_HEIGHT, 0));
 
         emojiButton = new ChatActivityEnterViewAnimatedIconView(context) {
             @Override
@@ -2786,7 +2790,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                 }
             }
         });
-        messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.LEFT, 2, 0, 0, 0));
+        messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | (isChat ? Gravity.RIGHT : Gravity.LEFT), isChat ? 0 : 2, 0, isChat ? 2 : 0, 0));
         setEmojiButtonImage(false, false);
 
         deleteRichDraftButton = new ImageView(context);
@@ -2871,7 +2875,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             ThemeBind.colorFilter(attachButton, Theme.key_glass_defaultIcon, resourcesProvider, PorterDuff.Mode.MULTIPLY);
             attachButton.setImageResource(R.drawable.msg_input_attach2);
             ThemeBind.selectorBackground(attachButton, Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)), null, ThemeBind.of(Theme.key_listSelector), resourcesProvider);
-            messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT));
+            if (isChat) { textFieldContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 0, 0)); } else { messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT)); }
             attachButton.setOnClickListener(v -> {
                 if (adjustPanLayoutHelper != null && adjustPanLayoutHelper.animationInProgress() || attachLayoutPaddingAlpha == 0f) {
                     return;
@@ -3032,7 +3036,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         };
         sendButtonContainer.setClipChildren(false);
         sendButtonContainer.setClipToPadding(false);
-        textFieldContainer.addView(sendButtonContainer, LayoutHelper.createFrame(100, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT));
+        textFieldContainer.addView(sendButtonContainer, LayoutHelper.createFrame(100, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, isChat ? 8 : 0, 0));
 
         audioVideoButtonContainer = new FrameLayout(context) {
 
@@ -3281,7 +3285,7 @@ public class ChatActivityEnterView extends FrameLayout implements
 
             @Override
             protected void dispatchDraw(@NonNull Canvas canvas) {
-                if (!audioVideoButtonContainerForbidden) {
+                if (!audioVideoButtonContainerForbidden && !(isChat && audioPillGlassDrawable != null)) {
                     float s = 1;
                     if (expandStickersButton != null) {
                         if (expandStickersButton.getVisibility() == View.VISIBLE) {
@@ -3537,6 +3541,11 @@ public class ChatActivityEnterView extends FrameLayout implements
         });
 
         sendButton = new SendButton(context, isInScheduleMode() ? R.drawable.input_schedule : R.drawable.send_plane_24, resourcesProvider, true) {
+            @Override
+            public void setBlurredBackgroundDrawable(BlurredBackgroundDrawable drawable) {
+                super.setBlurredBackgroundDrawable(drawable);
+                initSeparateGlassPills(drawable, lagramGlassFactory);
+            }
             @Override
             public boolean isInScheduleMode() {
                 return ChatActivityEnterView.this.isInScheduleMode();
@@ -4775,12 +4784,62 @@ public class ChatActivityEnterView extends FrameLayout implements
     Paint backgroundPaint = new Paint();
     private float composeShadowAlpha = 1f;
     private Rect blurBounds = new Rect();
+    private BlurredBackgroundDrawable attachPillGlassDrawable;
+    private BlurredBackgroundDrawable inputPillGlassDrawable;
+    private BlurredBackgroundDrawable audioPillGlassDrawable;
+    private BlurredBackgroundDrawableViewFactory lagramGlassFactory;
+
+    private void initSeparateGlassPills(BlurredBackgroundDrawable sourceDrawable, BlurredBackgroundDrawableViewFactory factory) {
+        if (!isChat) {
+            return;
+        }
+        BlurredBackgroundProvider provider = BlurredBackgroundProviderImpl.bottomPanelChatActivity(resourcesProvider);
+        if (attachButton != null) {
+            if (factory != null) {
+                attachPillGlassDrawable = factory.create(attachButton, provider);
+            } else if (attachPillGlassDrawable == null && sourceDrawable != null && sourceDrawable.getUnwrappedSource() != null) {
+                attachPillGlassDrawable = BlurredBackgroundDrawableViewFactory.createDrawable(sourceDrawable.getUnwrappedSource()).setColorProvider(provider);
+            }
+            if (attachPillGlassDrawable != null) {
+                attachPillGlassDrawable.setRadius(dp(22));
+                attachPillGlassDrawable.setPadding(dp(4));
+                attachButton.setBackground(attachPillGlassDrawable);
+            }
+        }
+        if (messageEditTextContainer != null) {
+            if (factory != null) {
+                inputPillGlassDrawable = factory.create(messageEditTextContainer, provider);
+            } else if (inputPillGlassDrawable == null && sourceDrawable != null && sourceDrawable.getUnwrappedSource() != null) {
+                inputPillGlassDrawable = BlurredBackgroundDrawableViewFactory.createDrawable(sourceDrawable.getUnwrappedSource()).setColorProvider(provider);
+            }
+            if (inputPillGlassDrawable != null) {
+                inputPillGlassDrawable.setRadius(dp(22));
+                inputPillGlassDrawable.setPadding(dp(4));
+                messageEditTextContainer.setBackground(inputPillGlassDrawable);
+            }
+        }
+        if (audioVideoButtonContainer != null) {
+            if (factory != null) {
+                audioPillGlassDrawable = factory.create(audioVideoButtonContainer, provider);
+            } else if (audioPillGlassDrawable == null && sourceDrawable != null && sourceDrawable.getUnwrappedSource() != null) {
+                audioPillGlassDrawable = BlurredBackgroundDrawableViewFactory.createDrawable(sourceDrawable.getUnwrappedSource()).setColorProvider(provider);
+            }
+            if (audioPillGlassDrawable != null) {
+                audioPillGlassDrawable.setRadius(dp(22));
+                audioPillGlassDrawable.setPadding(dp(4));
+                audioVideoButtonContainer.setBackground(audioPillGlassDrawable);
+            }
+        }
+    }
     @Override
     protected void onDraw(Canvas canvas) {
         drawBackground(canvas, true);
     }
 
     public void drawBackground(Canvas canvas, boolean withComposeShadowDrawable) {
+        if (isChat && inputPillGlassDrawable != null && (topView == null || topView.getVisibility() != View.VISIBLE)) {
+            return;
+        }
         if (!shouldDrawBackground) {
             return;
         }
@@ -5877,7 +5936,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         ThemeBind.hintTextColor(messageEditText, Theme.key_chat_messagePanelHint, resourcesProvider);
         ThemeBind.cursorColor(messageEditText, Theme.key_chat_messagePanelCursor, resourcesProvider);
         ThemeBind.editHandlesColor(messageEditText, Theme.key_chat_TextSelectionCursor, resourcesProvider);
-        messageEditTextContainer.addView(messageEditText, 1, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 52, 0, isChat ? 50 : 2, 1.5f));
+        messageEditTextContainer.addView(messageEditText, 1, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 14 : 52, 0, isChat ? 48 : 2, 1.5f));
 
         richDraftPreview = new RichMessageLayout.PreviewView(getContext(), currentAccount, resourcesProvider);
         richDraftPreview.setAllowActions(false);
@@ -5886,7 +5945,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         richDraftPreview.setVisibility(View.GONE);
         richDraftPreview.setPadding(dp(8), dp(9), dp(8), dp(10));
         richDraftPreview.setOnClickListener(v -> openRichEditor());
-        messageEditTextContainer.addView(richDraftPreview, 2, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 52 - 8, 0, (isChat ? 50 : 2) - 8, 1.5f));
+        messageEditTextContainer.addView(richDraftPreview, 2, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 6 : 52 - 8, 0, (isChat ? 48 : 2) - 8, 1.5f));
         messageEditText.setOnKeyListener(new OnKeyListener() {
 
             @Override
@@ -14773,15 +14832,15 @@ public class ChatActivityEnterView extends FrameLayout implements
                 ((MarginLayoutParams) richDraftPreview.getLayoutParams()).leftMargin = dp(54) + width;
             }
         } else {
-            ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(3);
+            if (!isChat) { ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(3); }
             if (deleteRichDraftButton != null) {
                 ((MarginLayoutParams) deleteRichDraftButton.getLayoutParams()).leftMargin = dp(3);
             }
             if (messageEditText != null) {
-                ((MarginLayoutParams) messageEditText.getLayoutParams()).leftMargin = dp(50);
+                ((MarginLayoutParams) messageEditText.getLayoutParams()).leftMargin = dp(isChat ? 14 : 50);
             }
             if (richDraftPreview != null) {
-                ((MarginLayoutParams) richDraftPreview.getLayoutParams()).leftMargin = dp(50);
+                ((MarginLayoutParams) richDraftPreview.getLayoutParams()).leftMargin = dp(isChat ? 6 : 50);
             }
         }
         updateBotCommandsMenuContainerTopPadding();
