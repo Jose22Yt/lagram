@@ -453,7 +453,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
         flagSecureReason = new FlagSecureReason(getWindow(), () -> SharedConfig.passcodeHash.length() > 0 && !SharedConfig.allowScreenCapture);
         flagSecureReason.attach();
-
+        if (Build.VERSION.SDK_INT >= 31) {
+            getSplashScreen().setOnExitAnimationListener(splashScreenView -> splashScreenView.remove());
+        }
         super.onCreate(savedInstanceState);
         if (Build.VERSION.SDK_INT >= 24) {
             AndroidUtilities.isInMultiwindow = isInMultiWindowMode();
