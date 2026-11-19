@@ -145,7 +145,11 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
         final int position = holder.getAdapterPosition();
         if (position == RecyclerView.NO_POSITION) return;
         if (position == 0) outRect.top = enableTopPadding ? padding : AndroidUtilities.dp(4);
-        if (position == adapter.getItemCount() - 1) outRect.bottom = padding;
+        if (position == adapter.getItemCount() - 1) {
+            outRect.bottom = padding;
+            } else if (!parent.isInsideForcedSection(position) && isSectionPosition(position + 1)) {
+            outRect.bottom = AndroidUtilities.dp(3);
+        }
     }
 
     @Override
@@ -334,30 +338,14 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
     }
 
     private void drawStableSectionsBackgrounds(Canvas canvas) {
-        int startIndex = -1, previousIndex = -1;
-        View start = null, previous = null;
-        for (int i = 0; i < parent.getChildCount(); i++) {
-            final View child = parent.getChildAt(i);
-            if (child == parent.getEmptyView() || child.getVisibility() != View.VISIBLE || child.getAlpha() <= 0.0f ||
-                    !isSectionItem(child) || parent.isInsideForcedSection(parent.getChildAdapterPosition(child))) {
-                drawSectionBackground(canvas, start, previous, hasAbove(start, startIndex), hasBelow(previous, previousIndex));
-                startIndex = previousIndex = -1;
-                start = previous = null;
-                continue;
-            }
-            if (start != null && Math.abs(previous.getAlpha() - child.getAlpha()) > 0.1f) {
-                drawSectionBackground(canvas, start, previous, hasAbove(start, startIndex), hasBelow(previous, previousIndex));
-                startIndex = -1;
-                start = null;
-            }
-            if (start == null) {
-                startIndex = i;
-                start = child;
-            }
-            previousIndex = i;
-            previous = child;
-        }
-        drawSectionBackground(canvas, start, previous, hasAbove(start, startIndex), hasBelow(previous, previousIndex));
+       for (int i = 0; i < parent.getChildCount(); i++) {
+           final View child = parent.getChildAt(i);
+           if (child == parent.getEmptyView() || child.getVisibility() != View.VISIBLE || child.getAlpha() <= 0.0f ||
+               !isSectionItem(child) || parent.isInsideForcedSection(parent.getChildAdapterPosition(child))) {
+               continue;
+           }
+           drawSectionBackground(canvas, child, child, false, false);
+       }
     }
 
     private void drawAnimatingSectionsBackgrounds(Canvas canvas) {
@@ -687,8 +675,18 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
                     !isSectionItem(child) || parent.isInsideForcedSection(position)) continue;
             final float left = child.getX();
             final float right = left + child.getWidth();
-            if (!isSectionPosition(position - 1) && !RecyclerListView.hasSectionContentAboveTop(child)) drawTopCorners(canvas, left, right, RecyclerListView.top(child), 1.0f);
-            if (!isSectionPosition(position + 1)) drawBottomCorners(canvas, left, right, RecyclerListView.bottom(child), 1.0f);
+           final boolean hasPrev = isSectionPosition(position - 1);
+            final boolean hasNext = isSectionPosition(position + 1);
+            if (!hasPrev && !RecyclerListView.hasSectionContentAboveTop(child)) {
+                drawTopCorners(canvas, left, right, RecyclerListView.top(child), 1.0f);
+                } else if (hasPrev) {
+                drawTopCorners(canvas, left, right, RecyclerListView.top(child), 0.30f);
+            }
+            if (!hasNext) {
+                drawBottomCorners(canvas, left, right, RecyclerListView.bottom(child), 1.0f);
+                } else {
+                drawBottomCorners(canvas, left, right, RecyclerListView.bottom(child), 0.30f);
+            }
         }
     }
 
