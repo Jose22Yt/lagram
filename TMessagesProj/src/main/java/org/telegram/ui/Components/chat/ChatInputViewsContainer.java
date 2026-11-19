@@ -31,7 +31,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
     public static final int INPUT_BUBBLE_RADIUS = 22;
     public static final int INPUT_KEYBOARD_RADIUS = 29;
 
-    public static final int INPUT_BUBBLE_BOTTOM = 9;
+    public static final int INPUT_BUBBLE_BOTTOM = 20;
 
     private WindowInsetsProvider windowInsetsProvider;
 
@@ -86,6 +86,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
     private BlurredBackgroundDrawable underKeyboardBackgroundDrawable;
     public void setInputIslandBubbleDrawable(BlurredBackgroundDrawable drawable) {
         blurredBackgroundDrawable = drawable;
+        blurredBackgroundDrawable.setLiquidGlassEffectAllowed();
         blurredBackgroundDrawable.setPadding(dp(7));
         blurredBackgroundDrawable.setRadius(dp(INPUT_BUBBLE_RADIUS));
         leftPillDrawable = null;
@@ -308,13 +309,14 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
 
         if (drawInputBackground && blurredBackgroundDrawable != null) {
             final int pad = dp(7);
-            final int visL = Math.round(inputBubbleOffsetLeft) + pad;
-            final int visR = getMeasuredWidth() - Math.round(inputBubbleOffsetRight) - pad;
+            final int extraInset = splitIntoThreePills ? dp(20) : 0;
+            final int visL = Math.round(inputBubbleOffsetLeft) + pad + extraInset;
+            final int visR = getMeasuredWidth() - Math.round(inputBubbleOffsetRight) - pad - extraInset;
             final int visB = blurTop + (int) bubbleInputTranlationY + inputBubbleHeightRound;
             final int pillSize = dp(40);
             final int compactHeight = Math.max(pillSize, inputBubbleHeightRound - dp(4));
             final int visT = visB - compactHeight;
-            final int gap = dp(6);
+            final int gap = dp(7);
 
             if (splitIntoThreePills && (visR - visL) >= dp(160) && inputBubbleHeightRound >= dp(36)) {
                 ensureSidePillDrawables();
