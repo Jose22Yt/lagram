@@ -268,15 +268,14 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         avatarImageView.setRoundRadius(dp(21));
         addView(avatarImageView);
         if (avatarClickable) {
-            final TLRPC.Chat chat = parentFragment != null ? parentFragment.getCurrentChat() : null;
-            if (chat != null && chat.linked_community_id != 0) {
-                ScaleStateListAnimator.apply(avatarImageView, .05f, 1.2f);
-            }
+            ScaleStateListAnimator.apply(avatarImageView, .06f, 1.4f);
             avatarImageView.setOnClickListener(v -> {
                 if (!onAvatarClick()) {
                     openProfile(true);
                 }
             });
+        } else {
+            ScaleStateListAnimator.apply(this, .04f, 1.5f);
         }
 
         titleTextView = new SimpleTextConnectedView(context, titleTextLargerCopyView);
