@@ -271,7 +271,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
             final int pad = dp(7);
             final int visL = Math.round(inputBubbleOffsetLeft) + pad;
             final int visR = getMeasuredWidth() - Math.round(inputBubbleOffsetRight) - pad;
-            final int visT = blurTop + (int) bubbleInputTranslationY;
+            final int visT = blurTop + (int) bubbleInputTraslationY;
             final int visB = visT + inputBubbleHeightRound;
             final int pillSize = dp(44);
             final int gap = dp(6);
@@ -302,7 +302,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
                     inputBubbleHeightRound
                 );
                 tmpRect.inset(0, -pad);
-                tmpRect.offset(0, blurTop + (int) bubbleInputTranslationY);
+                tmpRect.offset(0, blurTop + (int) bubbleInputTranlationY);
                 blurredBackgroundDrawable.setBounds(tmpRect);
                 blurredBackgroundDrawable.draw(canvas);
             }
