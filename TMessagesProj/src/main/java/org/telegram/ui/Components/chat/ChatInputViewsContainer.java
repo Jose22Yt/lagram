@@ -281,7 +281,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
             leftPillDrawable.setLiquidGlassEffectAllowed();
             leftPillDrawable.setColorProvider(provider);
             leftPillDrawable.setPadding(dp(7));
-            leftPillDrawable.setRadius(dp(20));
+            leftPillDrawable.setRadius(dp(19));
             leftPillDrawable.setOutset(blurredBackgroundDrawable.getOutsetX(), blurredBackgroundDrawable.getOutsetY());
             leftPillDrawable.setAlpha(blurredBackgroundDrawable.getAlpha());
         }
@@ -291,7 +291,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
             rightPillDrawable.setLiquidGlassEffectAllowed();
             rightPillDrawable.setColorProvider(provider);
             rightPillDrawable.setPadding(dp(7));
-            rightPillDrawable.setRadius(dp(20));
+            rightPillDrawable.setRadius(dp(19));
             rightPillDrawable.setOutset(blurredBackgroundDrawable.getOutsetX(), blurredBackgroundDrawable.getOutsetY());
             rightPillDrawable.setAlpha(blurredBackgroundDrawable.getAlpha());
         }
@@ -312,9 +312,9 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
             final int extraInset = splitIntoThreePills ? dp(20) : 0;
             final int visL = Math.round(inputBubbleOffsetLeft) + pad + extraInset;
             final int visR = getMeasuredWidth() - Math.round(inputBubbleOffsetRight) - pad - extraInset;
-            final int visB = blurTop + (int) bubbleInputTranlationY + inputBubbleHeightRound;
-            final int pillSize = dp(40);
-            final int compactHeight = Math.max(pillSize, inputBubbleHeightRound - dp(4));
+            final int visB = blurTop + (int) bubbleInputTranlationY + inputBubbleHeightRound - dp(2);
+            final int pillSize = dp(38);
+            final int compactHeight = Math.max(pillSize, inputBubbleHeightRound - dp(8));
             final int visT = visB - compactHeight;
             final int gap = dp(7);
 
@@ -335,7 +335,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
                 }
 
                 // Center text input pill (40dp compact height, grows upward on multiline)
-                blurredBackgroundDrawable.setRadius(dp(20));
+                blurredBackgroundDrawable.setRadius(dp(19));
                 tmpRect.set(visL + pillSize + gap, visT, visR - pillSize - gap, visB);
                 tmpRect.inset(-pad, -pad);
                 blurredBackgroundDrawable.setBounds(tmpRect);
