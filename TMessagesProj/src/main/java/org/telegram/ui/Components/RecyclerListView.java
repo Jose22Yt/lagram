@@ -3501,10 +3501,10 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     }
 
     public void setSections() {
-        setSections(dp(12), dp(18), false);
+        setSections(dp(12), dp(20), false);
     }
     public void setSections(boolean topPadding) {
-        setSections(dp(12), dp(18), topPadding);
+        setSections(dp(12), dp(20), topPadding);
     }
     public void setSections(int padding, float roundRadius, boolean topPadding) {
         final Utilities.CallbackReturn<View, Boolean> isSectionView =
@@ -3591,11 +3591,11 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     }
 
     int getSectionColorForDecoration() {
-        return Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider);
+        return Theme.isCurrentThemeDark() ? 0xFF1C1F22 : 0xFFF2F4F7;
     }
 
     int getSectionsBackgroundColorForDecoration() {
-        return ColorUtils.setAlphaComponent(Theme.getColor(bitmapSectionsBackgroundColorKey, resourcesProvider), 0xFF);
+        return Theme.isCurrentThemeDark() ? 0xFF000000 : 0xFFFFFFFF;
     }
 
     @Override
