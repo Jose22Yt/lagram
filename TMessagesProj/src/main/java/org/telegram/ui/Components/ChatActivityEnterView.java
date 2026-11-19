@@ -2791,6 +2791,7 @@ lagramGlassFactory = factory;
             }
         });
         messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | (isChat ? Gravity.RIGHT : Gravity.LEFT), isChat ? 0 : 2, 0, isChat ? 2 : 0, 0));
+        if (isChat) { ScaleStateListAnimator.apply(emojiButton, 0.08f, 1.5f); }
         setEmojiButtonImage(false, false);
 
         deleteRichDraftButton = new ImageView(context);
@@ -2883,6 +2884,7 @@ lagramGlassFactory = factory;
                 delegate.didPressAttachButton();
             });
             attachButton.setContentDescription(getString(R.string.AccDescrAttachButton));
+            ScaleStateListAnimator.apply(attachButton, 0.08f, 1.5f);
             updateFieldRight(1);
         }
 
@@ -3316,6 +3318,7 @@ lagramGlassFactory = factory;
         audioVideoButtonContainer.setSoundEffectsEnabled(false);
         sendButtonContainer.addView(audioVideoButtonContainer, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.RIGHT | Gravity.BOTTOM));
         audioVideoButtonContainer.setFocusable(true);
+        if (isChat) { ScaleStateListAnimator.apply(audioVideoButtonContainer, 0.08f, 1.5f); }
         audioVideoButtonContainer.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
 
 //        audioVideoButtonContainer.setOnTouchListener((view, motionEvent) -> {
@@ -10544,6 +10547,15 @@ lagramGlassFactory = factory;
     @Override
     public void updateColors() {
         updateColorsExtra();
+        if (attachPillGlassDrawable != null) {
+                attachPillGlassDrawable.updateColors();
+        }
+        if (inputPillGlassDrawable != null) {
+            inputPillGlassDrawable.updateColors();
+        }
+        if (audioPillGlassDrawable != null) {
+            audioPillGlassDrawable.updateColors();
+        }
         if (messageSendPreview != null) {
             messageSendPreview.updateColors();
         }
