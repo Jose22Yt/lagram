@@ -2734,7 +2734,7 @@ lagramGlassFactory = factory;
             }
         };
         frameLayout.setClipChildren(false);
-        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 47 : 0, 0, isChat ? 47 : DEFAULT_HEIGHT, 0));
+        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 45 : 0, 0, isChat ? 45 : DEFAULT_HEIGHT, 0));
 
         emojiButton = new ChatActivityEnterViewAnimatedIconView(context) {
             @Override
@@ -2877,7 +2877,7 @@ lagramGlassFactory = factory;
             ThemeBind.colorFilter(attachButton, Theme.key_glass_defaultIcon, resourcesProvider, PorterDuff.Mode.MULTIPLY);
             attachButton.setImageResource(R.drawable.msg_input_attach2);
             ThemeBind.selectorBackground(attachButton, Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)), null, ThemeBind.of(Theme.key_listSelector), resourcesProvider);
-            if (isChat) { textFieldContainer.addView(attachButton, LayoutHelper.createFrame(40, 40, Gravity.BOTTOM | Gravity.LEFT, 0, 0, 0, 0)); } else { messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT)); }
+            if (isChat) { textFieldContainer.addView(attachButton, LayoutHelper.createFrame(38, 38, Gravity.BOTTOM | Gravity.LEFT, 0, 0, 0, 2)); } else { messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT)); }
             attachButton.setOnClickListener(v -> {
                 if (adjustPanLayoutHelper != null && adjustPanLayoutHelper.animationInProgress() || attachLayoutPaddingAlpha == 0f) {
                     return;
@@ -4794,6 +4794,7 @@ lagramGlassFactory = factory;
     private BlurredBackgroundDrawableViewFactory lagramGlassFactory;
 
     private void initSeparateGlassPills(BlurredBackgroundDrawable sourceDrawable, BlurredBackgroundDrawableViewFactory factory) {
+        if (true) return;
         if (!isChat) {
             return;
         }
@@ -4841,7 +4842,7 @@ lagramGlassFactory = factory;
     }
 
     public void drawBackground(Canvas canvas, boolean withComposeShadowDrawable) {
-        if (isChat && inputPillGlassDrawable != null && (topView == null || topView.getVisibility() != View.VISIBLE)) {
+        if (isChat && (topView == null || topView.getVisibility() != View.VISIBLE)) {
             return;
         }
         if (!shouldDrawBackground) {
