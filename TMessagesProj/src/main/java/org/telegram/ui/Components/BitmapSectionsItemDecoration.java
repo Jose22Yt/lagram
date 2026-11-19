@@ -160,33 +160,9 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
             drawSectionsBackgrounds(canvas);
             return;
         }
-        switch (drawingMode) {
-            case FULL_BACKGROUND:
-                canvas.drawRect(0.0f, 0.0f, parent.getWidth(), parent.getHeight(), backgroundPaint);
-                drawSectionsBackgrounds(canvas);
-                break;
-            case SECTION_COLOR_BACKGROUND:
-                sectionPaint.setColor(getSectionColor(1.0f));
-                canvas.drawRect(0.0f, 0.0f, parent.getWidth(), parent.getHeight(), sectionPaint);
-                drawOpaqueBackground(canvas, 0.0f);
-                sectionColorBackgroundDrawn = true;
-                drawSectionsBackgrounds(canvas);
-                sectionColorBackgroundDrawn = false;
-                break;
-            case DRAW_VERTICES:
-                beginVertices();
-                collectingVertices = true;
-                drawOpaqueBackground(canvas, 0.0f);
-                drawSectionsBackgrounds(canvas);
-                collectingVertices = false;
-                flushVertices(canvas);
-                break;
-            case OPTIMIZED_BACKGROUND:
-            default:
-                drawOpaqueBackground(canvas, OPAQUE_BACKGROUND_OVERLAP);
-                drawSectionsBackgrounds(canvas);
-                break;
-        }
+       canvas.drawRect(0.0f, 0.0f, parent.getWidth(), parent.getHeight(), backgroundPaint);
+        drawStableSectionsBackgrounds(canvas);
+        drawForcedSectionsBackgrounds(canvas);
     }
 
     @Override
@@ -651,18 +627,8 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
         if (recyclerView != parent || radius <= 0.0f) return;
         updateBackgroundColor();
         ensureBitmaps();
-        collectingCornerVertices = drawBackground && drawingMode == RecyclerListView.SectionsDrawingMode.DRAW_VERTICES;
-        if (collectingCornerVertices) beginCornerVertices();
-        if (parent.isAnimating()) {
-            drawAnimatedCorners(canvas);
-        } else {
-            drawStableCorners(canvas);
-        }
+       drawStableCorners(canvas);
         drawForcedSectionsCorners(canvas);
-        if (collectingCornerVertices) {
-            collectingCornerVertices = false;
-            flushCornerVertices(canvas);
-        }
     }
 
     private void drawStableCorners(Canvas canvas) {
