@@ -271,7 +271,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
             final int pad = dp(7);
             final int visL = Math.round(inputBubbleOffsetLeft) + pad;
             final int visR = getMeasuredWidth() - Math.round(inputBubbleOffsetRight) - pad;
-            final int visT = blurTop + (int) bubbleInputTraslationY;
+            final int visT = blurTop + (int) bubbleInputTranlationY;
             final int visB = visT + inputBubbleHeightRound;
             final int pillSize = dp(44);
             final int gap = dp(6);
