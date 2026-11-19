@@ -1536,6 +1536,13 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 checkStopHeavyOperations(newState);
+                if (Build.VERSION.SDK_INT >= 35) {
+                    if (newState != SCROLL_STATE_IDLE) {
+                        setRequestedFrameRate(View.REQUESTED_FRAME_RATE_CATEGORY_HIGH);
+                        } else {
+                        setRequestedFrameRate(View.REQUESTED_FRAME_RATE_CATEGORY_DEFAULT);
+                    }
+                }
                 if (newState != SCROLL_STATE_IDLE && currentChildView != null) {
                     if (selectChildRunnable != null) {
                         AndroidUtilities.cancelRunOnUIThread(selectChildRunnable);
@@ -1566,6 +1573,10 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (Build.VERSION.SDK_INT >= 35 && (dx != 0 || dy != 0)) {
+                    float velocity = (Math.abs(dx) + Math.abs(dy)) * Math.max(60f, AndroidUtilities.screenRefreshRate);
+                    setFrameContentVelocity(velocity);
+                }
                 if (onScrollListener != null) {
                     onScrollListener.onScrolled(recyclerView, dx, dy);
                 }
