@@ -2734,7 +2734,7 @@ lagramGlassFactory = factory;
             }
         };
         frameLayout.setClipChildren(false);
-        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 50 : 0, 0, isChat ? 50 : DEFAULT_HEIGHT, 0));
+        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 46 : 0, 0, isChat ? 46 : DEFAULT_HEIGHT, 0));
 
         emojiButton = new ChatActivityEnterViewAnimatedIconView(context) {
             @Override
@@ -2877,7 +2877,7 @@ lagramGlassFactory = factory;
             ThemeBind.colorFilter(attachButton, Theme.key_glass_defaultIcon, resourcesProvider, PorterDuff.Mode.MULTIPLY);
             attachButton.setImageResource(R.drawable.msg_input_attach2);
             ThemeBind.selectorBackground(attachButton, Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)), null, ThemeBind.of(Theme.key_listSelector), resourcesProvider);
-            if (isChat) { textFieldContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.LEFT, 0, 0, 0, 0)); } else { messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT)); }
+            if (isChat) { textFieldContainer.addView(attachButton, LayoutHelper.createFrame(40, 40, Gravity.BOTTOM | Gravity.LEFT, 0, 0, 0, 0)); } else { messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT)); }
             attachButton.setOnClickListener(v -> {
                 if (adjustPanLayoutHelper != null && adjustPanLayoutHelper.animationInProgress() || attachLayoutPaddingAlpha == 0f) {
                     return;
@@ -10602,7 +10602,7 @@ lagramGlassFactory = factory;
             botKeyboardView.updateColors();
         }
         // emojiButton / deleteRichDraftButton / sendOutlineView icon colors are ThemeBind bindings
-        final int audioVideoColor = audioVideoButtonContainerForbidden ? getThemedColor(Theme.key_glass_defaultIcon) : Color.WHITE;
+        final int audioVideoColor = (audioVideoButtonContainerForbidden || isChat) ? getThemedColor(Theme.key_glass_defaultIcon) : Color.WHITE;
         if (audioVideoSendButton != null && (!audioVideoColorApplied || audioVideoColor != lastAudioVideoColor)) {
             audioVideoColorApplied = true;
             lastAudioVideoColor = audioVideoColor;
@@ -14819,7 +14819,7 @@ lagramGlassFactory = factory;
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (isChat) {
-            android.view.ViewParent p = getParent(); while (p != null) { if (p instanceof ChatInputViewsContainer) { ((ChatInputViewsContainer) p).splitIntoThreePills = true; break; } p = p.getParent(); } }
+            android.view.ViewParent p = getParent(); while (p != null) { if (p instanceof ChatInputViewsContainer) { final ChatInputViewsContainer container = (ChatInputViewsContainer) p; container.splitIntoThreePills = true; container.pillResourcesProvider = resourcesProvider; break; } p = p.getParent(); } }
         int wasHeight = textFieldContainer.getMeasuredHeight();
         if (botCommandsMenuButton != null && botCommandsMenuButton.getTag() != null) {
             botCommandsMenuButton.measure(widthMeasureSpec, heightMeasureSpec);
