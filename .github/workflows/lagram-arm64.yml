@@ -1,4 +1,4 @@
-# Trigger build #39: centered 38dp glass pills + matching floating buttons + dark-mode glass depth + cached CI
+# Trigger build #40: fixed center pill Liquid Glass + iOS 27 icons + deterministic 4dp segmented settings (cached CI)
 name: Lagram Debug Build
 
 on:
