@@ -53,6 +53,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Cache Native C/C++ (.cxx) Build
+        id: cache-cxx
         uses: actions/cache@v4
         with:
           path: |
@@ -62,7 +63,14 @@ jobs:
           key: lagram-arm64-cxx-${{ hashFiles('TMessagesProj/jni/**') }}-v1
           restore-keys: |
             lagram-arm64-cxx-
-
+      - name: Refresh cached native timestamps for Ninja
+        if: steps.cache-cxx.outputs.cache-hit == 'true'
+        run: |
+          find TMessagesProj/.cxx TMessagesProj/build/intermediates/cxx -type f ! -name "*.a" ! -name "*.so" -exec touch {} +
+          sleep 1
+          find TMessagesProj/.cxx TMessagesProj/build/intermediates/cxx -type f -name "*.a" -exec touch {} +
+          sleep 1
+          find TMessagesProj/.cxx TMessagesProj/build/intermediates/cxx TMessagesProj/build/intermediates/merged_native_libs -type f -name "*.so" -exec touch {} +
       - name: Inject Telegram API credentials
         env:
           TG_APP_ID: ${{ secrets.TELEGRAM_APP_ID }}
