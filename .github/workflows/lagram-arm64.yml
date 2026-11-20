@@ -1,4 +1,4 @@
-# Lagram ARM64 Standalone CI (cached SDK/NDK, native .cxx cache, Gradle build-cache, fail-fast javac)
+# Trigger build #39: centered 38dp glass pills + matching floating buttons + dark-mode glass depth + cached CI
 name: Lagram Debug Build
 
 on:
