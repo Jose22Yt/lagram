@@ -83,6 +83,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
     public Theme.ResourcesProvider pillResourcesProvider;
     private BlurredBackgroundDrawable leftPillDrawable;
     private BlurredBackgroundDrawable rightPillDrawable;
+    private boolean centerPillGlassConfigured = false;
     private BlurredBackgroundDrawable underKeyboardBackgroundDrawable;
     public void setInputIslandBubbleDrawable(BlurredBackgroundDrawable drawable) {
         blurredBackgroundDrawable = drawable;
@@ -91,6 +92,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
         blurredBackgroundDrawable.setRadius(dp(INPUT_BUBBLE_RADIUS));
         leftPillDrawable = null;
         rightPillDrawable = null;
+        centerPillGlassConfigured = false;
     }
 
     public void setUnderKeyboardBackgroundDrawable(BlurredBackgroundDrawable drawable) {
@@ -295,6 +297,12 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
             rightPillDrawable.setOutset(blurredBackgroundDrawable.getOutsetX(), blurredBackgroundDrawable.getOutsetY());
             rightPillDrawable.setAlpha(blurredBackgroundDrawable.getAlpha());
         }
+        if (!centerPillGlassConfigured) {
+            centerPillGlassConfigured = true;
+            blurredBackgroundDrawable.setLiquidGlassEffectAllowed();
+            blurredBackgroundDrawable.setColorProvider(BlurredBackgroundProviderImpl.bottomPanelChatActivity(pillResourcesProvider));
+            blurredBackgroundDrawable.setRadius(dp(19));
+        }
     }
     @Override
     protected void dispatchDraw(@NonNull Canvas canvas) {
@@ -335,7 +343,6 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
                 }
 
                 // Center text input pill (40dp compact height, grows upward on multiline)
-                blurredBackgroundDrawable.setRadius(dp(19));
                 tmpRect.set(visL + pillSize + gap, visT, visR - pillSize - gap, visB);
                 tmpRect.inset(-pad, -pad);
                 blurredBackgroundDrawable.setBounds(tmpRect);
@@ -351,7 +358,10 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
                     rightPillDrawable.draw(canvas);
                 }
             } else {
-                blurredBackgroundDrawable.setRadius(dp(INPUT_BUBBLE_RADIUS));
+                if (centerPillGlassConfigured) {
+                    centerPillGlassConfigured = false;
+                    blurredBackgroundDrawable.setRadius(dp(INPUT_BUBBLE_RADIUS));
+                }
                 tmpRect.set(
                     Math.round(inputBubbleOffsetLeft),
                     0,
