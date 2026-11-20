@@ -25,9 +25,11 @@ import org.telegram.ui.ActionBar.ThemeBind;
 import org.telegram.ui.Components.CircularProgressDrawable;
 import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.ScaleStateListAnimator;
 import org.telegram.ui.Components.blur3.BlurredBackgroundDrawableViewFactory;
 import org.telegram.ui.Components.blur3.drawable.BlurredBackgroundDrawable;
 import org.telegram.ui.Components.blur3.drawable.color.BlurredBackgroundColorProvider;
+import org.telegram.ui.Components.blur3.drawable.color.impl.BlurredBackgroundProviderImpl;
 
 import me.vkryl.android.animator.BoolAnimator;
 import me.vkryl.android.animator.FactorAnimator;
@@ -126,6 +128,7 @@ public class ChatActivityBlurredRoundButton extends FrameLayout implements Facto
     private BlurredBackgroundDrawable backgroundDrawable;
     public void setBlurredBackgroundDrawable(BlurredBackgroundDrawable drawable) {
         backgroundDrawable = drawable;
+        backgroundDrawable.setLiquidGlassEffectAllowed();
         backgroundDrawable.setPadding(dp(CLICK_ZONE_MARGIN));
         backgroundDrawable.setRadius(dp(BUTTON_SIZE / 2f));
     }
@@ -174,12 +177,13 @@ public class ChatActivityBlurredRoundButton extends FrameLayout implements Facto
         final int color = Theme.getColor(Theme.key_glass_defaultIcon, resourcesProvider);
         button = new ChatActivityBlurredRoundButton(context);
         button.resourcesProvider = resourcesProvider;
-        button.setBlurredBackgroundDrawable(factory.create(button, colorProvider));
+        button.setBlurredBackgroundDrawable(factory.create(button, BlurredBackgroundProviderImpl.bottomPanelChatActivity(resourcesProvider)));
         button.setIconColor(color);
         int rad = dp(22);
         int pressedColor = Theme.multAlpha(color, .15f);
         ThemeBind.selectorBackground(button, Theme.createInsetRoundRectDrawable(pressedColor, rad, dp(6)), null, ThemeBind.multAlpha(Theme.key_glass_defaultIcon, .15f), resourcesProvider);
 
+        ScaleStateListAnimator.apply(button, 0.08f, 1.5f);
         return button;
     }
 
@@ -196,13 +200,14 @@ public class ChatActivityBlurredRoundButton extends FrameLayout implements Facto
         final int color = Theme.getColor(Theme.key_glass_defaultIcon, resourcesProvider);
         button = new ChatActivityBlurredRoundButton(context);
         button.resourcesProvider = resourcesProvider;
-        button.setBlurredBackgroundDrawable(factory.create(button, colorProvider));
+        button.setBlurredBackgroundDrawable(factory.create(button, BlurredBackgroundProviderImpl.bottomPanelChatActivity(resourcesProvider)));
         button.setIcon(res, iconSize);
         button.setIconColor(color);
         int rad = dp(22);
         int pressedColor = Theme.multAlpha(color, .15f);
         ThemeBind.selectorBackground(button, Theme.createInsetRoundRectDrawable(pressedColor, rad, dp(6)), null, ThemeBind.multAlpha(Theme.key_glass_defaultIcon, .15f), resourcesProvider);
 
+        ScaleStateListAnimator.apply(button, 0.08f, 1.5f);
         return button;
     }
 
