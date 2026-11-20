@@ -2881,7 +2881,7 @@ lagramGlassFactory = factory;
             };
             attachButton.setScaleType(ImageView.ScaleType.CENTER);
             ThemeBind.colorFilter(attachButton, Theme.key_glass_defaultIcon, resourcesProvider, PorterDuff.Mode.MULTIPLY);
-            attachButton.setImageResource(R.drawable.msg_input_attach2);
+            attachButton.setImageResource(isChat ? R.drawable.ic_lagram_ios27_attach : R.drawable.msg_input_attach2);
             ThemeBind.selectorBackground(attachButton, Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)), null, ThemeBind.of(Theme.key_listSelector), resourcesProvider);
             if (isChat) { attachButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE); attachButton.setPadding(dp(8.5f), dp(8.5f), dp(8.5f), dp(8.5f)); textFieldContainer.addView(attachButton, LayoutHelper.createFrame(38, 38, Gravity.BOTTOM | Gravity.LEFT, 0, 0, 0, 2)); } else { messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT)); }
             attachButton.setOnClickListener(v -> {
@@ -3496,7 +3496,7 @@ lagramGlassFactory = factory;
 //            return true;
 //        });
 
-        micOutline = getResources().getDrawable(R.drawable.input_mic).mutate();
+        micOutline = getResources().getDrawable(isChat ? R.drawable.ic_lagram_ios27_mic : R.drawable.input_mic).mutate();
         ThemeBind.drawableColorFilter(this, micOutline, Theme.key_glass_defaultIcon, resourcesProvider, PorterDuff.Mode.MULTIPLY);
 
         cameraOutline = getResources().getDrawable(R.drawable.input_video).mutate();
@@ -3506,9 +3506,9 @@ lagramGlassFactory = factory;
             private final Rect tmpRectF = new Rect();
             @Override
             public void draw(@NonNull Canvas canvas) {
-                if (audioVideoButtonContainerForbidden) {
+                if (audioVideoButtonContainerForbidden || isChat) {
                     tmpRectF.set(0, 0, getMeasuredWidth(), getMeasuredHeight());
-                    tmpRectF.inset(dp(7.5f), dp(7.5f));
+                    tmpRectF.inset(dp(isChat ? 8.5f : 7.5f), dp(isChat ? 8.5f : 7.5f));
                     Drawable d = getCurrentState() == State.VIDEO ? cameraOutline : micOutline;
                     d.setBounds(tmpRectF);
                     d.draw(canvas);
@@ -13259,9 +13259,9 @@ lagramGlassFactory = factory;
                 currentPage = emojiView.getCurrentPage();
             }
             if (currentPage == 0 || !allowStickers && !allowGifs) {
-                nextIcon = ChatActivityEnterViewAnimatedIconView.State.SMILE;
+                nextIcon = (isChat && stickersEnabled) ? ChatActivityEnterViewAnimatedIconView.State.STICKER : ChatActivityEnterViewAnimatedIconView.State.SMILE;
             } else if (messageEditText != null && !TextUtils.isEmpty(messageEditText.getText())) {
-                nextIcon = ChatActivityEnterViewAnimatedIconView.State.SMILE;
+                nextIcon = (isChat && stickersEnabled) ? ChatActivityEnterViewAnimatedIconView.State.STICKER : ChatActivityEnterViewAnimatedIconView.State.SMILE;
             } else {
                 if (currentPage == 1) {
                     nextIcon = ChatActivityEnterViewAnimatedIconView.State.STICKER;
