@@ -148,7 +148,7 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
         if (position == 0) outRect.top = enableTopPadding ? padding : AndroidUtilities.dp(4);
         if (position == adapter.getItemCount() - 1) {
             outRect.bottom = padding;
-            } else if (!parent.isInsideForcedSection(position)) {)
+        } else if (!parent.isInsideForcedSection(position)) {
             outRect.bottom = AndroidUtilities.dp(4);
         }
     }
