@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.Utilities;
+import org.telegram.ui.Cells.HeaderCell;
 import org.telegram.ui.Components.blur3.capture.IBlur3Capture;
 
 public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration implements IBlur3Capture {
@@ -131,8 +132,8 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
         bitmapRadius = -1.0f;
     }
 
-    boolean isSectionItem(View view) {
-        return isSectionView.run(view);
+    private boolean isSectionItem(View view) {
+        return view != null && !(view instanceof HeaderCell) && isSectionView.run(view);
     }
 
     @Override
@@ -147,7 +148,7 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
         if (position == 0) outRect.top = enableTopPadding ? padding : AndroidUtilities.dp(4);
         if (position == adapter.getItemCount() - 1) {
             outRect.bottom = padding;
-            } else if (!parent.isInsideForcedSection(position) && isSectionPosition(position + 1)) {
+            } else if (!parent.isInsideForcedSection(position)) {)
             outRect.bottom = AndroidUtilities.dp(4);
         }
     }
