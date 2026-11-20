@@ -1,4 +1,4 @@
-# Trigger build #44: test arm64-v8a-only CMake + ccache speed benchmark
+# Trigger build #45: calibrated razor-thin iOS 27 specular rim (0.75dp/0.65dp) + warm ccache arm64-v8a build
 name: Lagram Debug Build
 
 on:
