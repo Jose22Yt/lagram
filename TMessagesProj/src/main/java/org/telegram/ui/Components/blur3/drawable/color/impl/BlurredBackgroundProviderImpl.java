@@ -100,25 +100,25 @@ public class BlurredBackgroundProviderImpl {
                     if (!LiteMode.isEnabled(LiteMode.FLAG_CHAT_BLUR)) {
                         return Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground);
                     }
-                    return Theme.multAlpha(Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground), isDark ? 0.85f : 0.825f);
+                    return Theme.multAlpha(Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground, r), isDark ? 0.74f : 0.84f);
                 })
-                .setStrokeColorTop(0x44FFFFFF, 0)
-                .setStrokeColorBottom(0x22FFFFFF, 0)
+                .setStrokeColorTop(0xFFFFFFFF, 0x46FFFFFF)
+                .setStrokeColorBottom(0xE6FFFFFF, 0x32FFFFFF)
                 .setShadowColor(0x38000000, 0)
                 .setShadowLayer(dpf2(3.5f), 0, 0)
-                .setStrokeWidth(dpf2(2 / 3f), dpf2(2 / 3f))
+                .setStrokeWidth(dpf2(0.75f), dpf2(0.65f))
                 .build();
     }
 
     public static BlurredBackgroundProvider scrimMenuBackground(Theme.ResourcesProvider resourcesProvider) {
         return new BlurredBackgroundProviderBuilder(resourcesProvider)
             .setBackgroundColor((r, isDark) ->
-                Theme.multAlpha(Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground, r), isDark ? 0.85f : 0.825f))
-            .setStrokeColorTop(0x44FFFFFF, 0)
-            .setStrokeColorBottom(0x22FFFFFF, 0)
+                Theme.multAlpha(Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground, r), isDark ? 0.74f : 0.84f))
+            .setStrokeColorTop(0xFFFFFFFF, 0x46FFFFFF)
+            .setStrokeColorBottom(0xE6FFFFFF, 0x32FFFFFF)
             .setShadowColor(0x26000000, 0)
             .setShadowLayer(dpf2(4f), 0, 0)
-            .setStrokeWidth(dpf2(2 / 3f), dpf2(2 / 3f))
+            .setStrokeWidth(dpf2(0.75f), dpf2(0.65f))
             .build();
     }
 
