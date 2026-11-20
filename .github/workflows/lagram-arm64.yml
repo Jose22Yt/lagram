@@ -1,4 +1,4 @@
-# Lagram ARM64 Standalone CI (arm64-v8a only, ccache, cached SDK/NDK, Gradle build-cache, fail-fast javac)
+# Trigger build #44: test arm64-v8a-only CMake + ccache speed benchmark
 name: Lagram Debug Build
 
 on:
