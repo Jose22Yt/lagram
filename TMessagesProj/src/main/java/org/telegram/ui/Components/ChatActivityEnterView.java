@@ -2791,7 +2791,13 @@ lagramGlassFactory = factory;
                 }
             }
         });
-        messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | (isChat ? Gravity.RIGHT : Gravity.LEFT), isChat ? 0 : 2, 0, isChat ? 2 : 0, 0));
+        if (isChat) {
+            emojiButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            emojiButton.setPadding(dp(8.5f), dp(8.5f), dp(8.5f), dp(8.5f));
+            messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(38, 38, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 1, 2));
+            } else {
+            messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.LEFT, 2, 0, 0, 0));
+        }
         if (isChat) { ScaleStateListAnimator.apply(emojiButton, 0.08f, 1.5f); }
         setEmojiButtonImage(false, false);
 
@@ -2877,7 +2883,7 @@ lagramGlassFactory = factory;
             ThemeBind.colorFilter(attachButton, Theme.key_glass_defaultIcon, resourcesProvider, PorterDuff.Mode.MULTIPLY);
             attachButton.setImageResource(R.drawable.msg_input_attach2);
             ThemeBind.selectorBackground(attachButton, Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)), null, ThemeBind.of(Theme.key_listSelector), resourcesProvider);
-            if (isChat) { textFieldContainer.addView(attachButton, LayoutHelper.createFrame(38, 38, Gravity.BOTTOM | Gravity.LEFT, 0, 0, 0, 2)); } else { messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT)); }
+            if (isChat) { attachButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE); attachButton.setPadding(dp(8.5f), dp(8.5f), dp(8.5f), dp(8.5f)); textFieldContainer.addView(attachButton, LayoutHelper.createFrame(38, 38, Gravity.BOTTOM | Gravity.LEFT, 0, 0, 0, 2)); } else { messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT)); }
             attachButton.setOnClickListener(v -> {
                 if (adjustPanLayoutHelper != null && adjustPanLayoutHelper.animationInProgress() || attachLayoutPaddingAlpha == 0f) {
                     return;
@@ -3317,7 +3323,7 @@ lagramGlassFactory = factory;
             }
         };
         audioVideoButtonContainer.setSoundEffectsEnabled(false);
-        sendButtonContainer.addView(audioVideoButtonContainer, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.RIGHT | Gravity.BOTTOM));
+        sendButtonContainer.addView(audioVideoButtonContainer, isChat ? LayoutHelper.createFrame(38, 38, Gravity.RIGHT | Gravity.BOTTOM, 0, 0, 0, 2) : LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.RIGHT | Gravity.BOTTOM));
         audioVideoButtonContainer.setFocusable(true);
         if (isChat) { ScaleStateListAnimator.apply(audioVideoButtonContainer, 0.08f, 1.5f); }
         audioVideoButtonContainer.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
@@ -3514,9 +3520,9 @@ lagramGlassFactory = factory;
         audioVideoSendButton.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 //        audioVideoSendButton.setFocusable(true);
 //        audioVideoSendButton.setAccessibilityDelegate(mediaMessageButtonsDelegate);
-        padding = dp(10f);
+        padding = dp(isChat ? 8.5f : 10f);
         audioVideoSendButton.setPadding(padding, padding, padding, padding);
-        audioVideoButtonContainer.addView(audioVideoSendButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT));
+        audioVideoButtonContainer.addView(audioVideoSendButton, LayoutHelper.createFrame(isChat ? 38 : DEFAULT_HEIGHT, isChat ? 38 : DEFAULT_HEIGHT, Gravity.CENTER));
 
         cancelBotButton = new ImageView(context);
         cancelBotButton.setVisibility(INVISIBLE);
@@ -5932,7 +5938,7 @@ lagramGlassFactory = factory;
         messageEditText.setMaxLines(6);
         messageEditText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
         messageEditText.setGravity(Gravity.BOTTOM);
-        messageEditText.setPadding(0, dp(9), 0, dp(10));
+        messageEditText.setPadding(0, dp(isChat ? 7 : 9), 0, dp(isChat ? 7 : 10));
         messageEditText.setBackgroundDrawable(null);
         ThemeBind.textColor(messageEditText, Theme.key_chat_messagePanelText, resourcesProvider);
         ThemeBind.linkTextColor(messageEditText, Theme.key_chat_messageLinkOut, resourcesProvider);
@@ -5941,7 +5947,7 @@ lagramGlassFactory = factory;
         ThemeBind.hintTextColor(messageEditText, Theme.key_chat_messagePanelHint, resourcesProvider);
         ThemeBind.cursorColor(messageEditText, Theme.key_chat_messagePanelCursor, resourcesProvider);
         ThemeBind.editHandlesColor(messageEditText, Theme.key_chat_TextSelectionCursor, resourcesProvider);
-        messageEditTextContainer.addView(messageEditText, 1, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 14 : 52, 0, isChat ? 48 : 2, 1.5f));
+        messageEditTextContainer.addView(messageEditText, 1, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 14 : 52, 0, isChat ? 48 : 2, isChat ? 3.5f : 1.5f));
 
         richDraftPreview = new RichMessageLayout.PreviewView(getContext(), currentAccount, resourcesProvider);
         richDraftPreview.setAllowActions(false);
@@ -5950,7 +5956,7 @@ lagramGlassFactory = factory;
         richDraftPreview.setVisibility(View.GONE);
         richDraftPreview.setPadding(dp(8), dp(9), dp(8), dp(10));
         richDraftPreview.setOnClickListener(v -> openRichEditor());
-        messageEditTextContainer.addView(richDraftPreview, 2, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 6 : 52 - 8, 0, (isChat ? 48 : 2) - 8, 1.5f));
+        messageEditTextContainer.addView(richDraftPreview, 2, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 6 : 52 - 8, 0, (isChat ? 48 : 2) - 8, isChat ? 3.5f : 1.5f));
         messageEditText.setOnKeyListener(new OnKeyListener() {
 
             @Override
