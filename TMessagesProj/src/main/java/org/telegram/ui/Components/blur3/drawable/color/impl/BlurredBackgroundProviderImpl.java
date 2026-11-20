@@ -198,11 +198,11 @@ public class BlurredBackgroundProviderImpl {
                     final int colorBg = Theme.getColor(Theme.key_chat_topPanelBackground, r);
                     return Theme.multAlpha(colorBg, alpha);
                 })
-                .setStrokeColorTop(0xFFFFFFFF, 0x73FFFFFF)
-                .setStrokeColorBottom(0xE6FFFFFF, 0x52FFFFFF)
+                .setStrokeColorTop(0xFFFFFFFF, 0x46FFFFFF)
+                .setStrokeColorBottom(0xE6FFFFFF, 0x32FFFFFF)
                 .setShadowColor(0x20000000, 0)
                 //.setShadowLayer(dpf2(10 / 3f), 0, dpf2(2 / 3f))
-                .setStrokeWidth(dpf2(1.15f), dpf2(1.05f))
+                .setStrokeWidth(dpf2(0.75f), dpf2(0.65f))
                 .build();
     }
 
@@ -259,11 +259,11 @@ public class BlurredBackgroundProviderImpl {
                     final int colorBg = Theme.getColor(Theme.key_chat_topPanelBackground, r);
                     return Theme.multAlpha(colorBg, alpha);
                 })
-                .setStrokeColorTop(0xFFFFFFFF, 0x73FFFFFF)
-                .setStrokeColorBottom(0xE6FFFFFF, 0x52FFFFFF)
+                .setStrokeColorTop(0xFFFFFFFF, 0x46FFFFFF)
+                .setStrokeColorBottom(0xE6FFFFFF, 0x32FFFFFF)
                 .setShadowColor(0x20000000, 0)
                 //.setShadowLayer(dpf2(10 / 3f), 0, dpf2(2 / 3f))
-                .setStrokeWidth(dpf2(1.15f), dpf2(1.05f))
+                .setStrokeWidth(dpf2(0.75f), dpf2(0.65f))
                 .build();
     }
 
