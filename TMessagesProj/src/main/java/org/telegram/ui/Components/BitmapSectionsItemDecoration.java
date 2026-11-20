@@ -132,7 +132,7 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
         bitmapRadius = -1.0f;
     }
 
-    private boolean isSectionItem(View view) {
+    public boolean isSectionItem(View view) {
         return view != null && !(view instanceof HeaderCell) && isSectionView.run(view);
     }
 
