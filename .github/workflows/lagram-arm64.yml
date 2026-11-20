@@ -1,4 +1,4 @@
-# Trigger build #38: single 38dp slim Liquid Glass bottom bar + FlexyGram coordinates + M3 segmented settings
+# Lagram ARM64 Standalone CI (cached SDK/NDK, native .cxx cache, Gradle build-cache, fail-fast javac)
 name: Lagram Debug Build
 
 on:
@@ -9,10 +9,11 @@ on:
       - '**.md'
       - 'docs/**'
   workflow_dispatch:
+
 concurrency:
   group: lagram-turbo-${{ github.ref }}
   cancel-in-progress: true
-  
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,14 +30,38 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Cache Android SDK 36, NDK 27 & CMake
+        id: cache-android-sdk
+        uses: actions/cache@v4
+        with:
+          path: |
+            /usr/local/lib/android/sdk/platforms/android-36
+            /usr/local/lib/android/sdk/build-tools/36.0.0
+            /usr/local/lib/android/sdk/ndk/27.2.12479018
+            /usr/local/lib/android/sdk/cmake/3.22.1
+          key: android-sdk36-ndk27.2.12479018-cmake3.22.1-v1
+
       - name: Install SDK 36, Build-Tools & NDK 27.2.12479018
+        if: steps.cache-android-sdk.outputs.cache-hit != 'true'
         run: |
           SDKMANAGER=$(command -v sdkmanager || find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools" -name sdkmanager -type f | sort -V | tail -n 1)
           echo "Using sdkmanager: $SDKMANAGER"
           yes | "$SDKMANAGER" --licenses > /dev/null || true
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Cache Native C/C++ (.cxx) Build
+        uses: actions/cache@v4
+        with:
+          path: |
+            TMessagesProj/.cxx
+            TMessagesProj/build/intermediates/cxx
+            TMessagesProj/build/intermediates/merged_native_libs
+          key: lagram-arm64-cxx-${{ hashFiles('TMessagesProj/jni/**') }}-v1
+          restore-keys: |
+            lagram-arm64-cxx-
 
       - name: Inject Telegram API credentials
         env:
@@ -49,11 +74,15 @@ jobs:
           fi
           sed -i "s/public static int APP_ID = .*/public static int APP_ID = ${TG_APP_ID};/" TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
           sed -i "s/public static String APP_HASH = .*/public static String APP_HASH = \"${TG_APP_HASH}\";/" TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
-          
-      - name: Build afatStandalone APK
+
+      - name: Fast-fail Java compilation check
         run: |
           chmod +x gradlew
-          ./gradlew :TMessagesProj_App:assembleAfatStandalone -Parm64Only=true --no-daemon --max-workers=4
+          ./gradlew :TMessagesProj:compileStandaloneJavaWithJavac -Parm64Only=true --no-daemon --build-cache --parallel --max-workers=4
+
+      - name: Build afatStandalone APK
+        run: |
+          ./gradlew :TMessagesProj_App:assembleAfatStandalone -Parm64Only=true --no-daemon --build-cache --parallel --max-workers=4
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
