@@ -26,11 +26,11 @@ public class BlurredBackgroundProviderImpl {
                 final int colorTarget = Theme.getColor(Theme.key_glass_targetMainTabs, r);
                 return solveSrcColor(colorBg, colorTarget, alpha);
             })
-            .setStrokeColorTop(0x11000000, 0x06FFFFFF)
-            .setStrokeColorBottom(0x20000000, 0x11FFFFFF)
+            .setStrokeColorTop(0xFFFFFFFF, 0x46FFFFFF)
+            .setStrokeColorBottom(0xE6FFFFFF, 0x32FFFFFF)
             .setShadowColor(0x20000000, 0x04FFFFFF)
             .setShadowLayer(dpf2(2.667f), 0, dpf2(0.85f))
-            .setStrokeWidth(dpf2(0.4f), dpf2(0.4f))
+            .setStrokeWidth(dpf2(0.75f), dpf2(0.65f))
             .build();
     }
 
@@ -42,11 +42,11 @@ public class BlurredBackgroundProviderImpl {
                 final int colorTarget = Theme.getColor(Theme.key_glass_targetMainTopPanel, r);
                 return solveSrcColor(colorBg, colorTarget, alpha);
             })
-            .setStrokeColorTop(0x11000000, 0x06FFFFFF)
-            .setStrokeColorBottom(0x20000000, 0x11FFFFFF)
+            .setStrokeColorTop(0xFFFFFFFF, 0x46FFFFFF)
+            .setStrokeColorBottom(0xE6FFFFFF, 0x32FFFFFF)
             .setShadowColor(0x20000000, 0x04FFFFFF)
             .setShadowLayer(dpf2(2.667f), 0, dpf2(0.85f))
-            .setStrokeWidth(dpf2(0.4f), dpf2(0.4f))
+            .setStrokeWidth(dpf2(0.75f), dpf2(0.65f))
             .build();
     }
 
@@ -67,11 +67,11 @@ public class BlurredBackgroundProviderImpl {
                     final int colorBg = Theme.getColor(Theme.key_windowBackgroundWhite, r);
                     return Theme.multAlpha(colorBg, alpha);
                 })
-                .setStrokeColorTop(0xFFFFFFFF, 0x28FFFFFF)
-                .setStrokeColorBottom(0xFFFFFFFF, 0x14FFFFFF)
+                .setStrokeColorTop(0xFFFFFFFF, 0x46FFFFFF)
+                .setStrokeColorBottom(0xE6FFFFFF, 0x32FFFFFF)
                 .setShadowColor(0x40000000, 0)
                 .setShadowLayer(dpf2(11 / 3f), 0, dpf2(2 / 3f))
-                .setStrokeWidth(dpf2(0.5f), dpf2(0.5f))
+                .setStrokeWidth(dpf2(0.75f), dpf2(0.65f))
                 .build();
     }
 
@@ -140,10 +140,10 @@ public class BlurredBackgroundProviderImpl {
     public static BlurredBackgroundProvider searchFloatingDate(Theme.ResourcesProvider resourcesProvider) {
         return new BlurredBackgroundProviderBuilder(resourcesProvider)
                 .setBackgroundColor((r, isDark) -> 0x33000000)
-                .setStrokeColorTop(0x17000000, 0x17FFFFFF)
-                .setStrokeColorBottom(0x17000000, 0x17FFFFFF)
+                .setStrokeColorTop(0xFFFFFFFF, 0x46FFFFFF)
+                .setStrokeColorBottom(0xE6FFFFFF, 0x32FFFFFF)
                 .setShadowColor(0, 0)
-                .setStrokeWidth(1, 1)
+                .setStrokeWidth(dpf2(0.75f), dpf2(0.65f))
                 .build();
     }
 
@@ -280,11 +280,11 @@ public class BlurredBackgroundProviderImpl {
                 final int colorTarget = Theme.getColor(Theme.key_windowBackgroundWhite, r);
                 return solveSrcColor(colorBg, colorTarget, alpha);
             })
-            .setStrokeColorTop(0xFFFFFFFF, 0x20FFFFFF)
-            .setStrokeColorBottom(0xFFFFFFFF, 0x14FFFFFF)
+            .setStrokeColorTop(0xFFFFFFFF, 0x46FFFFFF)
+            .setStrokeColorBottom(0xE6FFFFFF, 0x32FFFFFF)
             .setShadowColor(0x16333333, 0)
             .setShadowLayer(dpf2(24 / 3f), 0, dpf2(7f / 3f))
-            .setStrokeWidth(dpf2(0.55f), dpf2(0.55f))
+            .setStrokeWidth(dpf2(0.75f), dpf2(0.65f))
             .build();
     }
 
