@@ -153,11 +153,18 @@ android {
         multiDexEnabled true
 
         externalNativeBuild {
-            cmake {
-                version '3.22.1'
-                arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-23' //, '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
-                targets 'tmessages.49', 'twidget'
-            }
+              cmake {
+                  version '3.22.1'
+                  if (project.hasProperty("arm64Only")) {
+                      abiFilters 'arm64-v8a'
+                  }
+                  if (project.hasProperty("useCcache")) {
+                      arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-23', '-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache'
+                      } else {
+                      arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-23'
+                  }
+                  targets 'tmessages.49', 'twidget'
+              }
         }
     }
 
