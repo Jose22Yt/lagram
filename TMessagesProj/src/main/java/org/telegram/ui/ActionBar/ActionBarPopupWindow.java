@@ -53,6 +53,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.utils.ViewOutlineProviderImpl;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.PopupSwipeBackLayout;
+import org.telegram.ui.Components.blur3.drawable.BlurredBackgroundDrawable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -372,6 +373,11 @@ public class ActionBarPopupWindow extends PopupWindow {
         public void setBackgroundDrawable(Drawable drawable) {
             backgroundColor = Color.WHITE;
             backgroundDrawable = drawable;
+            if (drawable instanceof BlurredBackgroundDrawable) {
+                final BlurredBackgroundDrawable glass = (BlurredBackgroundDrawable) drawable;
+                glass.setRadius(dp(20));
+                glass.setLiquidGlassEffectAllowed();
+            }
             if (backgroundDrawable != null) {
                 backgroundDrawable.getPadding(bgPaddings);
             } else {
