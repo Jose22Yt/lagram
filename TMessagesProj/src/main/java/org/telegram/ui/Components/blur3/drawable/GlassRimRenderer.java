@@ -1,7 +1,6 @@
 package org.telegram.ui.Components.blur3.drawable;
 
 import android.graphics.Bitmap;
-import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -19,7 +18,6 @@ import android.util.LruCache;
 
 import androidx.annotation.NonNull;
 
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.ui.Components.blur3.utils.NinePatchBuilder;
 
 /**
@@ -313,9 +311,7 @@ public final class GlassRimRenderer {
             g.offsetY = Math.round(cos * t * 8) / 8f;
             g.ringWidth = g.angle = g.ringTop = g.ringBottom = g.ringSides = g.ringExp = 0;
         }
-        final float blurPad = (layer == TOP || layer == BOTTOM) ? AndroidUtilities.dpf2(2.6f) : 0f;
-        final float ox = Math.abs(g.offsetX) * (layer == TOP || layer == BOTTOM ? 2.6f : 1f) + blurPad;
-        final float oy = Math.abs(g.offsetY) * (layer == TOP || layer == BOTTOM ? 2.6f : 1f) + blurPad;
+            final float ox = Math.abs(g.offsetX), oy = Math.abs(g.offsetY);    
         g.cornerL = (int) Math.ceil(Math.max(radii[0], radii[6]) + ox) + 1;
         g.cornerR = (int) Math.ceil(Math.max(radii[2], radii[4]) + ox) + 1;
         g.cornerT = (int) Math.ceil(Math.max(radii[1], radii[3]) + oy) + 1;
@@ -366,25 +362,9 @@ public final class GlassRimRenderer {
             shape.addRoundRect(e, radii, Path.Direction.CW);
             drawInnerStroke(c, shape, rim.strokeWidth, p);
         } else {
-            // Soft inner bevel + fused specular crest baked once into the NinePatch (zero per-frame cost)
+            // Clean razor-thin specular crescent: max at top/bottom crests, mathematically 0 at vertical sides
             final Path shape = new Path();
             shape.addRoundRect(e, radii, Path.Direction.CW);
-            c.save();
-            c.clipPath(shape);
-            // Pass 1: wide soft inner bevel that fuses smoothly into the glass body
-            final Path shiftedGlow = new Path();
-            shiftedGlow.addRoundRect(e.left + g.offsetX * 2.6f, e.top + g.offsetY * 2.6f, e.right + g.offsetX * 2.6f, e.bottom + g.offsetY * 2.6f, radii, Path.Direction.CW);
-            c.save();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                c.clipOutPath(shiftedGlow);
-                } else {
-                c.clipPath(shiftedGlow, Region.Op.DIFFERENCE);
-            }
-            p.setAlpha(140);
-            p.setMaskFilter(new BlurMaskFilter(Math.max(1.5f, AndroidUtilities.dpf2(2.4f)), BlurMaskFilter.Blur.NORMAL));
-            c.drawPath(shape, p);
-            c.restore();
-            // Pass 2: fine fused specular crest along top/bottom rim
             final Path shifted = new Path();
             shifted.addRoundRect(e.left + g.offsetX, e.top + g.offsetY, e.right + g.offsetX, e.bottom + g.offsetY, radii, Path.Direction.CW);
             c.save();
@@ -393,12 +373,7 @@ public final class GlassRimRenderer {
             } else {
                 c.clipPath(shifted, Region.Op.DIFFERENCE);
             }
-            p.setAlpha(235);
-            p.setMaskFilter(new BlurMaskFilter(Math.max(0.5f, AndroidUtilities.dpf2(0.75f)), BlurMaskFilter.Blur.NORMAL));
             c.drawPath(shape, p);
-            c.restore();
-            p.setMaskFilter(null);
-            p.setAlpha(255);
             c.restore();
         }
         bitmap.prepareToDraw();
