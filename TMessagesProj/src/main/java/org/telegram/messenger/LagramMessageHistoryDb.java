@@ -17,8 +17,8 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
     private static final int DB_VERSION = 1;
 
     private static volatile LagramMessageHistoryDb instance;
-    private static final Set<String> deletedKeys = Collections.synchronizedSet(new HashSet<>());
-    private static final Set<String> editedKeys = Collections.synchronizedSet(new HashSet<>());
+    private static final Set<Long> deletedKeys = Collections.synchronizedSet(new HashSet<>());
+    private static final Set<Long> editedKeys = Collections.synchronizedSet(new HashSet<>());
     private static volatile boolean cacheLoaded = false;
 
     public static final class EditEntry {
@@ -46,8 +46,9 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
         return instance;
     }
 
-    private static String makeKey(int account, long dialogId, int messageId) {
-        return account + ":" + dialogId + ":" + messageId;
+    private static long packKey(int account, long dialogId, int messageId) {
+        long h = ((long) (account & 0xF) << 60) ^ (dialogId * 0x9E3779B97F4A7C15L);
+        return h ^ ((long) messageId & 0xFFFFFFFFL);
     }
 
     public static void ensureCacheLoaded() {
@@ -62,12 +63,12 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
                     SQLiteDatabase db = dbHelper.getReadableDatabase();
                     try (Cursor c = db.rawQuery("SELECT account, dialog_id, msg_id FROM deleted_messages", null)) {
                         while (c.moveToNext()) {
-                            deletedKeys.add(makeKey(c.getInt(0), c.getLong(1), c.getInt(2)));
+                            deletedKeys.add(packKey(c.getInt(0), c.getLong(1), c.getInt(2)));
                         }
                     }
                     try (Cursor c = db.rawQuery("SELECT DISTINCT account, dialog_id, msg_id FROM edited_messages", null)) {
                         while (c.moveToNext()) {
-                            editedKeys.add(makeKey(c.getInt(0), c.getLong(1), c.getInt(2)));
+                            editedKeys.add(packKey(c.getInt(0), c.getLong(1), c.getInt(2)));
                         }
                     }
                 } catch (Exception e) {
@@ -100,7 +101,7 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
     }
 
     public static void markMessageDeleted(int account, long dialogId, int messageId) {
-        deletedKeys.add(makeKey(account, dialogId, messageId));
+        deletedKeys.add(packKey(account, dialogId, messageId));
         final LagramMessageHistoryDb dbHelper = getInstance();
         if (dbHelper == null) return;
         Utilities.globalQueue.postRunnable(() -> {
@@ -119,17 +120,19 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
     }
 
     public static boolean isMessageDeleted(int account, long dialogId, int messageId) {
-        if (!LagramConfig.saveDeletedMessages && deletedKeys.isEmpty()) {
+        if (deletedKeys.isEmpty()) {
+            if (LagramConfig.saveDeletedMessages && !cacheLoaded) {
+                ensureCacheLoaded();
+            }
             return false;
         }
-        ensureCacheLoaded();
-        return deletedKeys.contains(makeKey(account, dialogId, messageId))
-                || (dialogId > 0 && deletedKeys.contains(makeKey(account, 0, messageId)));
+        return deletedKeys.contains(packKey(account, dialogId, messageId))
+                || (dialogId > 0 && deletedKeys.contains(packKey(account, 0, messageId)));
     }
 
     public static void saveEditVersion(int account, long dialogId, int messageId, String oldText, int editDate) {
         if (oldText == null || oldText.isEmpty()) return;
-        editedKeys.add(makeKey(account, dialogId, messageId));
+        editedKeys.add(packKey(account, dialogId, messageId));
         final LagramMessageHistoryDb dbHelper = getInstance();
         if (dbHelper == null) return;
         Utilities.globalQueue.postRunnable(() -> {
@@ -149,11 +152,13 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
     }
 
     public static boolean hasEditHistory(int account, long dialogId, int messageId) {
-        if (!LagramConfig.saveEditedMessages && editedKeys.isEmpty()) {
+        if (editedKeys.isEmpty()) {
+            if (LagramConfig.saveEditedMessages && !cacheLoaded) {
+                ensureCacheLoaded();
+            }
             return false;
         }
-        ensureCacheLoaded();
-        return editedKeys.contains(makeKey(account, dialogId, messageId));
+        return editedKeys.contains(packKey(account, dialogId, messageId));
     }
 
     public static ArrayList<EditEntry> getEditHistory(int account, long dialogId, int messageId) {

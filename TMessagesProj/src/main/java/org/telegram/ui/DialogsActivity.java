@@ -12430,9 +12430,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (StoryRecorder.isVisible() || (getLastStoryViewer() != null && getLastStoryViewer().isFullyVisible())) {
             animated = false;
         }
-        boolean onlySelfStories = !isArchive() && getStoriesController().hasOnlySelfStories();
-        boolean newVisibility;
-        if (communityId != 0) {
+        boolean onlySelfStories = !LagramConfig.hideStories && !isArchive() && getStoriesController().hasOnlySelfStories();
+        final boolean newVisibility;
+        if (LagramConfig.hideStories || communityId != 0) {
             newVisibility = false;
         } else if (isArchive()) {
             newVisibility = !getStoriesController().getHiddenList().isEmpty();
@@ -12441,11 +12441,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             onlySelfStories = getStoriesController().hasOnlySelfStories();
         }
 
-        LagramConfig.ensureLoaded();
-        if (LagramConfig.hideStories) {
-            onlySelfStories = false;
-            newVisibility = false;
-        }
         hasOnlySlefStories = onlySelfStories;
 
         boolean oldStoriesCellVisibility = dialogStoriesCellVisible;

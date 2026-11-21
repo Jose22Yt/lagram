@@ -17,7 +17,7 @@ import org.json.JSONObject;
 
 public final class LagramConfig {
     private static final String PREFS_NAME = "lagram_config";
-    private static boolean loaded;
+    private static volatile boolean loaded;
 
     // Animation speed modes
     public static final int ANIM_SPEED_NORMAL = 0;
@@ -154,6 +154,10 @@ public final class LagramConfig {
         saveEditedMessages = prefs.getBoolean("saveEditedMessages", false);
         allowScreenshots = prefs.getBoolean("allowScreenshots", false);
         bypassNoForwards = prefs.getBoolean("bypassNoForwards", false);
+
+        if (saveDeletedMessages || saveEditedMessages) {
+            LagramMessageHistoryDb.ensureCacheLoaded();
+        }
     }
 
     private static void saveBoolean(String key, boolean value) {

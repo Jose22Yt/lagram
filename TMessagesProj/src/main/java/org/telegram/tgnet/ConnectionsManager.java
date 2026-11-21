@@ -422,14 +422,15 @@ public class ConnectionsManager extends BaseController {
     private volatile long lagramAllowReadUntilMs = 0L;
 
     private void sendRequestInternal(TLObject object, RequestDelegate onComplete, RequestDelegateTimestamp onCompleteTimestamp, QuickAckDelegate onQuickAck, WriteToSocketDelegate onWriteToSocket, int flags, int datacenterId, int connectionType, boolean immediate, int requestToken) {
-        org.telegram.messenger.LagramConfig.ensureLoaded();
         if (org.telegram.messenger.LagramConfig.ghostModeEnabled && object != null) {
             if (org.telegram.messenger.LagramConfig.ghostDontReadMessages && System.currentTimeMillis() > lagramAllowReadUntilMs && (
                     object instanceof TLRPC.TL_messages_readHistory ||
                     object instanceof TLRPC.TL_channels_readHistory ||
                     object instanceof TLRPC.TL_messages_readMessageContents ||
                     object instanceof TLRPC.TL_messages_readEncryptedHistory ||
-                    object instanceof TLRPC.TL_messages_readDiscussion)) {
+                    object instanceof TLRPC.TL_messages_readDiscussion ||
+                    object instanceof TLRPC.TL_messages_readSavedHistory ||
+                    object instanceof TLRPC.TL_messages_readMentions)) {
                 return;
             }
             if (org.telegram.messenger.LagramConfig.ghostDontReadStories && (
@@ -444,12 +445,10 @@ public class ConnectionsManager extends BaseController {
             }
             if (org.telegram.messenger.LagramConfig.ghostDontSendOnline && object instanceof org.telegram.tgnet.tl.TL_account.updateStatus) {
                 ((org.telegram.tgnet.tl.TL_account.updateStatus) object).offline = true;
-            }
-            boolean isSendingMessage = object instanceof TLRPC.TL_messages_sendMessage ||
+            } else if (object instanceof TLRPC.TL_messages_sendMessage ||
                     object instanceof TLRPC.TL_messages_sendMedia ||
                     object instanceof TLRPC.TL_messages_sendMultiMedia ||
-                    object instanceof TLRPC.TL_messages_forwardMessages;
-            if (isSendingMessage) {
+                    object instanceof TLRPC.TL_messages_forwardMessages) {
                 if (org.telegram.messenger.LagramConfig.ghostMarkReadOnSend) {
                     lagramAllowReadUntilMs = System.currentTimeMillis() + 3000L;
                 }
