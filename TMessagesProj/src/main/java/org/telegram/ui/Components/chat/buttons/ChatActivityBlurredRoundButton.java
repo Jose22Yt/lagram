@@ -128,7 +128,6 @@ public class ChatActivityBlurredRoundButton extends FrameLayout implements Facto
     private BlurredBackgroundDrawable backgroundDrawable;
     public void setBlurredBackgroundDrawable(BlurredBackgroundDrawable drawable) {
         backgroundDrawable = drawable;
-        backgroundDrawable.setLiquidGlassEffectAllowed();
         backgroundDrawable.setPadding(dp(CLICK_ZONE_MARGIN));
         backgroundDrawable.setRadius(dp(BUTTON_SIZE / 2f));
     }
