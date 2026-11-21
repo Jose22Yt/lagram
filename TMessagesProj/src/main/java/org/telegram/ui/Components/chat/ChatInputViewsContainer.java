@@ -84,6 +84,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
     private BlurredBackgroundDrawable leftPillDrawable;
     private BlurredBackgroundDrawable rightPillDrawable;
     private boolean centerPillGlassConfigured = false;
+    private int lastVisL = -1, lastVisT = -1, lastVisR = -1, lastVisB = -1;
     private BlurredBackgroundDrawable underKeyboardBackgroundDrawable;
     public void setInputIslandBubbleDrawable(BlurredBackgroundDrawable drawable) {
         blurredBackgroundDrawable = drawable;
@@ -93,6 +94,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
         leftPillDrawable = null;
         rightPillDrawable = null;
         centerPillGlassConfigured = false;
+        lastVisL = lastVisT = lastVisR = lastVisB = -1;
     }
 
     public void setUnderKeyboardBackgroundDrawable(BlurredBackgroundDrawable drawable) {
@@ -280,7 +282,6 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
         if (leftPillDrawable == null) {
             final BlurredBackgroundProvider provider = BlurredBackgroundProviderImpl.bottomPanelChatActivity(pillResourcesProvider);
             leftPillDrawable = BlurredBackgroundDrawableViewFactory.createDrawable(blurredBackgroundDrawable.getSource());
-            leftPillDrawable.setLiquidGlassEffectAllowed();
             leftPillDrawable.setColorProvider(provider);
             leftPillDrawable.setPadding(dp(7));
             leftPillDrawable.setRadius(dp(19));
@@ -290,7 +291,6 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
         if (rightPillDrawable == null) {
             final BlurredBackgroundProvider provider = BlurredBackgroundProviderImpl.bottomPanelChatActivity(pillResourcesProvider);
             rightPillDrawable = BlurredBackgroundDrawableViewFactory.createDrawable(blurredBackgroundDrawable.getSource());
-            rightPillDrawable.setLiquidGlassEffectAllowed();
             rightPillDrawable.setColorProvider(provider);
             rightPillDrawable.setPadding(dp(7));
             rightPillDrawable.setRadius(dp(19));
@@ -331,32 +331,40 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
                 final float ox = blurredBackgroundDrawable.getSourceOffsetX();
                 final float oy = blurredBackgroundDrawable.getSourceOffsetY();
                 final int alpha = blurredBackgroundDrawable.getAlpha();
+                final boolean boundsChanged = visL != lastVisL || visT != lastVisT || visR != lastVisR || visB != lastVisB;
 
                 // Left circular attach pill (40dp compact, independent RenderNode)
                 if (leftPillDrawable != null) {
                     leftPillDrawable.setSourceOffset(ox, oy);
                     leftPillDrawable.setAlpha(alpha);
+                    if (boundsChanged) {
                     tmpRect.set(visL, visB - pillSize, visL + pillSize, visB);
                     tmpRect.inset(-pad, -pad);
                     leftPillDrawable.setBounds(tmpRect);
+                    }
                     leftPillDrawable.draw(canvas);
                 }
 
                 // Center text input pill (40dp compact height, grows upward on multiline)
+                if (boundsChanged) {
                 tmpRect.set(visL + pillSize + gap, visT, visR - pillSize - gap, visB);
                 tmpRect.inset(-pad, -pad);
                 blurredBackgroundDrawable.setBounds(tmpRect);
+                }
                 blurredBackgroundDrawable.draw(canvas);
 
                 // Right circular voice/send pill (40dp compact, independent RenderNode)
                 if (rightPillDrawable != null) {
                     rightPillDrawable.setSourceOffset(ox, oy);
                     rightPillDrawable.setAlpha(alpha);
+                    if (boundsChanged) {
                     tmpRect.set(visR - pillSize, visB - pillSize, visR, visB);
                     tmpRect.inset(-pad, -pad);
                     rightPillDrawable.setBounds(tmpRect);
+                    }
                     rightPillDrawable.draw(canvas);
                 }
+                if (boundsChanged) { lastVisL = visL; lastVisT = visT; lastVisR = visR; lastVisB = visB; }
             } else {
                 if (centerPillGlassConfigured) {
                     centerPillGlassConfigured = false;
