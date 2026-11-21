@@ -31,7 +31,6 @@ import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.DownloadController;
 import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SaveToGallerySettingsHelper;
@@ -88,7 +87,6 @@ public class DataSettingsActivity extends BaseFragment {
     private int usageSection2Row;
     private int streamSectionRow;
     private int enableStreamRow;
-    private int turboDownloadsRow;
     private int enableCacheStreamRow;
     private int enableAllStreamRow;
     private int enableMkvRow;
@@ -184,7 +182,6 @@ public class DataSettingsActivity extends BaseFragment {
 //        autoplaySectionRow = rowCount++;
         streamSectionRow = rowCount++;
         enableStreamRow = rowCount++;
-        turboDownloadsRow = rowCount++;
         if (BuildVars.DEBUG_VERSION) {
             enableMkvRow = rowCount++;
             enableAllStreamRow = rowCount++;
@@ -563,11 +560,6 @@ public class DataSettingsActivity extends BaseFragment {
                 SharedConfig.toggleStreamMedia();
                 TextCheckCell textCheckCell = (TextCheckCell) view;
                 textCheckCell.setChecked(SharedConfig.streamMedia);
-                } else if (position == turboDownloadsRow) {
-                    LagramConfig.ensureLoaded();
-                    LagramConfig.toggleTurboDownloads();
-                    TextCheckCell textCheckCell = (TextCheckCell) view;
-                    textCheckCell.setChecked(LagramConfig.turboDownloads);
             } else if (position == enableAllStreamRow) {
                 SharedConfig.toggleStreamAllVideo();
                 TextCheckCell textCheckCell = (TextCheckCell) view;
@@ -768,9 +760,6 @@ public class DataSettingsActivity extends BaseFragment {
                     TextCheckCell checkCell = (TextCheckCell) holder.itemView;
                     if (position == enableStreamRow) {
                         checkCell.setTextAndCheck(LocaleController.getString(R.string.EnableStreaming), SharedConfig.streamMedia, enableAllStreamRow != -1);
-                    } else if (position == turboDownloadsRow) {
-                        LagramConfig.ensureLoaded();
-                        checkCell.setTextAndCheck(LagramConfig.withNewBadge("Descargas paralelas Turbo"), LagramConfig.turboDownloads, enableAllStreamRow != -1);
                     } else if (position == enableCacheStreamRow) {
                         //checkCell.setTextAndCheck(LocaleController.getString(R.string.CacheStreamFile), SharedConfig.saveStreamMedia, true);
                     } else if (position == enableMkvRow) {
@@ -889,9 +878,6 @@ public class DataSettingsActivity extends BaseFragment {
                     checkCell.setChecked(SharedConfig.saveStreamMedia);
                 } else if (position == enableStreamRow) {
                     checkCell.setChecked(SharedConfig.streamMedia);
-                } else if (position == turboDownloadsRow) {
-                    LagramConfig.ensureLoaded();
-                    checkCell.setChecked(LagramConfig.turboDownloads);
                 } else if (position == enableAllStreamRow) {
                     checkCell.setChecked(SharedConfig.streamAllVideo);
                 } else if (position == enableMkvRow) {
@@ -906,7 +892,7 @@ public class DataSettingsActivity extends BaseFragment {
 
         public boolean isRowEnabled(int position) {
             return position == mobileRow || position == roamingRow || position == wifiRow || position == storageUsageRow || position == useLessDataForCallsRow || position == dataUsageRow || position == proxyRow || position == clearDraftsRow ||
-                    position == enableCacheStreamRow ||position == turboDownloadsRow ||  position == enableStreamRow || position == enableAllStreamRow || position == enableMkvRow || position == autoplayVideoRow || position == autoplayGifsRow ||
+                    position == enableCacheStreamRow ||  position == enableStreamRow || position == enableAllStreamRow || position == enableMkvRow || position == autoplayVideoRow || position == autoplayGifsRow ||
                     position == storageNumRow || position == saveToGalleryGroupsRow || position == saveToGalleryPeerRow || position == saveToGalleryChannelsRow || position == resetDownloadRow;
         }
 
@@ -952,7 +938,7 @@ public class DataSettingsActivity extends BaseFragment {
                 return 0;
             } else if (position == mediaDownloadSectionRow || position == streamSectionRow || position == callsSectionRow || position == usageSectionRow || position == proxySectionRow || position == autoplayHeaderRow || position == saveToGallerySectionRow) {
                 return 2;
-            } else if (position == enableCacheStreamRow ||position == turboDownloadsRow ||  position == enableStreamRow || position == enableAllStreamRow || position == enableMkvRow || position == autoplayGifsRow || position == autoplayVideoRow) {
+            } else if (position == enableCacheStreamRow  ||  position == enableStreamRow || position == enableAllStreamRow || position == enableMkvRow || position == autoplayGifsRow || position == autoplayVideoRow) {
                 return 3;
             } else if (position == enableAllStreamInfoRow) {
                 return 4;
