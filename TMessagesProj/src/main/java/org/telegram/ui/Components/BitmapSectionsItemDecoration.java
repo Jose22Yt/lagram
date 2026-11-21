@@ -628,8 +628,14 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
         if (recyclerView != parent || radius <= 0.0f) return;
         updateBackgroundColor();
         ensureBitmaps();
-       drawStableCorners(canvas);
+        collectingCornerVertices = drawBackground && drawingMode == RecyclerListView.SectionsDrawingMode.DRAW_VERTICES;
+        if (collectingCornerVertices) beginCornerVertices();
+        drawStableCorners(canvas);
         drawForcedSectionsCorners(canvas);
+        if (collectingCornerVertices) {
+            collectingCornerVertices = false;
+            flushCornerVertices(canvas);
+        }
     }
 
     private void drawStableCorners(Canvas canvas) {
