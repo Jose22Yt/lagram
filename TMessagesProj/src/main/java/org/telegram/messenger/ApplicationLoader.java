@@ -189,6 +189,7 @@ public class ApplicationLoader extends Application {
     }
 
     public static void postInitApplication() {
+        LagramConfig.ensureLoaded();
         if (applicationInited || applicationContext == null) {
             return;
         }
