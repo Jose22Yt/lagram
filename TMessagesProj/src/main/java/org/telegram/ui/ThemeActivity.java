@@ -57,7 +57,6 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.FileLog;
-import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesController;
@@ -166,8 +165,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     private int raiseToListenRow;
     private int nextMediaTapRow;
     private int sendByEnterRow;
-    private int ios27BottomBarRow;
-    private int disableSponsoredMessagesRow;
     private int saveToGalleryOption1Row;
     private int saveToGalleryOption2Row;
     private int saveToGallerySectionRow;
@@ -705,8 +702,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
         distanceRow = -1;
         searchEngineRow = -1;
         bluetoothScoRow = -1;
-        ios27BottomBarRow = -1;
-        disableSponsoredMessagesRow = -1;
         settings2Row = -1;
 
         swipeGestureHeaderRow = -1;
@@ -815,8 +810,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 sensitiveContentRow = rowCount++;
             }
             sendByEnterRow = rowCount++;
-            ios27BottomBarRow = rowCount++;
-            disableSponsoredMessagesRow = rowCount++;
             distanceRow = rowCount++;
             otherSectionRow = rowCount++;
         } else {
@@ -1235,19 +1228,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 presentFragment(new WallpapersListActivity(WallpapersListActivity.TYPE_ALL));
             } else if (position == changeUserColor) {
                 presentFragment(new PeerColorActivity(0).setOnApplied(this));
-            } else if (position == ios27BottomBarRow) {
-                LagramConfig.ensureLoaded();
-                LagramConfig.toggleIos27BottomBar();
-                if (view instanceof TextCheckCell) {
-                    ((TextCheckCell) view).setChecked(LagramConfig.ios27BottomBar);
-                }
-            } else if (position == disableSponsoredMessagesRow) {
-                LagramConfig.ensureLoaded();
-                LagramConfig.toggleDisableSponsoredMessages();
-                if (view instanceof TextCheckCell) {
-                    ((TextCheckCell) view).setChecked(LagramConfig.disableSponsoredMessages);
-                }
-            } else if (position == sendByEnterRow) {
+        } else if (position == sendByEnterRow) {
                 SharedPreferences preferences = MessagesController.getGlobalMainSettings();
                 boolean send = preferences.getBoolean("send_by_enter", false);
                 SharedPreferences.Editor editor = preferences.edit();
@@ -2730,12 +2711,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     } else if (position == enableAnimationsRow) {
                         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
                         textCheckCell.setTextAndCheck(getString("EnableAnimations", R.string.EnableAnimations), preferences.getBoolean("view_animations", true), true);
-                    } else if (position == ios27BottomBarRow) {
-                        LagramConfig.ensureLoaded();
-                        textCheckCell.setTextAndCheck(LagramConfig.withNewBadge("Barra inferior iOS 27 (3 píldoras)"), LagramConfig.ios27BottomBar, true);
-                    } else if (position == disableSponsoredMessagesRow) {
-                        LagramConfig.ensureLoaded();
-                        textCheckCell.setTextAndCheck(LagramConfig.withNewBadge("Ocultar mensajes patrocinados"), LagramConfig.disableSponsoredMessages, true);
                     } else if (position == sendByEnterRow) {
                         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
                         textCheckCell.setTextAndCheck(getString("SendByEnter", R.string.SendByEnter), preferences.getBoolean("send_by_enter", false), true);
@@ -2887,7 +2862,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             } else if (position == automaticBrightnessRow) {
                 return TYPE_BRIGHTNESS;
             } else if (position == scheduleLocationRow || position == sendByEnterRow ||
-                    position == ios27BottomBarRow || position == disableSponsoredMessagesRow ||
                     position == raiseToSpeakRow || position == raiseToListenRow || position == pauseOnRecordRow ||
                     position == directShareRow || position == chatBlurRow || position == pauseOnMediaRow || position == nextMediaTapRow || position == sensitiveContentRow) {
                 return TYPE_TEXT_CHECK;
