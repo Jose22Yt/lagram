@@ -1533,6 +1533,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
             FileLog.e(e);
         }
         super.setOnScrollListener(new OnScrollListener() {
+            private float lastContentVelocity = -1f;
 
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
@@ -1542,6 +1543,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
                         setRequestedFrameRate(View.REQUESTED_FRAME_RATE_CATEGORY_HIGH);
                         } else {
                         setRequestedFrameRate(View.REQUESTED_FRAME_RATE_CATEGORY_DEFAULT);
+                        lastContentVelocity = -1f;
                     }
                 }
                 if (newState != SCROLL_STATE_IDLE && currentChildView != null) {
@@ -1576,7 +1578,10 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 if (Build.VERSION.SDK_INT >= 35 && (dx != 0 || dy != 0)) {
                     float velocity = (Math.abs(dx) + Math.abs(dy)) * Math.max(60f, AndroidUtilities.screenRefreshRate);
-                    setFrameContentVelocity(velocity);
+                    if (Math.abs(velocity - lastContentVelocity) > 250f) {
+                        lastContentVelocity = velocity;
+                        setFrameContentVelocity(velocity);
+                    }
                 }
                 if (onScrollListener != null) {
                     onScrollListener.onScrolled(recyclerView, dx, dy);
