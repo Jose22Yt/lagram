@@ -438,7 +438,8 @@ public class LiteModeSettingsActivity extends BaseFragment {
                     textCell.setTextAndCheck(item.text, LagramConfig.highRefreshRateScroll, false);
             }
         }
-
+        }
+        
         @Override
         public int getItemViewType(int position) {
             if (position < 0 || position >= items.size()) {
