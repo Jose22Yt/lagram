@@ -131,6 +131,7 @@ import org.telegram.messenger.Emoji;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.ImageReceiver;
+import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.LiteMode;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaController;
@@ -2881,9 +2882,11 @@ lagramGlassFactory = factory;
             };
             attachButton.setScaleType(ImageView.ScaleType.CENTER);
             ThemeBind.colorFilter(attachButton, Theme.key_glass_defaultIcon, resourcesProvider, PorterDuff.Mode.MULTIPLY);
-            attachButton.setImageResource(isChat ? R.drawable.ic_lagram_ios27_attach : R.drawable.msg_input_attach2);
+            LagramConfig.ensureLoaded();
+        final boolean ios27AttachBar = isChat && LagramConfig.ios27BottomBar;
+        attachButton.setImageResource(ios27AttachBar ? R.drawable.ic_lagram_ios27_attach : R.drawable.msg_input_attach2);
             ThemeBind.selectorBackground(attachButton, Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)), null, ThemeBind.of(Theme.key_listSelector), resourcesProvider);
-            if (isChat) { attachButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE); attachButton.setPadding(dp(8.5f), dp(8.5f), dp(8.5f), dp(8.5f)); textFieldContainer.addView(attachButton, LayoutHelper.createFrame(38, 38, Gravity.BOTTOM | Gravity.LEFT, 0, 0, 0, 2)); } else { messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT)); }
+            if (ios27AttachBar) { attachButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE); attachButton.setPadding(dp(8.5f), dp(8.5f), dp(8.5f), dp(8.5f)); textFieldContainer.addView(attachButton, LayoutHelper.createFrame(38, 38, Gravity.BOTTOM | Gravity.LEFT, 0, 0, 0, 2)); } else { messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT)); }
             attachButton.setOnClickListener(v -> {
                 if (adjustPanLayoutHelper != null && adjustPanLayoutHelper.animationInProgress() || attachLayoutPaddingAlpha == 0f) {
                     return;
@@ -3496,7 +3499,8 @@ lagramGlassFactory = factory;
 //            return true;
 //        });
 
-        micOutline = getResources().getDrawable(isChat ? R.drawable.ic_lagram_ios27_mic : R.drawable.input_mic).mutate();
+        LagramConfig.ensureLoaded();
+        micOutline = getResources().getDrawable(isChat && LagramConfig.ios27BottomBar ? R.drawable.ic_lagram_ios27_mic : R.drawable.input_mic).mutate();
         ThemeBind.drawableColorFilter(this, micOutline, Theme.key_glass_defaultIcon, resourcesProvider, PorterDuff.Mode.MULTIPLY);
 
         cameraOutline = getResources().getDrawable(R.drawable.input_video).mutate();
@@ -13277,7 +13281,8 @@ lagramGlassFactory = factory;
         }
 
         emojiButton.setState(nextIcon, animated);
-        if (isChat && nextIcon != ChatActivityEnterViewAnimatedIconView.State.KEYBOARD) {
+        LagramConfig.ensureLoaded();
+        if (isChat && LagramConfig.ios27BottomBar && nextIcon != ChatActivityEnterViewAnimatedIconView.State.KEYBOARD) {
             emojiButton.setImageResource(R.drawable.ic_lagram_ios27_sticker);
         }
         onEmojiIconChanged(nextIcon);
@@ -14830,7 +14835,19 @@ lagramGlassFactory = factory;
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (isChat && !parentLinkedToThreePills) {
-            android.view.ViewParent p = getParent(); while (p != null) { if (p instanceof ChatInputViewsContainer) { final ChatInputViewsContainer container = (ChatInputViewsContainer) p; container.splitIntoThreePills = true; container.pillResourcesProvider = resourcesProvider; parentLinkedToThreePills = true; break; } p = p.getParent(); } }
+            LagramConfig.ensureLoaded();
+            android.view.ViewParent p = getParent();
+            while (p != null) {
+                if (p instanceof ChatInputViewsContainer) {
+                    final ChatInputViewsContainer container = (ChatInputViewsContainer) p;
+                    container.splitIntoThreePills = LagramConfig.ios27BottomBar;
+                    container.pillResourcesProvider = LagramConfig.ios27BottomBar ? resourcesProvider : null;
+                    parentLinkedToThreePills = true;
+                    break;
+                }
+                p = p.getParent();
+            }
+        }
         int wasHeight = textFieldContainer.getMeasuredHeight();
         if (botCommandsMenuButton != null && botCommandsMenuButton.getTag() != null) {
             botCommandsMenuButton.measure(widthMeasureSpec, heightMeasureSpec);
