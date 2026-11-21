@@ -13,6 +13,7 @@ import static org.telegram.messenger.AndroidUtilities.dpf2;
 import static org.telegram.messenger.AndroidUtilities.lerp;
 import static org.telegram.ui.ActionBar.Theme.multAlpha;
 
+import org.telegram.messenger.LagramConfig;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
@@ -1539,7 +1540,8 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 checkStopHeavyOperations(newState);
                 if (Build.VERSION.SDK_INT >= 35) {
-                    if (newState != SCROLL_STATE_IDLE) {
+                    LagramConfig.ensureLoaded();
+                    if( LagramConfig.highRefreshRateScroll && (newState != SCROLL_STATE_IDLE)) {
                         setRequestedFrameRate(View.REQUESTED_FRAME_RATE_CATEGORY_HIGH);
                         } else {
                         setRequestedFrameRate(View.REQUESTED_FRAME_RATE_CATEGORY_DEFAULT);
@@ -1577,10 +1579,13 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 if (Build.VERSION.SDK_INT >= 35 && (dx != 0 || dy != 0)) {
-                    float velocity = (Math.abs(dx) + Math.abs(dy)) * Math.max(60f, AndroidUtilities.screenRefreshRate);
+                    LagramConfig.ensureLoaded();
+                    if (LagramConfig.highRefreshRateScroll) {
+                        float velocity = (Math.abs(dx) + Math.abs(dy)) * Math.max(60f, AndroidUtilities.screenRefreshRate);
                     if (Math.abs(velocity - lastContentVelocity) > 250f) {
                         lastContentVelocity = velocity;
                         setFrameContentVelocity(velocity);
+                    }
                     }
                 }
                 if (onScrollListener != null) {
