@@ -514,8 +514,10 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         @Nullable
         public Boolean highQuality;
         public boolean isHighQuality() {
-            if (highQuality == null)
-                return SharedConfig.photoHighQualityDefault;
+            if (highQuality == null) {
+                LagramConfig.ensureLoaded();
+                return LagramConfig.sendPhotosInHd || SharedConfig.photoHighQualityDefault;
+            }
             return highQuality;
         }
 
@@ -2287,7 +2289,8 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
             lastAccelerometerDetected = System.currentTimeMillis();
         }
         final boolean allowRecording = !manualRecording && playingMessageObject == null && SharedConfig.enabledRaiseTo(true) && ApplicationLoader.isScreenOn && !inputFieldHasText && allowStartRecord && raiseChat != null && !callInProgress;
-        final boolean allowListening = SharedConfig.enabledRaiseTo(false) && playingMessageObject != null && (playingMessageObject.isVoice() || playingMessageObject.isRoundVideo());
+        LagramConfig.ensureLoaded();
+        final boolean allowListening = !LagramConfig.disableProximitySensor && SharedConfig.enabledRaiseTo(false) && playingMessageObject != null && (playingMessageObject.isVoice() || playingMessageObject.isRoundVideo());
         final boolean proximityDetected = proximityTouched;
         final boolean accelerometerDetected = raisedToBack == minCount || accelerometerVertical || System.currentTimeMillis() - lastAccelerometerDetected < 60;
         final boolean alreadyPlaying = useFrontSpeaker || raiseToEarRecord;

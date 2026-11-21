@@ -6460,6 +6460,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 if (isPinnedChat || drawSideButton == 1 && (messageObject.messageOwner.fwd_from != null && !messageObject.isOutOwner() && messageObject.messageOwner.fwd_from.saved_from_peer != null && messageObject.getDialogId() == UserConfig.getInstance(currentAccount).getClientUserId() || messageObject.isSaved)) {
                     drawSideButton = 2;
                 }
+                org.telegram.messenger.LagramConfig.ensureLoaded();
+                if (drawSideButton == 1 && org.telegram.messenger.LagramConfig.hideShareButtonInChannels) {
+                    drawSideButton = 0;
+                }
             }
             drawSummarizeButton = TranslateController.isSummarizable(messageObject);
             if (isCompactMode()) {
@@ -8054,6 +8058,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                                     maxPhotoWidth = (int) (AndroidUtilities.getMinTabletSide() * 0.5f);
                                 } else {
                                     maxPhotoWidth = (int) (getParentWidth() * 0.5f);
+                                }
+                                if (documentAttachType == DOCUMENT_ATTACH_TYPE_STICKER) {
+                                    org.telegram.messenger.LagramConfig.ensureLoaded();
+                                    if (org.telegram.messenger.LagramConfig.stickerSize != 14) {
+                                        float scale = org.telegram.messenger.LagramConfig.stickerSize / 14.0f;
+                                        maxPhotoWidth = Math.max(dp(48), Math.round(maxPhotoWidth * scale));
+                                    }
                                 }
                             } else if (documentAttachType == DOCUMENT_ATTACH_TYPE_ROUND) {
                                 maxPhotoWidth = AndroidUtilities.roundMessageSize;

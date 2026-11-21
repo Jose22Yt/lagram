@@ -338,7 +338,15 @@ public class FileUploadOperation {
                 }
                 maxRequestsCount = Math.max(1, (slowNetwork ? maxUploadingSlowNetworkKBytes : maxUploadingKBytes) / uploadChunkSize);
                 // TDLib uploads premium files over 8 sessions.
-                uploadConnectionsCount = AccountInstance.getInstance(currentAccount).getUserConfig().isPremium() ? ConnectionsManager.UploadConnectionsCountPremium : 4;
+                LagramConfig.ensureLoaded();
+                if (LagramConfig.turboUploads) {
+                    uploadConnectionsCount = ConnectionsManager.UploadConnectionsCountPremium;
+                    if (!slowNetwork) {
+                        maxRequestsCount = Math.max(maxRequestsCount, 8);
+                    }
+                } else {
+                    uploadConnectionsCount = AccountInstance.getInstance(currentAccount).getUserConfig().isPremium() ? ConnectionsManager.UploadConnectionsCountPremium : 4;
+                }
 
                 if (isEncrypted) {
                     freeRequestIvs = new ArrayList<>(maxRequestsCount);

@@ -861,9 +861,19 @@ public class FileLoadOperation {
         if (useDownloadByteBudget) {
             boolean premium = UserConfig.getInstance(currentAccount).isPremium();
             LagramConfig.ensureLoaded();
-            downloadConnectionsCount = LagramConfig.turboDownloads ? 4 : (premium ? ConnectionsManager.DownloadConnectionsCount : 2);
-            int byteBudget = (premium ? 16 : 2) * 1024 * 1024;
-            currentMaxDownloadRequests = byteBudget / currentDownloadChunkSize;
+            if (LagramConfig.downloadSpeedBoost == LagramConfig.DOWNLOAD_BOOST_EXTREME) {
+                downloadConnectionsCount = 8;
+                int byteBudget = 16 * 1024 * 1024;
+                currentMaxDownloadRequests = byteBudget / currentDownloadChunkSize;
+            } else if (LagramConfig.downloadSpeedBoost == LagramConfig.DOWNLOAD_BOOST_FAST) {
+                downloadConnectionsCount = 4;
+                int byteBudget = (premium ? 16 : 8) * 1024 * 1024;
+                currentMaxDownloadRequests = byteBudget / currentDownloadChunkSize;
+            } else {
+                downloadConnectionsCount = premium ? ConnectionsManager.DownloadConnectionsCount : 2;
+                int byteBudget = (premium ? 16 : 2) * 1024 * 1024;
+                currentMaxDownloadRequests = byteBudget / currentDownloadChunkSize;
+            }
         }
     }
 

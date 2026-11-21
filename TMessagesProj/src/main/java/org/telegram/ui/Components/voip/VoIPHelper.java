@@ -75,6 +75,20 @@ public class VoIPHelper {
 	private static final int VOIP_SUPPORT_ID = 4244000;
 
 	public static void startCall(TLRPC.User user, boolean videoCall, boolean canVideoCall, final Activity activity, TLRPC.UserFull userFull, AccountInstance accountInstance) {
+		org.telegram.messenger.LagramConfig.ensureLoaded();
+		if (org.telegram.messenger.LagramConfig.confirmBeforeCall && activity != null) {
+			new AlertDialog.Builder(activity)
+					.setTitle(LocaleController.getString(R.string.LagramConfirmCallTitle))
+					.setMessage(LocaleController.getString(R.string.LagramConfirmCallMessage))
+					.setPositiveButton(LocaleController.getString(R.string.Call), (dialog, which) -> startCallInternal(user, videoCall, canVideoCall, activity, userFull, accountInstance))
+					.setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+					.show();
+			return;
+		}
+		startCallInternal(user, videoCall, canVideoCall, activity, userFull, accountInstance);
+	}
+
+	private static void startCallInternal(TLRPC.User user, boolean videoCall, boolean canVideoCall, final Activity activity, TLRPC.UserFull userFull, AccountInstance accountInstance) {
 		if (accountInstance == null ? MessagesController.getInstance(UserConfig.selectedAccount).isFrozen() : accountInstance.getMessagesController().isFrozen()) {
 			AccountFrozenAlert.show(accountInstance == null ? UserConfig.selectedAccount : accountInstance.getCurrentAccount());
 			return;

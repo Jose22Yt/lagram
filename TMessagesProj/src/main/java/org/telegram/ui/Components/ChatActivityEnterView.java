@@ -3186,8 +3186,11 @@ lagramGlassFactory = factory;
                         if (recordAudioVideoRunnableStarted) {
                             AndroidUtilities.cancelRunOnUIThread(recordAudioVideoRunnable);
                             if (sendVoiceEnabled && sendRoundEnabled) {
-                                delegate.onSwitchRecordMode(!isInVideoMode());
-                                setRecordVideoButtonVisible(!isInVideoMode(), true);
+                                LagramConfig.ensureLoaded();
+                                if (!LagramConfig.disableVoiceVideoToggle) {
+                                    delegate.onSwitchRecordMode(!isInVideoMode());
+                                    setRecordVideoButtonVisible(!isInVideoMode(), true);
+                                }
                             } else {
                                 delegate.needShowMediaBanHint();
                             }
@@ -12854,12 +12857,26 @@ lagramGlassFactory = factory;
     @Override
     public void onStickerSelected(TLRPC.Document sticker, String query, Object parent, MessageObject.SendAnimationData sendAnimationData, boolean clearsInputField, boolean notify, int scheduleDate, int scheduleRepeatPeriod) {
         if (isLiveComment) return;
+        LagramConfig.ensureLoaded();
+        if (LagramConfig.confirmBeforeSendSticker && parentActivity != null) {
+            new AlertDialog.Builder(parentActivity, resourcesProvider)
+                    .setTitle(LocaleController.getString(R.string.LagramConfirmStickerTitle))
+                    .setMessage(LocaleController.getString(R.string.LagramConfirmStickerMessage))
+                    .setPositiveButton(LocaleController.getString(R.string.Send), (dialog, which) -> onStickerSelectedInternal(sticker, query, parent, sendAnimationData, clearsInputField, notify, scheduleDate, scheduleRepeatPeriod))
+                    .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                    .show();
+            return;
+        }
+        onStickerSelectedInternal(sticker, query, parent, sendAnimationData, clearsInputField, notify, scheduleDate, scheduleRepeatPeriod);
+    }
+
+    private void onStickerSelectedInternal(TLRPC.Document sticker, String query, Object parent, MessageObject.SendAnimationData sendAnimationData, boolean clearsInputField, boolean notify, int scheduleDate, int scheduleRepeatPeriod) {
         if (replyingQuote != null && parentFragment != null && replyingQuote.outdated) {
             parentFragment.showQuoteMessageUpdate();
             return;
         }
         if (isInScheduleMode() && scheduleDate == 0) {
-            AlertsCreator.createScheduleDatePickerDialog(parentActivity, parentFragment.getDialogId(), (n, s, r) -> onStickerSelected(sticker, query, parent, sendAnimationData, clearsInputField, n, s, r), resourcesProvider);
+            AlertsCreator.createScheduleDatePickerDialog(parentActivity, parentFragment.getDialogId(), (n, s, r) -> onStickerSelectedInternal(sticker, query, parent, sendAnimationData, clearsInputField, n, s, r), resourcesProvider);
         } else {
             AlertsCreator.ensurePaidMessageConfirmation(currentAccount, dialog_id, 1, stars -> {
                 final Runnable runnable = () -> {

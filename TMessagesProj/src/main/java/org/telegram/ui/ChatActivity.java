@@ -2004,6 +2004,34 @@ public class ChatActivity extends BaseFragment implements
             } else {
                 return;
             }
+            org.telegram.messenger.LagramConfig.ensureLoaded();
+            int dtAction = org.telegram.messenger.LagramConfig.doubleTapAction;
+            if (dtAction == org.telegram.messenger.LagramConfig.DOUBLE_TAP_NONE) {
+                return;
+            } else if (dtAction == org.telegram.messenger.LagramConfig.DOUBLE_TAP_REPLY) {
+                showFieldPanelForReply(messageObject);
+                return;
+            } else if (dtAction == org.telegram.messenger.LagramConfig.DOUBLE_TAP_COPY) {
+                selectedObject = messageObject;
+                processSelectedOption(OPTION_COPY);
+                return;
+            } else if (dtAction == org.telegram.messenger.LagramConfig.DOUBLE_TAP_FORWARD) {
+                selectedObject = messageObject;
+                processSelectedOption(OPTION_FORWARD);
+                return;
+            } else if (dtAction == org.telegram.messenger.LagramConfig.DOUBLE_TAP_EDIT) {
+                if (messageObject.canEditMessage(currentChat)) {
+                    selectedObject = messageObject;
+                    processSelectedOption(OPTION_EDIT);
+                }
+                return;
+            } else if (dtAction == org.telegram.messenger.LagramConfig.DOUBLE_TAP_SAVE) {
+                ArrayList<MessageObject> list = new ArrayList<>();
+                list.add(messageObject);
+                getSendMessagesHelper().sendMessage(list, getUserConfig().getClientUserId(), false, false, true, 0, 0, null, -1, 0, 0, null);
+                BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.raw.contact_check, LocaleController.getString(R.string.FwdMessageToSavedMessages)).show();
+                return;
+            }
             if (messageObject.isSecret() || !messageObject.canSetReaction() || messageObject.isExpiredStory() || messageObject.type == MessageObject.TYPE_JOINED_CHANNEL) {
                 return;
             }
@@ -6855,6 +6883,10 @@ public class ChatActivity extends BaseFragment implements
                     if (searchOtherButton != null && searchOtherButton.getVisibility() == View.VISIBLE && isKeyboardVisible()) {
                         AndroidUtilities.hideKeyboard(getParentActivity().getCurrentFocus());
                     }
+                    org.telegram.messenger.LagramConfig.ensureLoaded();
+                    if (org.telegram.messenger.LagramConfig.hideKeyboardOnScroll && newState == RecyclerView.SCROLL_STATE_DRAGGING && isKeyboardVisible() && getParentActivity() != null && getParentActivity().getCurrentFocus() != null) {
+                        AndroidUtilities.hideKeyboard(getParentActivity().getCurrentFocus());
+                    }
                     if (newState == RecyclerView.SCROLL_STATE_SETTLING) {
                         wasManualScroll = true;
                         scrollingChatListView = true;
@@ -11653,6 +11685,10 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private void animateToNextChat() {
+        org.telegram.messenger.LagramConfig.ensureLoaded();
+        if (org.telegram.messenger.LagramConfig.disableNextChannelJump) {
+            return;
+        }
         if (pullingDownDrawable == null) {
             return;
         }
@@ -30876,6 +30912,13 @@ public class ChatActivity extends BaseFragment implements
     public void onPause() {
         super.onPause();
         scrolling = false;
+        org.telegram.messenger.LagramConfig.ensureLoaded();
+        if (org.telegram.messenger.LagramConfig.pauseVideoOnMinimize) {
+            MessageObject playing = MediaController.getInstance().getPlayingMessageObject();
+            if (playing != null && (playing.isVideo() || playing.isRoundVideo())) {
+                MediaController.getInstance().pauseMessage(playing);
+            }
+        }
         if (scrimPopupWindow != null) {
             scrimPopupWindow.setPauseNotifications(false);
             closeMenu();

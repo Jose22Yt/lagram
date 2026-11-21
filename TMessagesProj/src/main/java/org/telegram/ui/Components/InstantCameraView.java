@@ -144,7 +144,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
     private ImageView muteImageView;
     private float progress;
     private CameraInfo selectedCamera;
-    private boolean isFrontface = true;
+    private boolean isFrontface = !org.telegram.messenger.LagramConfig.rearCameraForRoundVideo;
     private volatile boolean cameraReady;
     private AnimatorSet muteAnimation;
     private TLRPC.InputFile file;
@@ -737,7 +737,8 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         selectedCamera = null;
         if (!fromPaused) {
             if (!useCamera2) {
-                isFrontface = true;
+                org.telegram.messenger.LagramConfig.ensureLoaded();
+                isFrontface = !org.telegram.messenger.LagramConfig.rearCameraForRoundVideo;
             }
             updateFlash();
             recordedTime = 0;
