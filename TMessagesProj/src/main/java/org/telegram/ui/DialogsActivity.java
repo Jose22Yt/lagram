@@ -16,6 +16,7 @@ import static org.telegram.messenger.LocaleController.formatPluralStringComma;
 import static org.telegram.messenger.LocaleController.formatString;
 import static org.telegram.messenger.LocaleController.getString;
 import static org.telegram.ui.Components.AlertsCreator.createClearOrDeleteDialogsAlert;
+import org.telegram.messenger.LagramConfig;
 
 import android.Manifest;
 import android.animation.Animator;
@@ -6799,8 +6800,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     selectWithStableId = true;
                 }
                 filterTabsView.removeTabs();
+                LagramConfig.ensureLoaded();
                 for (int a = 0, N = filters.size(); a < N; a++) {
                     if (filters.get(a).isDefault()) {
+                        if (LagramConfig.hideAllChatsFolder && N > 1) {
+                            continue;
+                        }
                         filterTabsView.addTab(a, 0, LocaleController.getString(R.string.FilterAllChats), null, false, true, filters.get(a).locked);
                     } else {
                         final MessagesController.DialogFilter filter = filters.get(a);
@@ -12436,6 +12441,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             onlySelfStories = getStoriesController().hasOnlySelfStories();
         }
 
+        LagramConfig.ensureLoaded();
+        if (LagramConfig.hideStories) {
+            onlySelfStories = false;
+            newVisibility = false;
+        }
         hasOnlySlefStories = onlySelfStories;
 
         boolean oldStoriesCellVisibility = dialogStoriesCellVisible;

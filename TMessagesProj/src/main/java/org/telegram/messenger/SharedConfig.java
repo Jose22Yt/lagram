@@ -1645,6 +1645,10 @@ public class SharedConfig {
 
     @PerformanceClass
     public static int getDevicePerformanceClass() {
+        LagramConfig.ensureLoaded();
+        if (LagramConfig.forcePerformanceClass >= 0) {
+            return LagramConfig.forcePerformanceClass;
+        }
         if (overrideDevicePerformanceClass != -1) {
             return overrideDevicePerformanceClass;
         }

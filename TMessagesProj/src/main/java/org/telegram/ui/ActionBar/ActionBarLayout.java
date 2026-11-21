@@ -12,6 +12,7 @@ import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.dpf2;
 import static org.telegram.messenger.AndroidUtilities.lerp;
 import static org.telegram.messenger.Utilities.clamp01;
+import org.telegram.messenger.LagramConfig;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -1944,7 +1945,15 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                     dt = 18;
                 }
                 lastFrameTime = newTime;
-                float duration = preview && open ? 110.0f : 85.0f;
+                LagramConfig.ensureLoaded();
+                float duration;
+                if (LagramConfig.animationSpeed == LagramConfig.ANIM_SPEED_NORMAL) {
+                    duration = preview && open ? 190.0f : 150.0f;
+                } else if (LagramConfig.animationSpeed == LagramConfig.ANIM_SPEED_INSTANT) {
+                    duration = preview && open ? 45.0f : 35.0f;
+                } else {
+                    duration = preview && open ? 110.0f : 85.0f;
+                }
                 animationProgress += dt / duration;
                 if (animationProgress > 1.0f) {
                     animationProgress = 1.0f;
@@ -2284,7 +2293,9 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 currentAnimation = new AnimatorSet();
                 currentAnimation.playTogether(animators);
                 currentAnimation.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
-                currentAnimation.setDuration(110);
+                LagramConfig.ensureLoaded();
+                int animDur = LagramConfig.animationSpeed == LagramConfig.ANIM_SPEED_NORMAL ? 200 : (LagramConfig.animationSpeed == LagramConfig.ANIM_SPEED_INSTANT ? 45 : 110);
+                currentAnimation.setDuration(animDur);
                 currentAnimation.addListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
@@ -2362,7 +2373,9 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                                     if (delayedAnimationResumed) {
                                         delayedOpenAnimationRunnable.run();
                                     } else {
-                                        AndroidUtilities.runOnUIThread(delayedOpenAnimationRunnable, 110);
+                                        LagramConfig.ensureLoaded();
+                                        long delayMs = LagramConfig.animationSpeed == LagramConfig.ANIM_SPEED_NORMAL ? 200 : (LagramConfig.animationSpeed == LagramConfig.ANIM_SPEED_INSTANT ? 45 : 110);
+                                        AndroidUtilities.runOnUIThread(delayedOpenAnimationRunnable, delayMs);
                                     }
                                 }
                             }

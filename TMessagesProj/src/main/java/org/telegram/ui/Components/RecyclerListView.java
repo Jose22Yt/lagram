@@ -3601,11 +3601,19 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     }
 
     int getSectionColorForDecoration() {
-        return Theme.isCurrentThemeDark() ? 0xFF1C1F22 : 0xFFF2F4F7;
+        LagramConfig.ensureLoaded();
+        if (LagramConfig.amoledSettingsBackdrop) {
+            return Theme.isCurrentThemeDark() ? 0xFF1C1F22 : 0xFFF2F4F7;
+        }
+        return Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider);
     }
 
     int getSectionsBackgroundColorForDecoration() {
-        return Theme.isCurrentThemeDark() ? 0xFF000000 : 0xFFFFFFFF;
+        LagramConfig.ensureLoaded();
+        if (LagramConfig.amoledSettingsBackdrop) {
+            return Theme.isCurrentThemeDark() ? 0xFF000000 : 0xFFFFFFFF;
+        }
+        return ColorUtils.setAlphaComponent(Theme.getColor(bitmapSectionsBackgroundColorKey, resourcesProvider), 0xFF);
     }
 
     @Override

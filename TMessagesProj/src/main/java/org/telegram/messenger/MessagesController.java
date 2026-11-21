@@ -23878,13 +23878,18 @@ public class MessagesController extends BaseController implements NotificationCe
 
     private HashMap<Long, ChannelRecommendations> cachedChannelRecommendations;
     public ChannelRecommendations getCachedChannelRecommendations(long dialogId) {
-        if (cachedChannelRecommendations == null) {
+        LagramConfig.ensureLoaded();
+        if (LagramConfig.hideSimilarChannels || cachedChannelRecommendations == null) {
             return null;
         }
         return cachedChannelRecommendations.get(dialogId);
     }
 
     public ChannelRecommendations getChannelRecommendations(long dialogId) {
+        LagramConfig.ensureLoaded();
+        if (LagramConfig.hideSimilarChannels) {
+            return null;
+        }
         if (cachedChannelRecommendations == null) {
             cachedChannelRecommendations = new HashMap<>();
         }

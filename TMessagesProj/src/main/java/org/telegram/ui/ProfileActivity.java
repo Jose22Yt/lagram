@@ -20,6 +20,7 @@ import static org.telegram.messenger.LocaleController.getString;
 import static org.telegram.ui.Stars.StarGiftSheet.replaceUnderstood;
 import static org.telegram.ui.Stars.StarsIntroActivity.formatStarsAmountShort;
 import static org.telegram.ui.bots.AffiliateProgramFragment.percents;
+import org.telegram.messenger.LagramConfig;
 
 import android.Manifest;
 import android.animation.Animator;
@@ -666,6 +667,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int infoHeaderRowEmpty;
     private int infoEndRowEmpty;
     private int phoneRow;
+    private int idDcRow;
     private int noteRow;
     private int locationRow;
     private int userInfoRow;
@@ -7549,6 +7551,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             return true;
         } else if (position == noteRow) {
 
+        } else if (position == idDcRow) {
+            String idText = getFormattedPeerId();
+            if (!TextUtils.isEmpty(idText)) {
+                AndroidUtilities.addToClipboard(idText);
+                BulletinFactory.of(this).createCopyBulletin(LocaleController.getString(R.string.LagramIdCopied)).show();
+            }
+            return true;
         } else if (position == phoneRow || position == numberRow) {
             if (editRow(view, position)) return true;
 
@@ -10879,6 +10888,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         infoHeaderRowEmpty = -1;
         infoEndRowEmpty = -1;
         phoneRow = -1;
+        idDcRow = -1;
         noteRow = -1;
         userInfoRow = -1;
         locationRow = -1;
@@ -11072,6 +11082,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (!isBot && (hasPhone || !hasInfo)) {
                     phoneRow = rowCount++;
                 }
+                LagramConfig.ensureLoaded();
+                if (LagramConfig.showIdAndDc && userId != 0) {
+                    idDcRow = rowCount++;
+                }
                 if (userInfo != null && !TextUtils.isEmpty(userInfo.about)) {
                     userInfoRow = rowCount++;
                 }
@@ -11236,6 +11250,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (ChatObject.isPublic(currentChat)) {
                     usernameRow = rowCount++;
                 }
+            }
+            LagramConfig.ensureLoaded();
+            if (LagramConfig.showIdAndDc && chatId != 0) {
+                idDcRow = rowCount++;
             }
             if (emptyRow < 0 && emptyRow2 < 0) {
                 if (hasMusic || hasBalance || peerColor != null || actionsView == null) {
@@ -13653,11 +13671,20 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
                             containsGift = !myProfile && today && !getMessagesController().premiumPurchaseBlocked();
                         }
+                    } else if (position == idDcRow) {
+                        String idText = getFormattedPeerId();
+                        int dcId = getPeerDcId();
+                        String label = dcId > 0 ? ("ID • DC" + dcId) : "ID";
+                        detailCell.setTextAndValue(idText != null ? idText : "", label, false);
                     } else if (position == phoneRow) {
                         String text;
                         TLRPC.User user = getMessagesController().getUser(userId);
                         String phoneNumber;
-                        if (user != null && !TextUtils.isEmpty(vcardPhone)) {
+                        LagramConfig.ensureLoaded();
+                        if (LagramConfig.hidePhoneNumber) {
+                            text = LocaleController.getString(R.string.PhoneHidden);
+                            phoneNumber = null;
+                        } else if (user != null && !TextUtils.isEmpty(vcardPhone)) {
                             text = PhoneFormat.getInstance().format("+" + vcardPhone);
                             phoneNumber = vcardPhone;
                         } else if (user != null && !TextUtils.isEmpty(user.phone)) {
@@ -14487,7 +14514,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (position == infoHeaderRow || position == membersHeaderRow || position == settingsSectionRow2 ||
                     position == numberSectionRow || position == helpHeaderRow || position == debugHeaderRow || position == botPermissionsHeader) {
                 return VIEW_TYPE_HEADER;
-            } else if (position == phoneRow || position == locationRow || position == numberRow || position == birthdayRow) {
+            } else if (position == phoneRow || position == idDcRow || position == locationRow || position == numberRow || position == birthdayRow) {
                 return VIEW_TYPE_TEXT_DETAIL;
             } else if (position == usernameRow || position == setUsernameRow) {
                 return VIEW_TYPE_TEXT_DETAIL_MULTILINE;
@@ -17210,5 +17237,36 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         keys.add(Theme.key_profile_title);
         keys.add(Theme.key_chat_lockIcon);
         keys.add(Theme.key_avatar_actionBarSelectorBlue);
+    }
+
+    private String getFormattedPeerId() {
+        LagramConfig.ensureLoaded();
+        if (userId != 0) {
+            return String.valueOf(userId);
+        } else if (chatId != 0) {
+            if (LagramConfig.idFormatBotApi) {
+                if (currentChat != null && ChatObject.isChannel(currentChat)) {
+                    return "-100" + chatId;
+                }
+                return "-" + chatId;
+            }
+            return String.valueOf(chatId);
+        }
+        return null;
+    }
+
+    private int getPeerDcId() {
+        if (userId != 0) {
+            TLRPC.User user = getMessagesController().getUser(userId);
+            if (user != null && user.photo != null && user.photo.dc_id > 0) {
+                return user.photo.dc_id;
+            }
+        } else if (chatId != 0) {
+            TLRPC.Chat chat = currentChat != null ? currentChat : getMessagesController().getChat(chatId);
+            if (chat != null && chat.photo != null && chat.photo.dc_id > 0) {
+                return chat.photo.dc_id;
+            }
+        }
+        return 0;
     }
 }

@@ -2499,6 +2499,15 @@ public class AndroidUtilities {
     }
 
     public static Typeface getTypeface(String assetPath) {
+        LagramConfig.ensureLoaded();
+        if (LagramConfig.useSystemFonts && assetPath != null && !assetPath.contains("mono")) {
+            boolean bold = assetPath.contains("medium") || assetPath.contains("rbold") || assetPath.contains("rextrabold");
+            boolean italic = assetPath.contains("italic");
+            if (bold && italic) return Typeface.defaultFromStyle(Typeface.BOLD_ITALIC);
+            if (bold) return Typeface.DEFAULT_BOLD;
+            if (italic) return Typeface.defaultFromStyle(Typeface.ITALIC);
+            return Typeface.DEFAULT;
+        }
         synchronized (typefaceCache) {
             if (!typefaceCache.containsKey(assetPath)) {
                 try {

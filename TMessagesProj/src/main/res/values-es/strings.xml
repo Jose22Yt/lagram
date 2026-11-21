@@ -1316,4 +1316,121 @@
     <string name="RemindDayYearAt">\'Recordar el\' d \'de\' MMM \'de\' yyyy \'a las\' HH:mm</string>
     <string name="BotsMenuTitle">Menu</string>
     <string name="Understood">👍 Entendido</string>
+
+    <!-- Ajustes de Lagram -->
+    <string name="LagramSettings">Ajustes de Lagram</string>
+    <string name="LagramCategoriesHeader">CATEGORÍAS</string>
+    <string name="LagramQuickGhostHeader">PRIVACIDAD RÁPIDA</string>
+    <string name="LagramBackupHeader">RESPALDO E INFORMACIÓN</string>
+    <string name="LagramCategoryAppearance">Apariencia e Interfaz</string>
+    <string name="LagramCategoryChats">Chats y Mensajes</string>
+    <string name="LagramCategoryPrivacy">Privacidad y Modo Fantasma</string>
+    <string name="LagramCategoryMedia">Multimedia y Red</string>
+    <string name="LagramCategoryGeneral">Rendimiento y General</string>
+    <string name="LagramExportSettings">Exportar ajustes al portapapeles</string>
+    <string name="LagramImportSettings">Importar ajustes desde portapapeles</string>
+    <string name="LagramResetSettings">Restablecer ajustes de Lagram</string>
+    <string name="LagramResetConfirmTitle">¿Restablecer ajustes de Lagram?</string>
+    <string name="LagramResetConfirmMessage">Todas las preferencias de Lagram volverán a sus valores por defecto.</string>
+    <string name="LagramExportedToast">Ajustes de Lagram copiados al portapapeles</string>
+    <string name="LagramImportedToast">Ajustes de Lagram importados correctamente</string>
+    <string name="LagramImportFailedToast">El portapapeles no contiene un JSON válido de Lagram</string>
+    <string name="LagramResetToast">Ajustes de Lagram restablecidos</string>
+    <string name="LagramAboutFooter">Lagram Turbo — Interfaz Liquid Glass, fluidez 120 Hz, Modo Fantasma y control total.</string>
+
+    <!-- Apariencia -->
+    <string name="LagramLiquidGlassHeader">LIQUID GLASS Y TEMA</string>
+    <string name="LagramIos27BottomBar">Barra inferior iOS 27 (3 píldoras)</string>
+    <string name="LagramAmoledSettings">Fondo AMOLED puro en ajustes</string>
+    <string name="LagramAnimationSpeed">Velocidad de animaciones</string>
+    <string name="LagramAnimNormal">Normal</string>
+    <string name="LagramAnimFast">Rápida (110 ms)</string>
+    <string name="LagramAnimInstant">Instantánea (45 ms)</string>
+    <string name="LagramUseSystemFonts">Usar fuente del sistema</string>
+    <string name="LagramUiVisibilityHeader">INTERFAZ LIMPIA</string>
+    <string name="LagramHideStories">Ocultar barra de Historias</string>
+    <string name="LagramHideAllChats">Ocultar pestaña \"Todos los chats\"</string>
+    <string name="LagramHidePhoneNumber">Ocultar número de teléfono</string>
+    <string name="LagramHideTelegramBloat">Ocultar Premium, Stars y Wallet en Ajustes</string>
+    <string name="LagramDetailsHeader">FORMATO Y PERFILES</string>
+    <string name="LagramShowSeconds">Mostrar segundos en la hora</string>
+    <string name="LagramShowIdAndDc">Mostrar ID y DC en perfiles</string>
+    <string name="LagramIdFormatBotApi">Usar formato Bot API (-100)</string>
+    <string name="LagramAppearanceInfo">Algunas opciones visuales como la fuente del sistema o el fondo AMOLED puro se aplican por completo al reabrir la pantalla o reiniciar Lagram.</string>
+    <string name="LagramIdCopied">ID copiado al portapapeles</string>
+
+    <!-- Chats -->
+    <string name="LagramChatGesturesHeader">GESTOS Y ACCIONES</string>
+    <string name="LagramDoubleTapAction">Doble toque en mensaje</string>
+    <string name="LagramDoubleTapReaction">Reacción rápida</string>
+    <string name="LagramDoubleTapReply">Responder</string>
+    <string name="LagramDoubleTapCopy">Copiar texto</string>
+    <string name="LagramDoubleTapForward">Reenviar</string>
+    <string name="LagramDoubleTapEdit">Editar</string>
+    <string name="LagramDoubleTapSave">Guardar en Mensajes guardados</string>
+    <string name="LagramDoubleTapNone">Desactivado</string>
+    <string name="LagramHideKeyboardOnScroll">Ocultar teclado al hacer scroll</string>
+    <string name="LagramDisableNextChannelJump">Desactivar salto al siguiente canal</string>
+    <string name="LagramForwardWithoutQuote">Reenviar sin autor por defecto</string>
+    <string name="LagramChatConfirmHeader">CONFIRMACIONES Y CONTROLES</string>
+    <string name="LagramConfirmBeforeCall">Confirmar antes de llamar</string>
+    <string name="LagramConfirmBeforeSendSticker">Confirmar antes de enviar sticker/GIF</string>
+    <string name="LagramDisableVoiceVideoToggle">Desactivar cambio rápido audio/video</string>
+    <string name="LagramDisableProximitySensor">Desactivar sensor de proximidad en audios</string>
+    <string name="LagramChatLayoutHeader">ELEMENTOS DEL CHAT</string>
+    <string name="LagramHideShareInChannels">Ocultar botón lateral de compartir en canales</string>
+    <string name="LagramStickerSize">Tamaño de stickers</string>
+    <string name="LagramConfirmCallTitle">¿Iniciar llamada?</string>
+    <string name="LagramConfirmCallMessage">¿Seguro que quieres iniciar esta llamada?</string>
+    <string name="LagramConfirmStickerTitle">¿Enviar sticker?</string>
+    <string name="LagramConfirmStickerMessage">¿Quieres enviar este sticker al chat?</string>
+
+    <!-- Multimedia y Red -->
+    <string name="LagramNetworkHeader">ACELERACIÓN DE RED</string>
+    <string name="LagramDownloadBoost">Aceleración de descargas</string>
+    <string name="LagramBoostOff">Normal</string>
+    <string name="LagramBoostFast">Rápida (4 conexiones)</string>
+    <string name="LagramBoostExtreme">Turbo Extrema (8 conexiones)</string>
+    <string name="LagramTurboUploads">Subidas paralelas Turbo</string>
+    <string name="LagramMediaHeader">CÁMARA Y REPRODUCCIÓN</string>
+    <string name="LagramSendPhotosHd">Enviar fotos en HD por defecto</string>
+    <string name="LagramRearCameraRound">Iniciar videomensajes en cámara trasera</string>
+    <string name="LagramPauseVideoMinimize">Pausar video al salir del chat</string>
+    <string name="LagramMediaInfo">Las descargas y subidas Turbo amplían las conexiones paralelas MTProto y el tamaño de bloque para archivos grandes.</string>
+
+    <!-- Rendimiento y General -->
+    <string name="LagramPerformanceHeader">RENDIMIENTO</string>
+    <string name="LagramHighRefreshRate">Hints de 120 Hz en scroll</string>
+    <string name="LagramForcePerfClass">Clase de rendimiento forzada</string>
+    <string name="LagramPerfAuto">Automática</string>
+    <string name="LagramPerfLow">Baja</string>
+    <string name="LagramPerfAverage">Media</string>
+    <string name="LagramPerfHigh">Alta (Máxima fluidez)</string>
+    <string name="LagramAntiBloatHeader">LIMPIEZA</string>
+    <string name="LagramDisableSponsored">Ocultar mensajes patrocinados</string>
+    <string name="LagramHideSimilarChannels">Ocultar canales similares recomendados</string>
+    <string name="LagramGeneralInfo">Forzar la clase de rendimiento Alta desbloquea todas las animaciones y efectos Liquid Glass en cualquier dispositivo.</string>
+
+    <!-- Privacidad y Modo Fantasma -->
+    <string name="LagramGhostModeHeader">MODO FANTASMA</string>
+    <string name="LagramGhostModeMaster">Activar Modo Fantasma</string>
+    <string name="LagramGhostDontReadMessages">No enviar confirmación de lectura</string>
+    <string name="LagramGhostDontReadStories">No marcar historias como vistas</string>
+    <string name="LagramGhostDontSendTyping">No enviar estado \"escribiendo / grabando\"</string>
+    <string name="LagramGhostDontSendOnline">No enviar estado \"En línea\"</string>
+    <string name="LagramGhostOfflineAfterSend">Pasar a desconectado tras enviar</string>
+    <string name="LagramGhostMarkReadOnSend">Marcar chat como leído al responder</string>
+    <string name="LagramHistoryHeader">HISTORIAL LOCAL (ANTI-BORRADO)</string>
+    <string name="LagramSaveDeletedMessages">Conservar mensajes eliminados</string>
+    <string name="LagramSaveEditedMessages">Guardar historial de ediciones</string>
+    <string name="LagramClearHistoryDb">Limpiar base de datos de historial local</string>
+    <string name="LagramHistoryClearedToast">Historial local limpiado</string>
+    <string name="LagramDeletedLabel">eliminado</string>
+    <string name="LagramEditHistoryMenu">Historial de ediciones</string>
+    <string name="LagramEditHistoryTitle">Historial de ediciones</string>
+    <string name="LagramEditHistoryEmpty">No hay versiones anteriores guardadas para este mensaje.</string>
+    <string name="LagramAntiRestrictHeader">ANTI-RESTRICCIONES</string>
+    <string name="LagramAllowScreenshots">Permitir capturas de pantalla</string>
+    <string name="LagramBypassNoForwards">Permitir copiar y guardar en chats protegidos</string>
+    <string name="LagramPrivacyInfo">El Modo Fantasma bloquea localmente los paquetes de lectura, escritura y conexión. El anti-borrado conserva mensajes eliminados mientras Lagram está activo.</string>
 </resources>
