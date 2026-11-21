@@ -13277,6 +13277,9 @@ lagramGlassFactory = factory;
         }
 
         emojiButton.setState(nextIcon, animated);
+        if (isChat && nextIcon != ChatActivityEnterViewAnimatedIconView.State.KEYBOARD) {
+            emojiButton.setImageResource(R.drawable.ic_lagram_ios27_sticker);
+        }
         onEmojiIconChanged(nextIcon);
     }
 
@@ -14822,11 +14825,12 @@ lagramGlassFactory = factory;
 
     int botCommandLastPosition = -1;
     int botCommandLastTop;
+    private boolean parentLinkedToThreePills;
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (isChat) {
-            android.view.ViewParent p = getParent(); while (p != null) { if (p instanceof ChatInputViewsContainer) { final ChatInputViewsContainer container = (ChatInputViewsContainer) p; container.splitIntoThreePills = true; container.pillResourcesProvider = resourcesProvider; break; } p = p.getParent(); } }
+        if (isChat && !parentLinkedToThreePills) {
+            android.view.ViewParent p = getParent(); while (p != null) { if (p instanceof ChatInputViewsContainer) { final ChatInputViewsContainer container = (ChatInputViewsContainer) p; container.splitIntoThreePills = true; container.pillResourcesProvider = resourcesProvider; parentLinkedToThreePills = true; break; } p = p.getParent(); } }
         int wasHeight = textFieldContainer.getMeasuredHeight();
         if (botCommandsMenuButton != null && botCommandsMenuButton.getTag() != null) {
             botCommandsMenuButton.measure(widthMeasureSpec, heightMeasureSpec);
