@@ -2691,7 +2691,9 @@ lagramGlassFactory = factory;
         };
         textFieldContainer.setClipChildren(false);
         textFieldContainer.setClipToPadding(false);
-        textFieldContainer.setPadding(isChat ? dp(20) : 0, dp(1), isChat ? dp(20) : 0, 0);
+        LagramConfig.ensureLoaded();
+        final boolean ios27BottomBar = isChat && LagramConfig.ios27BottomBar;
+        textFieldContainer.setPadding(ios27BottomBar ? dp(20) : 0, dp(1), ios27BottomBar ? dp(20) : 0, 0);
         addView(textFieldContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.BOTTOM, 0, 1, 0, 0));
 
         FrameLayout frameLayout = messageEditTextContainer = new FrameLayout(context) {
@@ -2735,7 +2737,7 @@ lagramGlassFactory = factory;
             }
         };
         frameLayout.setClipChildren(false);
-        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 45 : 0, 0, isChat ? 45 : DEFAULT_HEIGHT, 0));
+        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, ios27BottomBar ? 45 : 0, 0, ios27BottomBar ? 45 : DEFAULT_HEIGHT, 0));
 
         emojiButton = new ChatActivityEnterViewAnimatedIconView(context) {
             @Override
@@ -2799,7 +2801,7 @@ lagramGlassFactory = factory;
             } else {
             messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.LEFT, 2, 0, 0, 0));
         }
-        if (isChat) { ScaleStateListAnimator.apply(emojiButton, 0.08f, 1.5f); }
+        if (ios27BottomBar) { ScaleStateListAnimator.apply(emojiButton, 0.08f, 1.5f); }
         setEmojiButtonImage(false, false);
 
         deleteRichDraftButton = new ImageView(context);
@@ -3297,7 +3299,7 @@ lagramGlassFactory = factory;
 
             @Override
             protected void dispatchDraw(@NonNull Canvas canvas) {
-                if (!audioVideoButtonContainerForbidden && !isChat) {
+                if (!audioVideoButtonContainerForbidden && !ios27BottomBar) {
                     float s = 1;
                     if (expandStickersButton != null) {
                         if (expandStickersButton.getVisibility() == View.VISIBLE) {
@@ -3326,9 +3328,9 @@ lagramGlassFactory = factory;
             }
         };
         audioVideoButtonContainer.setSoundEffectsEnabled(false);
-        sendButtonContainer.addView(audioVideoButtonContainer, isChat ? LayoutHelper.createFrame(38, 38, Gravity.RIGHT | Gravity.BOTTOM, 0, 0, 0, 2) : LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.RIGHT | Gravity.BOTTOM));
+        sendButtonContainer.addView(audioVideoButtonContainer, ios27BottomBar ? LayoutHelper.createFrame(38, 38, Gravity.RIGHT | Gravity.BOTTOM, 0, 0, 0, 2) : LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.RIGHT | Gravity.BOTTOM));
         audioVideoButtonContainer.setFocusable(true);
-        if (isChat) { ScaleStateListAnimator.apply(audioVideoButtonContainer, 0.08f, 1.5f); }
+        if (ios27BottomBar) { ScaleStateListAnimator.apply(audioVideoButtonContainer, 0.08f, 1.5f); }
         audioVideoButtonContainer.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
 
 //        audioVideoButtonContainer.setOnTouchListener((view, motionEvent) -> {
@@ -3510,9 +3512,9 @@ lagramGlassFactory = factory;
             private final Rect tmpRectF = new Rect();
             @Override
             public void draw(@NonNull Canvas canvas) {
-                if (audioVideoButtonContainerForbidden || isChat) {
+                if (audioVideoButtonContainerForbidden || ios27BottomBar) {
                     tmpRectF.set(0, 0, getMeasuredWidth(), getMeasuredHeight());
-                    tmpRectF.inset(dp(isChat ? 8.5f : 7.5f), dp(isChat ? 8.5f : 7.5f));
+                    tmpRectF.inset(dp(ios27BottomBar ? 8.5f : 7.5f), dp(ios27BottomBar ? 8.5f : 7.5f));
                     Drawable d = getCurrentState() == State.VIDEO ? cameraOutline : micOutline;
                     d.setBounds(tmpRectF);
                     d.draw(canvas);
@@ -3524,9 +3526,9 @@ lagramGlassFactory = factory;
         audioVideoSendButton.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 //        audioVideoSendButton.setFocusable(true);
 //        audioVideoSendButton.setAccessibilityDelegate(mediaMessageButtonsDelegate);
-        padding = dp(isChat ? 8.5f : 10f);
+        padding = dp(ios27BottomBar ? 8.5f : 10f);
         audioVideoSendButton.setPadding(padding, padding, padding, padding);
-        audioVideoButtonContainer.addView(audioVideoSendButton, LayoutHelper.createFrame(isChat ? 38 : DEFAULT_HEIGHT, isChat ? 38 : DEFAULT_HEIGHT, Gravity.CENTER));
+        audioVideoButtonContainer.addView(audioVideoSendButton, LayoutHelper.createFrame(ios27BottomBar ? 38 : DEFAULT_HEIGHT, ios27BottomBar ? 38 : DEFAULT_HEIGHT, Gravity.CENTER));
 
         cancelBotButton = new ImageView(context);
         cancelBotButton.setVisibility(INVISIBLE);
@@ -5942,7 +5944,8 @@ lagramGlassFactory = factory;
         messageEditText.setMaxLines(6);
         messageEditText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
         messageEditText.setGravity(Gravity.BOTTOM);
-        messageEditText.setPadding(0, dp(isChat ? 7 : 9), 0, dp(isChat ? 7 : 10));
+        LagramConfig.ensureLoaded();
+        messageEditText.setPadding(0, dp((isChat && LagramConfig.ios27BottomBar) ? 7 : 9), 0, dp((isChat && LagramConfig.ios27BottomBar) ? 7 : 10));
         messageEditText.setBackgroundDrawable(null);
         ThemeBind.textColor(messageEditText, Theme.key_chat_messagePanelText, resourcesProvider);
         ThemeBind.linkTextColor(messageEditText, Theme.key_chat_messageLinkOut, resourcesProvider);
@@ -14840,8 +14843,8 @@ lagramGlassFactory = factory;
             while (p != null) {
                 if (p instanceof ChatInputViewsContainer) {
                     final ChatInputViewsContainer container = (ChatInputViewsContainer) p;
-                    container.splitIntoThreePills = LagramConfig.ios27BottomBar;
-                    container.pillResourcesProvider = LagramConfig.ios27BottomBar ? resourcesProvider : null;
+                    container.splitIntoThreePills = isChat && LagramConfig.ios27BottomBar;
+                    container.pillResourcesProvider = (isChat && LagramConfig.ios27BottomBar) ? resourcesProvider : null;
                     parentLinkedToThreePills = true;
                     break;
                 }
