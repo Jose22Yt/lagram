@@ -193,7 +193,8 @@ public class BlurredBackgroundProviderImpl {
                     if (!checkBlurEnabled(resourcesProvider)) {
                         return ColorUtils.setAlphaComponent(Theme.getColor(Theme.key_chat_messagePanelBackground, r), 255);
                     }
-
+            if       (isDark) return Theme.multAlpha(0xFF23252A, 0.74f);
+                    
                     final float alpha = LiteMode.isEnabled(LiteMode.FLAG_LIQUID_GLASS) ? (isDark ? 0.68f : 0.82f) : (isDark ? 0.64f : 0.76f);
                     final int colorBg = Theme.getColor(Theme.key_chat_topPanelBackground, r);
                     return Theme.multAlpha(colorBg, alpha);
@@ -254,7 +255,7 @@ public class BlurredBackgroundProviderImpl {
                         return ColorUtils.setAlphaComponent(Theme.getColor(isDark ?
                             Theme.key_actionBarDefault : Theme.key_chat_topPanelBackground, r), 255);
                     }
-
+            if (isDark) return Theme.multAlpha(0xFF23252A, 0.74f);
                     final float alpha = LiteMode.isEnabled(LiteMode.FLAG_LIQUID_GLASS) ? 0.85f : 0.76f;
                     final int colorBg = Theme.getColor(Theme.key_chat_topPanelBackground, r);
                     return Theme.multAlpha(colorBg, alpha);
