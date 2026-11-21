@@ -41,7 +41,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BuildVars;
-import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.LiteMode;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
@@ -157,10 +156,6 @@ public class LiteModeSettingsActivity extends BaseFragment {
                     SharedConfig.setAnimationsEnabled(!animations);
                     editor.commit();
                     ((TextCell) view).setChecked(!animations);
-                } else if (item.type == SWITCH_TYPE_HIGH_REFRESH_RATE_SCROLL) {
-                    LagramConfig.ensureLoaded();
-                    LagramConfig.toggleHighRefreshRateScroll();
-                    ((TextCell) view).setChecked(LagramConfig.highRefreshRateScroll);
                 }
             }
             GlassEngine.getCurrentGlassSettings();
@@ -300,7 +295,6 @@ public class LiteModeSettingsActivity extends BaseFragment {
 
         items.add(Item.asSwitch(LocaleController.getString(R.string.LiteSmoothTransitions), SWITCH_TYPE_SMOOTH_TRANSITIONS));
         items.add(Item.asInfo(LocaleController.getString("LiteSmoothTransitionsInfo")));
-        items.add(Item.asSwitch(LagramConfig.withNewBadge("Hints de 120 Hz en scroll"), SWITCH_TYPE_HIGH_REFRESH_RATE_SCROLL));
         
         adapter.setItems(oldItems, items);
     }
@@ -359,7 +353,6 @@ public class LiteModeSettingsActivity extends BaseFragment {
     private static final int VIEW_TYPE_SWITCH2 = 5;
 
     public static final int SWITCH_TYPE_SMOOTH_TRANSITIONS = 1;
-    public static final int SWITCH_TYPE_HIGH_REFRESH_RATE_SCROLL = 2;
     
     private class Adapter extends AdapterWithDiffUtils {
 
@@ -433,9 +426,6 @@ public class LiteModeSettingsActivity extends BaseFragment {
                     SharedPreferences preferences = MessagesController.getGlobalMainSettings();
                     boolean animations = preferences.getBoolean("view_animations", true);
                     textCell.setTextAndCheck(item.text, animations, false);
-                } else if (item.type == SWITCH_TYPE_HIGH_REFRESH_RATE_SCROLL) {
-                    LagramConfig.ensureLoaded();
-                    textCell.setTextAndCheck(item.text, LagramConfig.highRefreshRateScroll, false);
             }
         }
         }
