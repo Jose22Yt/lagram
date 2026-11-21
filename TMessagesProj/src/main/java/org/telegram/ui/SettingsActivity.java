@@ -506,16 +506,6 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        updateColors();
-        setInfo();
-        if (listView != null && listView.adapter != null) {
-            listView.adapter.update(true);
-        }
-    }
-
-    @Override
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.starBalanceUpdated) {
             setInfo();
@@ -629,6 +619,8 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
     @Override
     public void onResume() {
         super.onResume();
+        updateColors();
+        setInfo();
         if (listView.adapter != null) {
             listView.adapter.update(false);
         }
