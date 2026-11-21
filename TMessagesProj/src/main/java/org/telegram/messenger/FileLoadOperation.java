@@ -299,13 +299,16 @@ public class FileLoadOperation {
     }
 
     private void updateParams() {
-        if (!forceSmallChunk) {
+        LagramConfig.ensureLoaded();
+        if (!forceSmallChunk && LagramConfig.turboDownloads) {
             downloadChunkSizeBig = 1024 * 512;
             maxDownloadRequests = 8;
+            downloadConnectionsCount = 4;
             maxDownloadRequestsBig = 8;
         } else {
             downloadChunkSizeBig = 1024 * 128;
             maxDownloadRequests = 4;
+            downloadConnectionsCount = 2;
             maxDownloadRequestsBig = 4;
         }
         if (isStory) {
@@ -857,7 +860,8 @@ public class FileLoadOperation {
                 totalBytesCount > 0 && key == null && !encryptFile && !isPreloadVideoOperation && preloadPrefixSize == 0;
         if (useDownloadByteBudget) {
             boolean premium = UserConfig.getInstance(currentAccount).isPremium();
-            downloadConnectionsCount = premium ? ConnectionsManager.DownloadConnectionsCount : 2;
+            LagramConfig.ensureLoaded();
+            downloadConnectionsCount = LagramConfig.turboDownloads ? 4 : (premium ? ConnectionsManager.DownloadConnectionsCount : 2);
             int byteBudget = (premium ? 16 : 2) * 1024 * 1024;
             currentMaxDownloadRequests = byteBudget / currentDownloadChunkSize;
         }
