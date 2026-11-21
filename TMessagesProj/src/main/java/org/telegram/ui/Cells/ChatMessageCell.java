@@ -15596,7 +15596,11 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             }
             return LocaleController.formatSeenDate(date);
         }
-        return LocaleController.getInstance().getFormatterDay().format((long) (message.messageOwner.date) * 1000);
+        String formattedTime = LocaleController.getInstance().getFormatterDay().format((long) (message.messageOwner.date) * 1000);
+        if (org.telegram.messenger.LagramMessageHistoryDb.isMessageDeleted(current.currentAccount, current.getDialogId(), current.getId())) {
+            return getString(R.string.LagramDeletedLabel) + " • " + formattedTime;
+        }
+        return formattedTime;
     }
 
     void measureTime(MessageObject messageObject) {

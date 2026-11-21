@@ -74,6 +74,10 @@ public class FlagSecureReason {
     }
 
     public static boolean isSecuredNow(Window window) {
+        LagramConfig.ensureLoaded();
+        if (LagramConfig.allowScreenshots) {
+            return false;
+        }
         return currentSecureReasons != null && currentSecureReasons.get(window) != null;
     }
 

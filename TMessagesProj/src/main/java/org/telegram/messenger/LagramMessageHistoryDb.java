@@ -123,7 +123,8 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
             return false;
         }
         ensureCacheLoaded();
-        return deletedKeys.contains(makeKey(account, dialogId, messageId));
+        return deletedKeys.contains(makeKey(account, dialogId, messageId))
+                || (dialogId > 0 && deletedKeys.contains(makeKey(account, 0, messageId)));
     }
 
     public static void saveEditVersion(int account, long dialogId, int messageId, String oldText, int editDate) {

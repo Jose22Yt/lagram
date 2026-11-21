@@ -1286,6 +1286,7 @@ public class ChatActivity extends BaseFragment implements
     public final static int OPTION_EDIT_PRICE = 107;
     public final static int OPTION_GIFT = 108;
     public final static int OPTION_EDIT_TODO = 109;
+    public final static int OPTION_EDIT_HISTORY = 119;
     public final static int OPTION_ADD_TO_TODO = 110;
 
     public final static int OPTION_SUGGESTION_EDIT_PRICE = 111;
@@ -34397,6 +34398,29 @@ public class ChatActivity extends BaseFragment implements
                 presentFragment(fragment);
                 break;
             }
+            case OPTION_EDIT_HISTORY: {
+                if (selectedObject != null && getParentActivity() != null) {
+                    ArrayList<org.telegram.messenger.LagramMessageHistoryDb.EditEntry> entries =
+                            org.telegram.messenger.LagramMessageHistoryDb.getEditHistory(currentAccount, selectedObject.getDialogId(), selectedObject.getId());
+                    StringBuilder sb = new StringBuilder();
+                    if (entries.isEmpty()) {
+                        sb.append(LocaleController.getString(R.string.LagramEditHistoryEmpty));
+                    } else {
+                        for (int idx = 0; idx < entries.size(); idx++) {
+                            org.telegram.messenger.LagramMessageHistoryDb.EditEntry entry = entries.get(idx);
+                            if (idx > 0) sb.append("\n\n");
+                            sb.append("[").append(LocaleController.formatDateTime(entry.date, true)).append("]\n");
+                            sb.append(entry.text);
+                        }
+                    }
+                    new AlertDialog.Builder(getParentActivity(), themeDelegate)
+                            .setTitle(LocaleController.getString(R.string.LagramEditHistoryTitle))
+                            .setMessage(sb.toString())
+                            .setPositiveButton(LocaleController.getString(R.string.OK), null)
+                            .show();
+                }
+                break;
+            }
             case OPTION_COPY: {
                 final TL_iv.RichMessage copyRichMessage = selectedObject.messageOwner != null ? selectedObject.messageOwner.rich_message : null;
                 if (selectedObject.isDice()) {
@@ -47047,6 +47071,11 @@ public class ChatActivity extends BaseFragment implements
                     items.add(LocaleController.getString(R.string.Copy));
                     options.add(OPTION_COPY);
                     icons.add(R.drawable.msg_copy);
+                }
+                if (selectedObject != null && org.telegram.messenger.LagramMessageHistoryDb.hasEditHistory(currentAccount, selectedObject.getDialogId(), selectedObject.getId())) {
+                    items.add(LocaleController.getString(R.string.LagramEditHistoryMenu));
+                    options.add(OPTION_EDIT_HISTORY);
+                    icons.add(R.drawable.msg_log);
                 }
                 if (!isThreadChat() && chatMode != MODE_SCHEDULED && currentChat != null && primaryMessage != null && (currentChat.has_link || primaryMessage.hasReplies()) && currentChat.megagroup && primaryMessage.canViewThread()) {
                     if (primaryMessage.hasReplies()) {

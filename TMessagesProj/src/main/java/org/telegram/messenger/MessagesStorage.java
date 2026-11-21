@@ -16026,13 +16026,32 @@ public class MessagesStorage extends BaseController {
                 int readState = 0;
                 NativeByteBuffer customParams = null;
                 try {
-                    cursor = database.queryFinalized(String.format(Locale.US, "SELECT uid, read_state, custom_params FROM messages_v2 WHERE mid = %d AND uid = %d LIMIT 1", message.id, MessageObject.getDialogId(message)));
+                    LagramConfig.ensureLoaded();
+                    boolean saveEdits = LagramConfig.saveEditedMessages;
+                    cursor = database.queryFinalized(String.format(Locale.US, saveEdits
+                            ? "SELECT uid, read_state, custom_params, data FROM messages_v2 WHERE mid = %d AND uid = %d LIMIT 1"
+                            : "SELECT uid, read_state, custom_params FROM messages_v2 WHERE mid = %d AND uid = %d LIMIT 1",
+                            message.id, MessageObject.getDialogId(message)));
                     if (!cursor.next()) {
                         cursor.dispose();
                         return;
                     }
                     readState = cursor.intValue(1);
                     customParams = cursor.byteBufferValue(2);
+                    if (saveEdits) {
+                        NativeByteBuffer oldData = cursor.byteBufferValue(3);
+                        if (oldData != null) {
+                            try {
+                                TLRPC.Message oldMsg = TLRPC.Message.TLdeserialize(oldData, oldData.readInt32(false), false);
+                                if (oldMsg != null && !TextUtils.isEmpty(oldMsg.message) && !oldMsg.message.equals(message.message)) {
+                                    LagramMessageHistoryDb.saveEditVersion(currentAccount, MessageObject.getDialogId(message), message.id, oldMsg.message, oldMsg.edit_date > 0 ? oldMsg.edit_date : oldMsg.date);
+                                }
+                            } catch (Exception ignore) {
+                            } finally {
+                                oldData.reuse();
+                            }
+                        }
+                    }
                 } catch (Exception e) {
                     checkSQLException(e);
                 } finally {
