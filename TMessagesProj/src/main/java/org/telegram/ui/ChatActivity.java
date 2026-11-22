@@ -972,7 +972,6 @@ public class ChatActivity extends BaseFragment implements
     private Runnable closeInstantCameraAnimation;
 
     private final org.telegram.ui.lagram.focus.LagramMessageFocusController messageFocus = new org.telegram.ui.lagram.focus.LagramMessageFocusController();
-    private boolean lagramLockChecked;
 
     {
         skeletonOutlinePaint.setStyle(Paint.Style.STROKE);
@@ -4610,25 +4609,15 @@ public class ChatActivity extends BaseFragment implements
         chatInputViewsContainer = new ChatInputViewsContainer(context);
         chatInputViewsContainer.setClipChildren(false);
         chatInputViewsContainer.setWindowInsetsProvider(windowInsetsStateHolder);
-        final BlurredBackgroundDrawable inputIslandDrawable =
-            glassBackgroundDrawableFactory.create(chatInputViewsContainer, blurredBackgroundColorProvider);
-        if (org.telegram.messenger.LagramConfig.chatBoxStyle == org.telegram.messenger.LagramConfig.CHAT_BOX_BUTTONS) {
-            inputIslandDrawable.setAlpha(Math.round(255 * (Math.max(5, org.telegram.messenger.LagramConfig.chatBoxContrast) / 160f)));
-        } else if (org.telegram.messenger.LagramConfig.chatBoxStyle == org.telegram.messenger.LagramConfig.CHAT_BOX_EXPRESSIVE) {
-            inputIslandDrawable.setAlpha(Math.round(255 * (Math.max(30, org.telegram.messenger.LagramConfig.chatBoxContrast) / 100f)));
-        } else if (org.telegram.messenger.LagramConfig.chatBoxStyle == org.telegram.messenger.LagramConfig.CHAT_BOX_IOS_GLASS) {
-            inputIslandDrawable.setAlpha(Math.round(255 * (Math.max(20, org.telegram.messenger.LagramConfig.chatBoxContrast) / 115f)));
-        }
-        chatInputViewsContainer.setInputIslandBubbleDrawable(inputIslandDrawable);
+        chatInputViewsContainer.setInputIslandBubbleDrawable(
+            glassBackgroundDrawableFactory.create(chatInputViewsContainer, blurredBackgroundColorProvider));
         chatInputViewsContainer.setUnderKeyboardBackgroundDrawable(
             glassBackgroundDrawableFactoryFrosted.create(chatInputViewsContainer, blurredBackgroundColorProvider));
         if (actionBar != null) {
             int hdrStyle = org.telegram.messenger.LagramConfig.chatHeaderStyle;
             if (hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_DEFAULT) {
                 actionBar.doNotDrawGlassMenu = true;
-            } else if (hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_IOS
-                    || hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_ADAPTIVE
-                    || hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_EXPRESSIVE) {
+            } else {
                 actionBar.doNotDrawGlassMenu = false;
                 actionBar.setCastShadows(false);
             }
@@ -6540,7 +6529,14 @@ public class ChatActivity extends BaseFragment implements
         chatListViewPaddingTop = 0;
         paddingTopHeight = 0;
         botDraftHeightController.setRecyclerView(chatListView);
-        org.telegram.ui.lagram.LagramScrollEdgeController.attach(chatListView);
+        org.telegram.ui.lagram.LagramScrollEdgeController.attach(chatListView, (rv, out) -> {
+            float top = actionBar != null && actionBar.getVisibility() == View.VISIBLE
+                    ? (actionBar.getBottom() - rv.getTop())
+                    : (AndroidUtilities.statusBarHeight + dp(56));
+            float bottomInset = inputIslandHeightCurrent + windowInsetsStateHolder.getAnimatedMaxBottomInset() + dp(10);
+            out[0] = Math.max(0f, top);
+            out[1] = Math.max(out[0] + dp(120), rv.getHeight() - bottomInset);
+        });
         invalidateChatListViewTopPadding();
         if (MessagesController.getGlobalMainSettings().getBoolean("view_animations", true)) {
             chatListItemAnimator = new ChatListItemAnimator(this, chatListView, themeDelegate) {
@@ -9961,7 +9957,7 @@ public class ChatActivity extends BaseFragment implements
         translateButton = new TranslateButton(getContext(), this, themeDelegate) {
             @Override
             protected void onButtonClick() {
-                if (getUserConfig().isPremium() || currentChat != null && currentChat.autotranslation) {
+                if (org.telegram.messenger.LagramConfig.nagramTranslateEnabled || getUserConfig().isPremium() || currentChat != null && currentChat.autotranslation) {
                     getMessagesController().getTranslateController().toggleTranslatingDialog(getDialogId());
                 } else {
                     MessagesController.getNotificationsSettings(currentAccount).edit().putInt("dialog_show_translate_count" + getDialogId(), 14).commit();
@@ -30767,23 +30763,6 @@ public class ChatActivity extends BaseFragment implements
         if (contentView != null) {
             contentView.onResume();
             org.telegram.ui.lagram.LagramGlassBubbleEngine.setSource(this, navbarContentSourceWallpaper, contentView.getBackgroundImage());
-        }
-        org.telegram.messenger.LagramConfig.ensureLoaded();
-        if (!lagramLockChecked && getParentActivity() != null && !inPreviewMode) {
-            boolean needLock = (currentEncryptedChat != null && org.telegram.messenger.LagramConfig.lockSecret)
-                    || (currentUser != null && currentUser.self && org.telegram.messenger.LagramConfig.lockSaved);
-            if (needLock) {
-                lagramLockChecked = true;
-                AlertDialog.Builder lb = new AlertDialog.Builder(getParentActivity(), themeDelegate);
-                lb.setTitle(LocaleController.getString(R.string.LagramLockConfirmTitle));
-                lb.setMessage(LocaleController.getString(R.string.LagramLockConfirmMessage));
-                lb.setPositiveButton(LocaleController.getString(R.string.OK), null);
-                lb.setNegativeButton(LocaleController.getString(R.string.Cancel), (d, w) -> finishFragment());
-                AlertDialog lockDialog = lb.create();
-                lockDialog.setCancelable(false);
-                lockDialog.setCanceledOnTouchOutside(false);
-                showDialog(lockDialog);
-            }
         }
         checkChecksHint();
 

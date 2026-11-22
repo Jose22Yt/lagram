@@ -121,12 +121,23 @@ public final class LagramConfig {
     public static final int HAPTICS_NORMAL = 2;
     public static final int HAPTICS_STRONG = 3;
 
-    // Appearance & Material Design 3 Expressive (Opexgram)
+    // Liquid Glass blur intensity levels
+    public static final int GLASS_BLUR_SOFT = 0;
+    public static final int GLASS_BLUR_MEDIUM = 1;
+    public static final int GLASS_BLUR_STRONG = 2;
+
+    // Liquid Glass tint modes
+    public static final int GLASS_TINT_THEME = 0;
+    public static final int GLASS_TINT_CRYSTAL = 1;
+    public static final int GLASS_TINT_FROST = 2;
+    public static final int GLASS_TINT_SMOKED = 3;
+
+    // Appearance & Liquid Glass
     public static boolean materialContainers = true;
     public static int sectionSpacingDp = 7;
-    public static boolean materialControls = true;
-    public static boolean materialChatList = true;
-    public static boolean materialAppBar = true;
+    public static boolean materialControls = false;
+    public static boolean materialChatList = false;
+    public static boolean materialAppBar = false;
     public static int appBarBackground = APP_BAR_BG_BLUR;
     public static boolean materialProfileTabs = true;
     public static boolean ios27BottomBar = true;
@@ -144,7 +155,10 @@ public final class LagramConfig {
     public static boolean useSystemFonts = false;
     public static boolean showBubbleTails = true;
     public static boolean glassMessages = false;
-    public static int glassMessagesAlpha = 55;
+    public static int glassMessagesAlpha = 52;
+    public static int glassBlurLevel = GLASS_BLUR_MEDIUM;
+    public static int glassTintMode = GLASS_TINT_THEME;
+    public static int glassBorderOpacity = 60;
     public static boolean glassMessagesBorder = true;
     public static boolean glassHighlights = true;
     public static boolean popupGlass = true;
@@ -250,6 +264,17 @@ public final class LagramConfig {
     public static boolean allowScreenshots = false;
     public static boolean bypassNoForwards = false;
 
+    // Nagram Fast Translation Engine
+    public static final int TRANSLATE_PROVIDER_GOOGLE = 0;
+    public static final int TRANSLATE_PROVIDER_MICROSOFT = 1;
+    public static final int TRANSLATE_PROVIDER_GOOGLE_CLOUD = 2;
+    public static final int TRANSLATE_PROVIDER_TELEGRAM = 3;
+
+    public static boolean nagramTranslateEnabled = true;
+    public static int translateProvider = TRANSLATE_PROVIDER_GOOGLE;
+    public static boolean translateKeepOriginal = false;
+    public static boolean autoTranslateChats = false;
+
     private LagramConfig() {}
 
     public static void ensureLoaded() {
@@ -268,14 +293,14 @@ public final class LagramConfig {
         }
         final SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
-        // Appearance & Material Design 3
+        // Appearance & Liquid Glass
         materialContainers = prefs.getBoolean("materialContainers", true);
         sectionSpacingDp = prefs.getInt("sectionSpacingDp", 7);
-        materialControls = prefs.getBoolean("materialControls", true);
-        materialChatList = prefs.getBoolean("materialChatList", true);
-        materialAppBar = prefs.getBoolean("materialAppBar", true);
-        appBarBackground = prefs.getInt("appBarBackground", APP_BAR_BG_BLUR);
-        materialProfileTabs = prefs.getBoolean("materialProfileTabs", true);
+        materialControls = false;
+        materialChatList = false;
+        materialAppBar = false;
+        appBarBackground = APP_BAR_BG_BLUR;
+        materialProfileTabs = true;
         ios27BottomBar = prefs.getBoolean("ios27BottomBar", true);
         amoledSettingsBackdrop = prefs.getBoolean("amoledSettingsBackdrop", true);
         animationSpeed = prefs.getInt("animationSpeed", ANIM_SPEED_FAST);
@@ -291,12 +316,15 @@ public final class LagramConfig {
         useSystemFonts = prefs.getBoolean("useSystemFonts", false);
         showBubbleTails = prefs.getBoolean("showBubbleTails", true);
         glassMessages = prefs.getBoolean("glassMessages", false);
-        glassMessagesAlpha = prefs.getInt("glassMessagesAlpha", 55);
+        glassMessagesAlpha = prefs.getInt("glassMessagesAlpha", 52);
+        glassBlurLevel = prefs.getInt("glassBlurLevel", GLASS_BLUR_MEDIUM);
+        glassTintMode = prefs.getInt("glassTintMode", GLASS_TINT_THEME);
+        glassBorderOpacity = prefs.getInt("glassBorderOpacity", 60);
         glassMessagesBorder = prefs.getBoolean("glassMessagesBorder", true);
         glassHighlights = prefs.getBoolean("glassHighlights", true);
         popupGlass = prefs.getBoolean("popupGlass", true);
         chatEdgeBlur = prefs.getBoolean("chatEdgeBlur", true);
-        folderBarStyle = prefs.getInt("folderBarStyle", FOLDER_BAR_BUTTONS);
+        folderBarStyle = FOLDER_BAR_TELEGRAM;
         folderTabsStyle = prefs.getInt("folderTabsStyle", FOLDER_TABS_ICON_AND_TEXT);
         showFolderCounters = prefs.getBoolean("showFolderCounters", true);
         rememberLastFolder = prefs.getBoolean("rememberLastFolder", false);
@@ -396,6 +424,11 @@ public final class LagramConfig {
         showDeletedTime = prefs.getBoolean("showDeletedTime", true);
         allowScreenshots = prefs.getBoolean("allowScreenshots", false);
         bypassNoForwards = prefs.getBoolean("bypassNoForwards", false);
+
+        nagramTranslateEnabled = prefs.getBoolean("nagramTranslateEnabled", true);
+        translateProvider = prefs.getInt("translateProvider", TRANSLATE_PROVIDER_GOOGLE);
+        translateKeepOriginal = prefs.getBoolean("translateKeepOriginal", false);
+        autoTranslateChats = prefs.getBoolean("autoTranslateChats", false);
 
         loaded = true;
         if (saveDeletedMessages || saveEditedMessages) {
@@ -680,8 +713,39 @@ public final class LagramConfig {
 
     public static void setGlassMessagesAlpha(int alpha) {
         ensureLoaded();
-        glassMessagesAlpha = Math.max(20, Math.min(100, alpha));
+        glassMessagesAlpha = Math.max(15, Math.min(95, alpha));
         saveInt("glassMessagesAlpha", glassMessagesAlpha);
+    }
+
+    public static void setGlassBlurLevel(int level) {
+        ensureLoaded();
+        glassBlurLevel = Math.max(GLASS_BLUR_SOFT, Math.min(GLASS_BLUR_STRONG, level));
+        saveInt("glassBlurLevel", glassBlurLevel);
+        org.telegram.ui.lagram.LagramGlassBubbleEngine.invalidateCapture();
+    }
+
+    public static int getGlassBlurRadius() {
+        switch (glassBlurLevel) {
+            case GLASS_BLUR_SOFT:
+                return 5;
+            case GLASS_BLUR_STRONG:
+                return 16;
+            case GLASS_BLUR_MEDIUM:
+            default:
+                return 10;
+        }
+    }
+
+    public static void setGlassTintMode(int mode) {
+        ensureLoaded();
+        glassTintMode = Math.max(GLASS_TINT_THEME, Math.min(GLASS_TINT_SMOKED, mode));
+        saveInt("glassTintMode", glassTintMode);
+    }
+
+    public static void setGlassBorderOpacity(int opacity) {
+        ensureLoaded();
+        glassBorderOpacity = Math.max(0, Math.min(100, opacity));
+        saveInt("glassBorderOpacity", glassBorderOpacity);
     }
 
     public static boolean toggleGlassMessagesBorder() {
@@ -1367,11 +1431,42 @@ public final class LagramConfig {
         return showDeletedTime;
     }
 
+    public static boolean toggleNagramTranslateEnabled() {
+        ensureLoaded();
+        nagramTranslateEnabled = !nagramTranslateEnabled;
+        saveBoolean("nagramTranslateEnabled", nagramTranslateEnabled);
+        return nagramTranslateEnabled;
+    }
+
+    public static void setTranslateProvider(int provider) {
+        ensureLoaded();
+        translateProvider = Math.max(TRANSLATE_PROVIDER_GOOGLE, Math.min(TRANSLATE_PROVIDER_TELEGRAM, provider));
+        saveInt("translateProvider", translateProvider);
+    }
+
+    public static boolean toggleTranslateKeepOriginal() {
+        ensureLoaded();
+        translateKeepOriginal = !translateKeepOriginal;
+        saveBoolean("translateKeepOriginal", translateKeepOriginal);
+        return translateKeepOriginal;
+    }
+
+    public static boolean toggleAutoTranslateChats() {
+        ensureLoaded();
+        autoTranslateChats = !autoTranslateChats;
+        saveBoolean("autoTranslateChats", autoTranslateChats);
+        return autoTranslateChats;
+    }
+
     // --- Export / Import / Reset ---
     public static String exportToJson() {
         ensureLoaded();
         try {
             JSONObject obj = new JSONObject();
+            obj.put("nagramTranslateEnabled", nagramTranslateEnabled);
+            obj.put("translateProvider", translateProvider);
+            obj.put("translateKeepOriginal", translateKeepOriginal);
+            obj.put("autoTranslateChats", autoTranslateChats);
             obj.put("ios27BottomBar", ios27BottomBar);
             obj.put("materialContainers", materialContainers);
             obj.put("sectionSpacingDp", sectionSpacingDp);
@@ -1418,6 +1513,9 @@ public final class LagramConfig {
             obj.put("showBubbleTails", showBubbleTails);
             obj.put("glassMessages", glassMessages);
             obj.put("glassMessagesAlpha", glassMessagesAlpha);
+            obj.put("glassBlurLevel", glassBlurLevel);
+            obj.put("glassTintMode", glassTintMode);
+            obj.put("glassBorderOpacity", glassBorderOpacity);
             obj.put("glassMessagesBorder", glassMessagesBorder);
             obj.put("glassHighlights", glassHighlights);
             obj.put("popupGlass", popupGlass);
@@ -1519,6 +1617,9 @@ public final class LagramConfig {
             if (obj.has("showBubbleTails")) editor.putBoolean("showBubbleTails", obj.getBoolean("showBubbleTails"));
             if (obj.has("glassMessages")) editor.putBoolean("glassMessages", obj.getBoolean("glassMessages"));
             if (obj.has("glassMessagesAlpha")) editor.putInt("glassMessagesAlpha", obj.getInt("glassMessagesAlpha"));
+            if (obj.has("glassBlurLevel")) editor.putInt("glassBlurLevel", obj.getInt("glassBlurLevel"));
+            if (obj.has("glassTintMode")) editor.putInt("glassTintMode", obj.getInt("glassTintMode"));
+            if (obj.has("glassBorderOpacity")) editor.putInt("glassBorderOpacity", obj.getInt("glassBorderOpacity"));
             if (obj.has("glassMessagesBorder")) editor.putBoolean("glassMessagesBorder", obj.getBoolean("glassMessagesBorder"));
             if (obj.has("glassHighlights")) editor.putBoolean("glassHighlights", obj.getBoolean("glassHighlights"));
             if (obj.has("popupGlass")) editor.putBoolean("popupGlass", obj.getBoolean("popupGlass"));
@@ -1622,6 +1723,10 @@ public final class LagramConfig {
             if (obj.has("deletedMessageDim")) editor.putBoolean("deletedMessageDim", obj.getBoolean("deletedMessageDim"));
             if (obj.has("deletedMessageStrike")) editor.putBoolean("deletedMessageStrike", obj.getBoolean("deletedMessageStrike"));
             if (obj.has("showDeletedTime")) editor.putBoolean("showDeletedTime", obj.getBoolean("showDeletedTime"));
+            if (obj.has("nagramTranslateEnabled")) editor.putBoolean("nagramTranslateEnabled", obj.getBoolean("nagramTranslateEnabled"));
+            if (obj.has("translateProvider")) editor.putInt("translateProvider", obj.getInt("translateProvider"));
+            if (obj.has("translateKeepOriginal")) editor.putBoolean("translateKeepOriginal", obj.getBoolean("translateKeepOriginal"));
+            if (obj.has("autoTranslateChats")) editor.putBoolean("autoTranslateChats", obj.getBoolean("autoTranslateChats"));
             editor.apply();
             loaded = false;
             ensureLoaded();

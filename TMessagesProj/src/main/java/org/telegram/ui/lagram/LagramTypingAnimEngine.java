@@ -33,7 +33,8 @@ public final class LagramTypingAnimEngine implements TextWatcher, Runnable {
     private static final CubicBezierInterpolator EASE_OUT = CubicBezierInterpolator.EASE_OUT_QUINT;
 
     private final WeakReference<EditText> editTextRef;
-    private final ArrayList<CharAnimSpan> activeSpans = new ArrayList<>();
+    private final ArrayList<CharAnimSpan> activeSpans = new ArrayList<>(16);
+    private final ArrayList<CharAnimSpan> spanPool = new ArrayList<>(16);
     private int pendingStart = -1;
     private int pendingCount = 0;
     private boolean frameScheduled = false;
@@ -49,6 +50,22 @@ public final class LagramTypingAnimEngine implements TextWatcher, Runnable {
         return engine;
     }
 
+    private CharAnimSpan obtainSpan(long startTime, int durationMs, boolean blur, boolean slide, boolean scale, boolean rotate) {
+        int poolSize = spanPool.size();
+        if (poolSize > 0) {
+            CharAnimSpan s = spanPool.remove(poolSize - 1);
+            s.reset(startTime, durationMs, blur, slide, scale, rotate);
+            return s;
+        }
+        return new CharAnimSpan(startTime, durationMs, blur, slide, scale, rotate);
+    }
+
+    private void recycleSpan(CharAnimSpan span) {
+        if (spanPool.size() < 16) {
+            spanPool.add(span);
+        }
+    }
+
     @Override
     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
         // No-op
@@ -59,7 +76,6 @@ public final class LagramTypingAnimEngine implements TextWatcher, Runnable {
         if (internalEdit) {
             return;
         }
-        LagramConfig.ensureLoaded();
         if (!LagramConfig.textAppearAnimation) {
             pendingStart = -1;
             pendingCount = 0;
@@ -122,7 +138,7 @@ public final class LagramTypingAnimEngine implements TextWatcher, Runnable {
                 i++;
                 continue;
             }
-            CharAnimSpan span = new CharAnimSpan(now, durationMs, blur, slide, scale, rotate);
+            CharAnimSpan span = obtainSpan(now, durationMs, blur, slide, scale, rotate);
             editable.setSpan(span, i, i + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             activeSpans.add(span);
             i++;
@@ -157,11 +173,13 @@ public final class LagramTypingAnimEngine implements TextWatcher, Runnable {
         long now = SystemClock.uptimeMillis();
         Editable editable = et.getText();
         boolean anyRunning = false;
+        boolean removedAny = false;
 
         for (int i = activeSpans.size() - 1; i >= 0; i--) {
             CharAnimSpan span = activeSpans.get(i);
             if (span.isFinished(now)) {
                 activeSpans.remove(i);
+                removedAny = true;
                 if (editable != null) {
                     int s = editable.getSpanStart(span);
                     if (s >= 0) {
@@ -173,32 +191,41 @@ public final class LagramTypingAnimEngine implements TextWatcher, Runnable {
                         }
                     }
                 }
+                recycleSpan(span);
             } else {
                 anyRunning = true;
             }
         }
 
-        et.invalidate();
+        if (anyRunning || removedAny) {
+            et.invalidate();
+        }
         if (anyRunning) {
             scheduleNextFrame();
         }
     }
 
     private static final class CharAnimSpan extends ReplacementSpan {
-        private final long startTime;
-        private final int durationMs;
-        private final boolean blur;
-        private final boolean slide;
-        private final boolean scale;
-        private final boolean rotate;
+        private long startTime;
+        private int durationMs;
+        private boolean blur;
+        private boolean slide;
+        private boolean scale;
+        private boolean rotate;
+        private float cachedWidth = -1f;
 
         CharAnimSpan(long startTime, int durationMs, boolean blur, boolean slide, boolean scale, boolean rotate) {
+            reset(startTime, durationMs, blur, slide, scale, rotate);
+        }
+
+        void reset(long startTime, int durationMs, boolean blur, boolean slide, boolean scale, boolean rotate) {
             this.startTime = startTime;
             this.durationMs = Math.max(80, durationMs);
             this.blur = blur;
             this.slide = slide;
             this.scale = scale;
             this.rotate = rotate;
+            this.cachedWidth = -1f;
         }
 
         boolean isFinished(long now) {
@@ -207,7 +234,8 @@ public final class LagramTypingAnimEngine implements TextWatcher, Runnable {
 
         @Override
         public int getSize(@NonNull Paint paint, CharSequence text, int start, int end, @Nullable Paint.FontMetricsInt fm) {
-            return Math.round(paint.measureText(text, start, end));
+            cachedWidth = paint.measureText(text, start, end);
+            return Math.round(cachedWidth);
         }
 
         @Override
@@ -217,7 +245,7 @@ public final class LagramTypingAnimEngine implements TextWatcher, Runnable {
             float raw = Math.max(0f, Math.min(1f, elapsed / (float) durationMs));
             float p = EASE_OUT.getInterpolation(raw);
 
-            float charW = paint.measureText(text, start, end);
+            float charW = cachedWidth >= 0f ? cachedWidth : paint.measureText(text, start, end);
             float centerX = x + charW * 0.5f;
             float centerY = y - paint.getTextSize() * 0.35f;
 

@@ -29,12 +29,6 @@ public class LagramGeneralActivity extends UniversalFragment {
     private static final int ID_HIDE_STORY_POSTING = 12;
     private static final int ID_OPEN_ARCHIVE_PULL = 13;
 
-    // Lock
-    private static final int ID_LOCK_ARCHIVE = 20;
-    private static final int ID_LOCK_SECRET = 21;
-    private static final int ID_LOCK_SAVED = 22;
-    private static final int ID_LOCK_DELETE = 23;
-
     // Performance & Haptics
     private static final int ID_HIGH_REFRESH = 30;
     private static final int ID_PERF_CLASS = 31;
@@ -81,7 +75,7 @@ public class LagramGeneralActivity extends UniversalFragment {
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         LagramConfig.ensureLoaded();
 
-        // 1. Profile (Exact Opexgram General top section - Sheet 2 Frame 9)
+        // 1. Profile
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramDetailsHeader)));
         items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                 ID_HIDE_PHONE_NUMBER, 0,
@@ -112,7 +106,7 @@ public class LagramGeneralActivity extends UniversalFragment {
                 LagramConfig.profileNameSwitch));
         items.add(UItem.asShadow(-1, null));
 
-        // 2. Stories and archive (Exact Opexgram Sheet 1 Frame 1)
+        // 2. Stories & Archive
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramStoriesArchiveHeader)));
         items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                 ID_HIDE_STORIES, 0,
@@ -136,31 +130,7 @@ public class LagramGeneralActivity extends UniversalFragment {
                 LagramConfig.openArchiveOnPull));
         items.add(UItem.asShadow(-2, null));
 
-        // 3. Lock (Exact Opexgram Sheet 1 Frame 1)
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramLockHeader)));
-        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_LOCK_ARCHIVE, 0,
-                LocaleController.getString(R.string.LagramLockArchive),
-                null,
-                LagramConfig.lockArchive));
-        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_LOCK_SECRET, 0,
-                LocaleController.getString(R.string.LagramLockSecret),
-                null,
-                LagramConfig.lockSecret));
-        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_LOCK_SAVED, 0,
-                LocaleController.getString(R.string.LagramLockSaved),
-                null,
-                LagramConfig.lockSaved));
-        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_LOCK_DELETE, 0,
-                LocaleController.getString(R.string.LagramLockDelete),
-                null,
-                LagramConfig.lockDelete));
-        items.add(UItem.asShadow(-3, null));
-
-        // 4. Performance & Haptics
+        // 3. Performance & Haptics
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramPerformanceHeader)));
         items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                 ID_HIGH_REFRESH, 0,
@@ -197,7 +167,7 @@ public class LagramGeneralActivity extends UniversalFragment {
                 }));
         items.add(UItem.asShadow(-4, LocaleController.getString(R.string.LagramGeneralInfo)));
 
-        // 5. Cleanup
+        // 4. Cleanup
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAntiBloatHeader)));
         items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                 ID_DISABLE_SPONSORED, 0,
@@ -242,18 +212,6 @@ public class LagramGeneralActivity extends UniversalFragment {
                 return;
             case ID_OPEN_ARCHIVE_PULL:
                 toggle(view, LagramConfig.toggleOpenArchiveOnPull());
-                return;
-            case ID_LOCK_ARCHIVE:
-                toggle(view, LagramConfig.toggleLockArchive());
-                return;
-            case ID_LOCK_SECRET:
-                toggle(view, LagramConfig.toggleLockSecret());
-                return;
-            case ID_LOCK_SAVED:
-                toggle(view, LagramConfig.toggleLockSaved());
-                return;
-            case ID_LOCK_DELETE:
-                toggle(view, LagramConfig.toggleLockDelete());
                 return;
             case ID_HIGH_REFRESH:
                 toggle(view, LagramConfig.toggleHighRefreshRateScroll());

@@ -28,18 +28,22 @@ public class LauncherIconController {
         Context ctx = ApplicationLoader.applicationContext;
         PackageManager pm = ctx.getPackageManager();
         for (LauncherIcon i : LauncherIcon.values()) {
-            pm.setComponentEnabledSetting(i.getComponentName(ctx), i == icon ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED :
-                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+            ComponentName cn = i.getComponentName(ctx);
+            int targetState = i == icon ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED : PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+            int currentState = pm.getComponentEnabledSetting(cn);
+            if (currentState != targetState) {
+                pm.setComponentEnabledSetting(cn, targetState, PackageManager.DONT_KILL_APP);
+            }
         }
     }
 
     public enum LauncherIcon {
-        DEFAULT("DefaultIcon", R.drawable.icon_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconDefault),
-        VINTAGE("VintageIcon", R.drawable.icon_6_background_sa, R.mipmap.icon_6_foreground_sa, R.string.AppIconVintage),
-        AQUA("AquaIcon", R.drawable.icon_4_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconAqua),
-        PREMIUM("PremiumIcon", R.drawable.icon_3_background_sa, R.mipmap.icon_3_foreground_sa, R.string.AppIconPremium, true),
-        TURBO("TurboIcon", R.drawable.icon_5_background_sa, R.mipmap.icon_5_foreground_sa, R.string.AppIconTurbo, true),
-        NOX("NoxIcon", R.mipmap.icon_2_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconNox, true);
+        DEFAULT("DefaultIcon", R.drawable.lagram_icon_1_bg, R.drawable.lagram_icon_1_fg, R.string.LagramIconDefault),
+        NOX("NoxIcon", R.drawable.lagram_icon_2_bg, R.drawable.lagram_icon_2_fg, R.string.LagramIconObsidian),
+        TURBO("TurboIcon", R.drawable.lagram_icon_3_bg, R.drawable.lagram_icon_3_fg, R.string.LagramIconAurora),
+        AQUA("AquaIcon", R.drawable.lagram_icon_4_bg, R.drawable.lagram_icon_4_fg, R.string.LagramIconEmerald),
+        PREMIUM("PremiumIcon", R.drawable.lagram_icon_5_bg, R.drawable.lagram_icon_5_fg, R.string.LagramIconSunset),
+        VINTAGE("VintageIcon", R.drawable.lagram_icon_6_bg, R.drawable.lagram_icon_6_fg, R.string.LagramIconTitanium);
 
         public final String key;
         public final int background;

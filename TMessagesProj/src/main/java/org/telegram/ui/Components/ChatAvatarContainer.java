@@ -777,9 +777,7 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
     private final android.graphics.RectF lagramPillRect = new android.graphics.RectF();
 
     private void drawLagramAdaptivePill(Canvas canvas) {
-        org.telegram.messenger.LagramConfig.ensureLoaded();
-        int hdrStyle = org.telegram.messenger.LagramConfig.chatHeaderStyle;
-        if (hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_ADAPTIVE
+        if (org.telegram.messenger.LagramConfig.chatHeaderStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_ADAPTIVE
                 && getMeasuredWidth() > 0 && getMeasuredHeight() > 0) {
             if (lagramAdaptivePillPaint == null) {
                 lagramAdaptivePillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -803,7 +801,6 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        org.telegram.messenger.LagramConfig.ensureLoaded();
         final int hdrStyle = org.telegram.messenger.LagramConfig.chatHeaderStyle;
         final int actionBarHeight = ActionBar.getCurrentActionBarHeight();
         final int avW = avatarImageView.getMeasuredWidth();
@@ -818,10 +815,12 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         final int totalW = right - left;
 
         if (hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_IOS) {
-            // iOS Centered: title & subtitle centered, avatar cleanly placed on the right edge
-            int avLeft = Math.max(dp(4), totalW - avW - dp(8));
+            // iOS Centered: clean centered title & subtitle, avatar cleanly docked with safe right inset
+            avatarImageView.setScaleX(0.92f);
+            avatarImageView.setScaleY(0.92f);
+            int avLeft = Math.max(dp(4), totalW - avW - dp(4));
             avatarImageView.layout(avLeft, 1 + viewTop, avLeft + avW, 1 + viewTop + avH);
-            int textAreaW = Math.max(dp(40), avLeft - dp(8));
+            int textAreaW = Math.max(dp(48), avLeft - dp(10));
             int titleW = Math.min(textAreaW, titleTextView.getMeasuredWidth());
             int titleL = Math.max(dp(4), (textAreaW - titleW) / 2);
             if (getSubtitleTextView().getVisibility() != GONE) {

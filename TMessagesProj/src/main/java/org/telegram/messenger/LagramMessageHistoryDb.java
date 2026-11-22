@@ -7,9 +7,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
 
@@ -17,8 +16,10 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
     private static final int DB_VERSION = 1;
 
     private static volatile LagramMessageHistoryDb instance;
-    private static final Set<Long> deletedKeys = Collections.synchronizedSet(new HashSet<>());
-    private static final Set<Long> editedKeys = Collections.synchronizedSet(new HashSet<>());
+    private static final Set<Long> deletedKeys = ConcurrentHashMap.newKeySet();
+    private static final Set<Long> editedKeys = ConcurrentHashMap.newKeySet();
+    private static volatile boolean hasAnyDeleted = false;
+    private static volatile boolean hasAnyEdited = false;
     private static volatile boolean cacheLoaded = false;
 
     public static final class EditEntry {
@@ -33,6 +34,14 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
 
     private LagramMessageHistoryDb(Context context) {
         super(context.getApplicationContext(), DB_NAME, null, DB_VERSION);
+    }
+
+    @Override
+    public void onConfigure(SQLiteDatabase db) {
+        super.onConfigure(db);
+        try {
+            db.enableWriteAheadLogging();
+        } catch (Throwable ignore) {}
     }
 
     public static LagramMessageHistoryDb getInstance() {
@@ -64,11 +73,13 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
                     try (Cursor c = db.rawQuery("SELECT account, dialog_id, msg_id FROM deleted_messages", null)) {
                         while (c.moveToNext()) {
                             deletedKeys.add(packKey(c.getInt(0), c.getLong(1), c.getInt(2)));
+                            hasAnyDeleted = true;
                         }
                     }
                     try (Cursor c = db.rawQuery("SELECT DISTINCT account, dialog_id, msg_id FROM edited_messages", null)) {
                         while (c.moveToNext()) {
                             editedKeys.add(packKey(c.getInt(0), c.getLong(1), c.getInt(2)));
+                            hasAnyEdited = true;
                         }
                     }
                 } catch (Exception e) {
@@ -102,6 +113,7 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
 
     public static void markMessageDeleted(int account, long dialogId, int messageId) {
         deletedKeys.add(packKey(account, dialogId, messageId));
+        hasAnyDeleted = true;
         final LagramMessageHistoryDb dbHelper = getInstance();
         if (dbHelper == null) return;
         Utilities.globalQueue.postRunnable(() -> {
@@ -125,7 +137,7 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
         if (messageId == PREVIEW_DELETED_MSG_ID) {
             return true;
         }
-        if (deletedKeys.isEmpty()) {
+        if (!hasAnyDeleted) {
             if (LagramConfig.saveDeletedMessages && !cacheLoaded) {
                 ensureCacheLoaded();
             }
@@ -138,6 +150,7 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
     public static void saveEditVersion(int account, long dialogId, int messageId, String oldText, int editDate) {
         if (oldText == null || oldText.isEmpty()) return;
         editedKeys.add(packKey(account, dialogId, messageId));
+        hasAnyEdited = true;
         final LagramMessageHistoryDb dbHelper = getInstance();
         if (dbHelper == null) return;
         Utilities.globalQueue.postRunnable(() -> {
@@ -157,7 +170,7 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
     }
 
     public static boolean hasEditHistory(int account, long dialogId, int messageId) {
-        if (editedKeys.isEmpty()) {
+        if (!hasAnyEdited) {
             if (LagramConfig.saveEditedMessages && !cacheLoaded) {
                 ensureCacheLoaded();
             }
@@ -186,6 +199,8 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
     }
 
     public static void clearAll() {
+        hasAnyDeleted = false;
+        hasAnyEdited = false;
         deletedKeys.clear();
         editedKeys.clear();
         final LagramMessageHistoryDb dbHelper = getInstance();

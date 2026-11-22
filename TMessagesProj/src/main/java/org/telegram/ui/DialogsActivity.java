@@ -2280,21 +2280,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 }
                                 LagramConfig.ensureLoaded();
                                 if (LagramConfig.openArchiveOnPull) {
-                                    Runnable openArchive = () -> {
-                                        Bundle args = new Bundle();
-                                        args.putInt("folderId", 1);
-                                        presentFragment(new DialogsActivity(args));
-                                    };
-                                    if (LagramConfig.lockArchive && getParentActivity() != null) {
-                                        AlertDialog.Builder lb = new AlertDialog.Builder(getParentActivity(), getResourceProvider());
-                                        lb.setTitle(LocaleController.getString(R.string.LagramLockConfirmTitle));
-                                        lb.setMessage(LocaleController.getString(R.string.LagramLockConfirmMessage));
-                                        lb.setPositiveButton(LocaleController.getString(R.string.OK), (d, w) -> openArchive.run());
-                                        lb.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-                                        showDialog(lb.create());
-                                    } else {
-                                        openArchive.run();
-                                    }
+                                    Bundle args = new Bundle();
+                                    args.putInt("folderId", 1);
+                                    presentFragment(new DialogsActivity(args));
                                 }
                             }
                         }
@@ -3456,14 +3444,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             } else {
                 statusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(null, dp(26));
                 statusDrawable.center = true;
-                logoDrawable = context.getResources().getDrawable(R.drawable.telegram_logo_2).mutate();
-                logoDrawable.setBounds(0, dp(2), logoDrawable.getIntrinsicWidth(), dp(2) + logoDrawable.getIntrinsicHeight());
-                // a new drawable (also when the view is recreated after a theme switch made elsewhere): remember its tint, the
-                // theme hook only recolors when the color differs from the last one applied
-                logoDrawable.setColorFilter(lastLogoDrawableColor = getThemedColor(Theme.key_telegram_color_dialogsLogo), PorterDuff.Mode.MULTIPLY);
-                SpannableStringBuilder ssb = new SpannableStringBuilder(getString(R.string.AppName));
-                ssb.setSpan(new ImageSpan(logoDrawable), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                actionBar.setTitle(ssb, statusDrawable);
+                logoDrawable = null;
+                actionBar.setTitle(getString(R.string.AppName), statusDrawable);
                 updateStatus(UserConfig.getInstance(currentAccount).getCurrentUser(), false);
             }
             if (folderId == 0) {
@@ -4010,7 +3992,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             viewPage.addView(viewPage.progressView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
 
             viewPage.listView = new DialogsRecyclerView(context, viewPage);
-            org.telegram.ui.lagram.LagramScrollEdgeController.attach(viewPage.listView);
+            org.telegram.ui.lagram.LagramScrollEdgeController.attach(viewPage.listView, (rv, out) -> {
+                float top = actionBar != null ? actionBar.getBottom() : (AndroidUtilities.statusBarHeight + dp(56));
+                if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
+                    top = Math.max(top, filterTabsView.getBottom());
+                }
+                out[0] = Math.max(0f, top - rv.getTop());
+                out[1] = Math.max(out[0] + dp(120), rv.getHeight() - AndroidUtilities.navigationBarHeight);
+            });
             glassEngine.addScrolledView(viewPage.listView);
             viewPage.scroller = new RecyclerListViewScroller(viewPage.listView);
             viewPage.listView.setAllowStopHeaveOperations(true);
@@ -9609,20 +9598,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void performDeleteOrClearDialogAction(int action, long selectedDialog, TLRPC.Chat chat, boolean isBot, boolean revoke) {
-        LagramConfig.ensureLoaded();
-        if (LagramConfig.lockDelete && getParentActivity() != null) {
-            AlertDialog.Builder lb = new AlertDialog.Builder(getParentActivity(), getResourceProvider());
-            lb.setTitle(LocaleController.getString(R.string.LagramLockConfirmTitle));
-            lb.setMessage(LocaleController.getString(R.string.LagramLockConfirmMessage));
-            lb.setPositiveButton(LocaleController.getString(R.string.OK), (d, w) -> performDeleteOrClearDialogActionInternal(action, selectedDialog, chat, isBot, revoke));
-            lb.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-            showDialog(lb.create());
-            return;
-        }
-        performDeleteOrClearDialogActionInternal(action, selectedDialog, chat, isBot, revoke);
-    }
-
-    private void performDeleteOrClearDialogActionInternal(int action, long selectedDialog, TLRPC.Chat chat, boolean isBot, boolean revoke) {
         if (action == clear) {
             getMessagesController().deleteDialog(selectedDialog, 1, revoke);
         } else {

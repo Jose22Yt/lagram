@@ -19661,7 +19661,10 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             return;
         }
 
-        if ((org.telegram.messenger.LagramConfig.mediaGlow || org.telegram.messenger.LagramConfig.mediaGlowVideos) && centerImage != null) {
+        final boolean lagramShowGlow = (videoPlayer != null)
+                ? org.telegram.messenger.LagramConfig.mediaGlowVideos
+                : org.telegram.messenger.LagramConfig.mediaGlow;
+        if (lagramShowGlow && centerImage != null) {
             Bitmap glowBmp = centerImage.getBitmap();
             if (glowBmp != null && !glowBmp.isRecycled()) {
                 drawMediaAmbientGlow(canvas, glowBmp);

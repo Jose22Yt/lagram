@@ -373,16 +373,24 @@ public class ApplicationLoader extends Application {
 
         applicationHandler = new Handler(applicationContext.getMainLooper());
 
-        Utilities.globalQueue.postRunnable(LagramConfig::ensureLoaded);
-        AndroidUtilities.runOnUIThread(ApplicationLoader::startPushService);
-        AndroidUtilities.runOnUIThread(() -> {
+        Utilities.globalQueue.postRunnable(() -> {
+            LagramConfig.ensureLoaded();
             LauncherIconController.tryFixLauncherIconIfNeeded();
-            ProxyRotationController.init();
-        }, 350);
+        });
+        AndroidUtilities.runOnUIThread(ApplicationLoader::startPushService);
+        AndroidUtilities.runOnUIThread(ProxyRotationController::init, 350);
 
         //if (BuildConfig.DEBUG_PRIVATE_VERSION) {
         //    Choreographer60FpsContent.getInstance().addFrameCallback(debugEverySecondChecks, 1);
         //}
+    }
+
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        if (level >= TRIM_MEMORY_UI_HIDDEN || level >= TRIM_MEMORY_RUNNING_LOW) {
+            org.telegram.ui.lagram.LagramGlassBubbleEngine.clearCache();
+        }
     }
 
     private final Runnable debugEverySecondChecks = () -> AndroidUtilities.runOnUIThread(() -> {

@@ -70,6 +70,13 @@ public final class LagramMessageFocusController {
 
     @RequiresApi(api = Build.VERSION_CODES.S)
     private static final class HardwareBlurNode {
+        private static final ColorMatrixColorFilter SATURATION_FILTER;
+        static {
+            ColorMatrix cm = new ColorMatrix();
+            cm.setSaturation(1.8f);
+            SATURATION_FILTER = new ColorMatrixColorFilter(cm);
+        }
+
         private final RenderNode sourceNode = new RenderNode("LagramFocusSource");
         private final RenderNode blurNode = new RenderNode("LagramFocusBlur");
         boolean isRecording;
@@ -90,13 +97,14 @@ public final class LagramMessageFocusController {
             if (alpha <= 0.0f) {
                 return;
             }
-            float downscaledRadius = radiusPx / 4.0f;
+            float downscaledRadius = Math.round((radiusPx / 4.0f) * 4.0f) / 4.0f;
+            if (downscaledRadius < 0.5f) {
+                downscaledRadius = 0.5f;
+            }
             if (lastRadius != downscaledRadius) {
                 lastRadius = downscaledRadius;
-                ColorMatrix cm = new ColorMatrix();
-                cm.setSaturation(1.8f);
                 blurNode.setRenderEffect(RenderEffect.createColorFilterEffect(
-                        new ColorMatrixColorFilter(cm),
+                        SATURATION_FILTER,
                         RenderEffect.createBlurEffect(downscaledRadius, downscaledRadius, Shader.TileMode.CLAMP)
                 ));
             }

@@ -404,6 +404,33 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
             return;
         }
 
+        if (org.telegram.messenger.LagramConfig.nagramTranslateEnabled
+                && org.telegram.messenger.LagramConfig.translateProvider != org.telegram.messenger.LagramConfig.TRANSLATE_PROVIDER_TELEGRAM
+                && !TextUtils.isEmpty(textWithEntities.text)) {
+            org.telegram.messenger.LagramTranslator.translate(textWithEntities.text, lang, (result, rateLimit) -> {
+                if (result != null && !result.isEmpty()) {
+                    firstTranslation = false;
+                    CharSequence translated = preprocessText(result);
+                    textView.setText(translated);
+                    adapter.updateMainView(textViewContainer);
+                } else if (firstTranslation) {
+                    dismiss();
+                    NotificationCenter.getGlobalInstance().postNotificationName(
+                            NotificationCenter.showBulletin,
+                            Bulletin.TYPE_ERROR,
+                            LocaleController.getString(rateLimit ? R.string.TranslationFailedAlert1 : R.string.TranslationFailedAlert2)
+                    );
+                } else {
+                    BulletinFactory.of((FrameLayout) containerView, resourcesProvider)
+                            .createErrorBulletin(LocaleController.getString(rateLimit ? R.string.TranslationFailedAlert1 : R.string.TranslationFailedAlert2))
+                            .show();
+                    headerView.toLanguageTextView.setText(languageName(toLanguage = prevToLanguage));
+                    adapter.updateMainView(textViewContainer);
+                }
+            });
+            return;
+        }
+
         TLRPC.TL_messages_translateText req = new TLRPC.TL_messages_translateText();
         if (reqPeer != null) {
             req.flags |= 1;

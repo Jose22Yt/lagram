@@ -16,42 +16,52 @@ import java.util.ArrayList;
 
 public class LagramChatsActivity extends UniversalFragment {
 
-    private static final int ID_PREVIEW_HEADER = 200;
-    private static final int ID_HEADER_STYLE = 201;
+    // 1. Message Tap Focus & Menu (Opexgram Focus + 3 styles)
+    private static final int ID_PREVIEW_MSG_MENU = 200;
+    private static final int ID_FOCUS_ENABLED = 201;
+    private static final int ID_FOCUS_BLUR = 202;
+    private static final int ID_FOCUS_STYLE = 203;
 
-    private static final int ID_PREVIEW_CHAT_BOX_TYPING = 210;
-    private static final int ID_CHAT_BOX_STYLE = 211;
-    private static final int ID_CHAT_BOX_CONTRAST = 212;
-    private static final int ID_IOS27_BAR = 213;
-    private static final int ID_TEXT_ANIM_ENABLE = 214;
-    private static final int ID_TEXT_ANIM_EFFECTS = 215;
-    private static final int ID_TEXT_ANIM_SPEED = 216;
+    // 2. Chat Top Bar Styles (4 clean, collision-free styles)
+    private static final int ID_PREVIEW_HEADER = 210;
+    private static final int ID_HEADER_STYLE = 211;
 
-    private static final int ID_PREVIEW_MSG_MENU = 220;
-    private static final int ID_FOCUS_ENABLED = 221;
-    private static final int ID_FOCUS_BLUR = 222;
-    private static final int ID_FOCUS_STYLE = 223;
+    // 3. Bottom Bar & Live Typing Effects
+    private static final int ID_PREVIEW_CHAT_BOX_TYPING = 220;
+    private static final int ID_IOS27_BAR = 221;
+    private static final int ID_TEXT_ANIM_ENABLE = 222;
+    private static final int ID_TEXT_ANIM_EFFECTS = 223;
+    private static final int ID_TEXT_ANIM_SPEED = 224;
 
+    // 4. Delete Message Animation
     private static final int ID_PREVIEW_DELETE = 230;
     private static final int ID_DELETE_EFFECT = 231;
 
+    // 4b. Fast Chat Translation (Nagram Engine)
+    private static final int ID_NAGRAM_TRANSLATE = 232;
+    private static final int ID_TRANSLATE_PROVIDER = 233;
+    private static final int ID_TRANSLATE_KEEP_ORIG = 234;
+    private static final int ID_AUTO_TRANSLATE = 235;
+    private static final int ID_CLEAR_TRANSLATE_CACHE = 236;
+
+    // 5. Gestures, Selection & Sizes
     private static final int ID_DOUBLE_TAP_IN = 240;
     private static final int ID_DOUBLE_TAP_OUT = 241;
     private static final int ID_UNLIMITED_SEL = 242;
-    private static final int ID_FAST_SEL = 243;
-    private static final int ID_SEL_SCROLL_SPEED = 244;
+    private static final int ID_STICKER_SIZE = 243;
+    private static final int ID_GIF_SIZE = 244;
+    private static final int ID_BIG_REACTIONS = 245;
 
-    private static final int ID_STICKER_SIZE = 250;
-    private static final int ID_GIF_SIZE = 251;
-    private static final int ID_BIG_REACTIONS = 252;
-    private static final int ID_PAGE_UP = 253;
-    private static final int ID_HIDE_KB_SCROLL = 254;
-    private static final int ID_DISABLE_NEXT_CHANNEL = 255;
-    private static final int ID_CONFIRM_CALL = 256;
-    private static final int ID_CONFIRM_STICKER = 257;
-    private static final int ID_DISABLE_VOICE_TOGGLE = 258;
-    private static final int ID_DISABLE_PROXIMITY = 259;
+    // 6. Controls & Confirmations
+    private static final int ID_PAGE_UP = 250;
+    private static final int ID_HIDE_KB_SCROLL = 251;
+    private static final int ID_DISABLE_NEXT_CHANNEL = 252;
+    private static final int ID_CONFIRM_CALL = 253;
+    private static final int ID_CONFIRM_STICKER = 254;
+    private static final int ID_DISABLE_VOICE_TOGGLE = 255;
+    private static final int ID_DISABLE_PROXIMITY = 256;
 
+    // 7. Quotes, Forwarding & Details
     private static final int ID_FORWARD_NO_QUOTE = 260;
     private static final int ID_HIDE_SHARE_CHANNELS = 261;
     private static final int ID_SHOW_WEEKDAY = 262;
@@ -101,100 +111,7 @@ public class LagramChatsActivity extends UniversalFragment {
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         LagramConfig.ensureLoaded();
 
-        // 1. REAL Interactive Chat Top Bar Styles Preview (Default / iOS Centered / Compact / Adaptive Pill / Expressive)
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatHeaderStyle)));
-        items.add(LagramRealPreviews.RealChatHeaderPreviewCell.Factory.of(ID_PREVIEW_HEADER));
-        items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
-                ID_HEADER_STYLE,
-                null,
-                new String[]{
-                        LocaleController.getString(R.string.LagramChatHeaderDefault),
-                        LocaleController.getString(R.string.LagramChatHeaderIos),
-                        LocaleController.getString(R.string.LagramChatHeaderCompact),
-                        LocaleController.getString(R.string.LagramChatHeaderAdaptive),
-                        LocaleController.getString(R.string.LagramChatHeaderExpressiveOpt)
-                },
-                LagramConfig.chatHeaderStyle,
-                idx -> {
-                    LagramConfig.setChatHeaderStyle(idx);
-                    refreshList();
-                }));
-        items.add(UItem.asShadow(null));
-
-        // 2. REAL Interactive Chat Box + Live Keyboard Typing Effects Preview!
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatBoxHeader)));
-        items.add(LagramRealPreviews.RealInteractiveChatBoxPreviewCell.Factory.of(ID_PREVIEW_CHAT_BOX_TYPING));
-        items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
-                ID_CHAT_BOX_STYLE,
-                null,
-                new String[]{
-                        LocaleController.getString(R.string.LagramChatBoxTelegram),
-                        LocaleController.getString(R.string.LagramChatBoxExpressive),
-                        LocaleController.getString(R.string.LagramChatBoxButtons),
-                        LocaleController.getString(R.string.LagramChatBoxIosGlass)
-                },
-                LagramConfig.chatBoxStyle,
-                idx -> {
-                    LagramConfig.setChatBoxStyle(idx);
-                    refreshList();
-                }));
-        items.add(OpexgramStyleWidgets.OpexSliderCell.Factory.of(
-                ID_CHAT_BOX_CONTRAST,
-                LocaleController.getString(R.string.LagramChatBoxContrast),
-                10, 100, 55, LagramConfig.chatBoxContrast, "%",
-                val -> {
-                    LagramConfig.setChatBoxContrast(val);
-                    refreshList();
-                }));
-        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_IOS27_BAR, 0,
-                LocaleController.getString(R.string.LagramIos27BottomBar),
-                null,
-                LagramConfig.ios27BottomBar));
-        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_TEXT_ANIM_ENABLE, 0,
-                LocaleController.getString(R.string.LagramTextAnimEnable),
-                LocaleController.getString(R.string.LagramTextAnimInfo),
-                LagramConfig.textAppearAnimation));
-        if (LagramConfig.textAppearAnimation) {
-            int mask = (LagramConfig.textAnimBlur ? 1 : 0)
-                    | (LagramConfig.textAnimSlide ? 2 : 0)
-                    | (LagramConfig.textAnimScale ? 4 : 0)
-                    | (LagramConfig.textAnimRotate ? 8 : 0);
-            items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.multi(
-                    ID_TEXT_ANIM_EFFECTS,
-                    LocaleController.getString(R.string.LagramTextAnimHeader),
-                    new String[]{
-                            LocaleController.getString(R.string.LagramTextAnimBlur),
-                            LocaleController.getString(R.string.LagramTextAnimSlide),
-                            LocaleController.getString(R.string.LagramTextAnimScale),
-                            LocaleController.getString(R.string.LagramTextAnimRotate)
-                    },
-                    mask,
-                    idx -> {
-                        if (idx == 0) LagramConfig.toggleTextAnimBlur();
-                        else if (idx == 1) LagramConfig.toggleTextAnimSlide();
-                        else if (idx == 2) LagramConfig.toggleTextAnimScale();
-                        else if (idx == 3) LagramConfig.toggleTextAnimRotate();
-                        refreshList();
-                    }));
-            items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
-                    ID_TEXT_ANIM_SPEED,
-                    LocaleController.getString(R.string.LagramTextAnimSpeed),
-                    new String[]{
-                            LocaleController.getString(R.string.LagramTextAnimSpeedFast),
-                            LocaleController.getString(R.string.LagramTextAnimSpeedNormal),
-                            LocaleController.getString(R.string.LagramTextAnimSpeedSmooth)
-                    },
-                    LagramConfig.textAnimSpeed,
-                    idx -> {
-                        LagramConfig.setTextAnimSpeed(idx);
-                        refreshList();
-                    }));
-        }
-        items.add(UItem.asShadow(LocaleController.getString(R.string.LagramChatBoxInfo)));
-
-        // 3. REAL Interactive Message Tap Menu & Focus Preview (List / Tiles / Capsule over REAL bubble!)
+        // 1. REAL Interactive Message Tap Focus & Menu (List / Tiles / Capsule)
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramMessageFocusHeader)));
         items.add(LagramRealPreviews.RealMessageMenuPreviewCell.Factory.of(ID_PREVIEW_MSG_MENU));
         items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
@@ -224,7 +141,78 @@ public class LagramChatsActivity extends UniversalFragment {
         }
         items.add(UItem.asShadow(LocaleController.getString(R.string.LagramMessageFocusInfo)));
 
-        // 4. REAL Interactive Delete Message Animation Preview!
+        // 2. REAL Interactive Chat Top Bar Styles (4 clean, collision-free styles)
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatHeaderStyle)));
+        items.add(LagramRealPreviews.RealChatHeaderPreviewCell.Factory.of(ID_PREVIEW_HEADER));
+        int currentHeaderIdx = Math.min(LagramConfig.CHAT_HEADER_ADAPTIVE, LagramConfig.chatHeaderStyle);
+        items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
+                ID_HEADER_STYLE,
+                null,
+                new String[]{
+                        LocaleController.getString(R.string.LagramChatHeaderDefault),
+                        LocaleController.getString(R.string.LagramChatHeaderIos),
+                        LocaleController.getString(R.string.LagramChatHeaderCompact),
+                        LocaleController.getString(R.string.LagramChatHeaderAdaptive)
+                },
+                currentHeaderIdx,
+                idx -> {
+                    LagramConfig.setChatHeaderStyle(idx);
+                    refreshList();
+                }));
+        items.add(UItem.asShadow(null));
+
+        // 3. REAL Interactive Bottom Bar & Live Per-Character Typing Effects
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramTextAnimHeader)));
+        items.add(LagramRealPreviews.RealInteractiveChatBoxPreviewCell.Factory.of(ID_PREVIEW_CHAT_BOX_TYPING));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_IOS27_BAR, 0,
+                LocaleController.getString(R.string.LagramIos27BottomBar),
+                null,
+                LagramConfig.ios27BottomBar));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_TEXT_ANIM_ENABLE, 0,
+                LocaleController.getString(R.string.LagramTextAnimEnable),
+                LocaleController.getString(R.string.LagramTextAnimInfo),
+                LagramConfig.textAppearAnimation));
+        if (LagramConfig.textAppearAnimation) {
+            int mask = (LagramConfig.textAnimBlur ? 1 : 0)
+                    | (LagramConfig.textAnimSlide ? 2 : 0)
+                    | (LagramConfig.textAnimScale ? 4 : 0)
+                    | (LagramConfig.textAnimRotate ? 8 : 0);
+            items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.multi(
+                    ID_TEXT_ANIM_EFFECTS,
+                    null,
+                    new String[]{
+                            LocaleController.getString(R.string.LagramTextAnimBlur),
+                            LocaleController.getString(R.string.LagramTextAnimSlide),
+                            LocaleController.getString(R.string.LagramTextAnimScale),
+                            LocaleController.getString(R.string.LagramTextAnimRotate)
+                    },
+                    mask,
+                    idx -> {
+                        if (idx == 0) LagramConfig.toggleTextAnimBlur();
+                        else if (idx == 1) LagramConfig.toggleTextAnimSlide();
+                        else if (idx == 2) LagramConfig.toggleTextAnimScale();
+                        else if (idx == 3) LagramConfig.toggleTextAnimRotate();
+                        refreshList();
+                    }));
+            items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
+                    ID_TEXT_ANIM_SPEED,
+                    LocaleController.getString(R.string.LagramTextAnimSpeed),
+                    new String[]{
+                            LocaleController.getString(R.string.LagramTextAnimSpeedFast),
+                            LocaleController.getString(R.string.LagramTextAnimSpeedNormal),
+                            LocaleController.getString(R.string.LagramTextAnimSpeedSmooth)
+                    },
+                    LagramConfig.textAnimSpeed,
+                    idx -> {
+                        LagramConfig.setTextAnimSpeed(idx);
+                        refreshList();
+                    }));
+        }
+        items.add(UItem.asShadow(null));
+
+        // 4. REAL Interactive Delete Message Animation Preview
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramDeleteEffect)));
         items.add(LagramRealPreviews.RealDeleteAnimPreviewCell.Factory.of(ID_PREVIEW_DELETE));
         items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
@@ -244,8 +232,47 @@ public class LagramChatsActivity extends UniversalFragment {
                 }));
         items.add(UItem.asShadow(null));
 
-        // 5. Gestures & Message Selection
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramSelectionHeader)));
+        // 4b. Fast Chat Translation (Nagram Engine)
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramTranslateHeader)));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_NAGRAM_TRANSLATE, 0,
+                LocaleController.getString(R.string.LagramNagramTranslate),
+                LocaleController.getString(R.string.LagramNagramTranslateDesc),
+                LagramConfig.nagramTranslateEnabled));
+        if (LagramConfig.nagramTranslateEnabled) {
+            items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
+                    ID_TRANSLATE_PROVIDER,
+                    LocaleController.getString(R.string.LagramTranslateProvider),
+                    new String[]{
+                            LocaleController.getString(R.string.LagramTranslateProviderGoogle),
+                            LocaleController.getString(R.string.LagramTranslateProviderMicrosoft),
+                            LocaleController.getString(R.string.LagramTranslateProviderGoogleCloud),
+                            LocaleController.getString(R.string.LagramTranslateProviderTelegram)
+                    },
+                    LagramConfig.translateProvider,
+                    idx -> {
+                        LagramConfig.setTranslateProvider(idx);
+                        refreshList();
+                    }));
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                    ID_TRANSLATE_KEEP_ORIG, 0,
+                    LocaleController.getString(R.string.LagramTranslateKeepOriginal),
+                    LocaleController.getString(R.string.LagramTranslateKeepOriginalDesc),
+                    LagramConfig.translateKeepOriginal));
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                    ID_AUTO_TRANSLATE, 0,
+                    LocaleController.getString(R.string.LagramAutoTranslateChats),
+                    LocaleController.getString(R.string.LagramAutoTranslateChatsDesc),
+                    LagramConfig.autoTranslateChats));
+            items.add(UItem.asButton(
+                    ID_CLEAR_TRANSLATE_CACHE,
+                    R.drawable.msg_delete,
+                    LocaleController.getString(R.string.LagramClearTranslateCache)));
+        }
+        items.add(UItem.asShadow(null));
+
+        // 5. Gestures & Sizes
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatGesturesHeader)));
         items.add(UItem.asButton(ID_DOUBLE_TAP_IN, 0,
                 LocaleController.getString(R.string.LagramDoubleTapIncoming),
                 doubleTapLabel(LagramConfig.doubleTapActionIncoming)));
@@ -257,25 +284,6 @@ public class LagramChatsActivity extends UniversalFragment {
                 LocaleController.getString(R.string.LagramUnlimitedSelection),
                 null,
                 LagramConfig.unlimitedSelection));
-        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_FAST_SEL, 0,
-                LocaleController.getString(R.string.LagramFastSelection),
-                null,
-                LagramConfig.fastSelection));
-        if (LagramConfig.fastSelection) {
-            items.add(OpexgramStyleWidgets.OpexSliderCell.Factory.of(
-                    ID_SEL_SCROLL_SPEED,
-                    LocaleController.getString(R.string.LagramSelectionSpeed),
-                    1, 10, 5, LagramConfig.selectionScrollSpeed, "x",
-                    val -> {
-                        LagramConfig.setSelectionScrollSpeed(val);
-                        refreshList();
-                    }));
-        }
-        items.add(UItem.asShadow(null));
-
-        // 6. Sizes, Stickers & Chat Controls
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatConfirmHeader)));
         items.add(OpexgramStyleWidgets.OpexSliderCell.Factory.of(
                 ID_STICKER_SIZE,
                 LocaleController.getString(R.string.LagramStickerSize),
@@ -297,6 +305,10 @@ public class LagramChatsActivity extends UniversalFragment {
                 LocaleController.getString(R.string.LagramBigReactions),
                 null,
                 LagramConfig.bigReactions));
+        items.add(UItem.asShadow(null));
+
+        // 6. Controls & Confirmations
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatConfirmHeader)));
         items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                 ID_PAGE_UP, 0,
                 LocaleController.getString(R.string.LagramShowPageUpButton),
@@ -409,6 +421,14 @@ public class LagramChatsActivity extends UniversalFragment {
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
         switch (item.id) {
+            case ID_FOCUS_ENABLED:
+                LagramConfig.toggleMessageFocusEnabled();
+                refreshList();
+                break;
+            case ID_FOCUS_BLUR:
+                LagramConfig.toggleMessageFocusBlur();
+                refreshList();
+                break;
             case ID_IOS27_BAR:
                 LagramConfig.toggleIos27BottomBar();
                 refreshList();
@@ -417,13 +437,24 @@ public class LagramChatsActivity extends UniversalFragment {
                 LagramConfig.toggleTextAppearAnimation();
                 refreshList();
                 break;
-            case ID_FOCUS_ENABLED:
-                LagramConfig.toggleMessageFocusEnabled();
+            case ID_NAGRAM_TRANSLATE:
+                LagramConfig.toggleNagramTranslateEnabled();
                 refreshList();
                 break;
-            case ID_FOCUS_BLUR:
-                LagramConfig.toggleMessageFocusBlur();
+            case ID_TRANSLATE_KEEP_ORIG:
+                LagramConfig.toggleTranslateKeepOriginal();
                 refreshList();
+                break;
+            case ID_AUTO_TRANSLATE:
+                LagramConfig.toggleAutoTranslateChats();
+                refreshList();
+                break;
+            case ID_CLEAR_TRANSLATE_CACHE:
+                org.telegram.messenger.LagramTranslateDb.clearAll(() -> {
+                    org.telegram.ui.Components.BulletinFactory.of(this)
+                            .createSimpleBulletin(R.raw.ic_delete, LocaleController.getString(R.string.LagramTranslateCacheCleared))
+                            .show();
+                });
                 break;
             case ID_DOUBLE_TAP_IN:
                 showDoubleTapPicker(false);
@@ -433,10 +464,6 @@ public class LagramChatsActivity extends UniversalFragment {
                 break;
             case ID_UNLIMITED_SEL:
                 LagramConfig.toggleUnlimitedSelection();
-                refreshList();
-                break;
-            case ID_FAST_SEL:
-                LagramConfig.toggleFastSelection();
                 refreshList();
                 break;
             case ID_BIG_REACTIONS:

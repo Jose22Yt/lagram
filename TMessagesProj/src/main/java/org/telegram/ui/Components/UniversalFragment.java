@@ -50,15 +50,6 @@ public abstract class UniversalFragment extends BaseFragment {
             actionBar.setAllowOverlayTitle(true);
             actionBar.setTitle(getTitle());
             actionBar.setActionBarMenuOnItemClick(onItemClick);
-            org.telegram.messenger.LagramConfig.ensureLoaded();
-            if (org.telegram.messenger.LagramConfig.materialAppBar) {
-                if (org.telegram.messenger.LagramConfig.appBarBackground == org.telegram.messenger.LagramConfig.APP_BAR_BG_BLUR) {
-                    actionBar.setCenterTitleAndGlass(true);
-                } else {
-                    actionBar.centerTitle();
-                }
-                actionBar.setCastShadows(false);
-            }
         }
 
         contentView = new SizeNotifierFrameLayout(context) {

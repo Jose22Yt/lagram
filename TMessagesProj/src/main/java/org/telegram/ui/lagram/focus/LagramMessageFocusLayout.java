@@ -119,7 +119,6 @@ public final class LagramMessageFocusLayout extends FrameLayout {
         scroller = new OverScroller(context);
 
         int maxBarWidth = computeAvailablePopupWidth(AndroidUtilities.displaySize.x);
-        LagramConfig.ensureLoaded();
         int style = LagramConfig.messageFocusStyle;
         this.menuBar = style != LagramConfig.FOCUS_STYLE_LIST
                 ? LagramMessageMenuBar.create(items, style, popupLayout.getResourcesProvider(), popupLayout, maxBarWidth, true, this::requestLayout)
@@ -370,6 +369,7 @@ public final class LagramMessageFocusLayout extends FrameLayout {
             return;
         }
         enterAnimStarted = true;
+        setAnimatedChildrenLayerType(LAYER_TYPE_HARDWARE);
         SpringAnimation spring = new SpringAnimation(new FloatValueHolder(0.0f));
         enterSpring = spring;
         SpringForce force = new SpringForce(1.0f);
@@ -381,8 +381,19 @@ public final class LagramMessageFocusLayout extends FrameLayout {
         spring.addEndListener((animation, canceled, value, velocity) -> {
             enterSpring = null;
             applyEnterProgress(1.0f);
+            setAnimatedChildrenLayerType(LAYER_TYPE_NONE);
         });
         spring.start();
+    }
+
+    private void setAnimatedChildrenLayerType(int layerType) {
+        int count = scrimPopupContainerLayout.getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = scrimPopupContainerLayout.getChildAt(i);
+            if (child != reactionsLayout && child.getLayerType() != layerType) {
+                child.setLayerType(layerType, null);
+            }
+        }
     }
 
     @Override
@@ -397,6 +408,7 @@ public final class LagramMessageFocusLayout extends FrameLayout {
             enterSpring.cancel();
             enterSpring = null;
         }
+        setAnimatedChildrenLayerType(LAYER_TYPE_NONE);
     }
 
     @Override

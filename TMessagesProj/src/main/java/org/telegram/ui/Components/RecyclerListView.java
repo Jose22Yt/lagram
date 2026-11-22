@@ -3605,7 +3605,6 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     }
 
     int getSectionColorForDecoration() {
-        LagramConfig.ensureLoaded();
         if (LagramConfig.amoledSettingsBackdrop) {
             return Theme.isCurrentThemeDark() ? 0xFF1C1F22 : 0xFFF2F4F7;
         }
@@ -3613,7 +3612,6 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     }
 
     int getSectionsBackgroundColorForDecoration() {
-        LagramConfig.ensureLoaded();
         if (LagramConfig.amoledSettingsBackdrop) {
             return Theme.isCurrentThemeDark() ? 0xFF000000 : 0xFFFFFFFF;
         }

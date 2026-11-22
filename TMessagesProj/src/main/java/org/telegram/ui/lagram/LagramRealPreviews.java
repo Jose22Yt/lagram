@@ -563,6 +563,9 @@ public final class LagramRealPreviews {
             long h = 17L;
             h = h * 31L + (LagramConfig.glassMessages ? 1 : 0);
             h = h * 31L + LagramConfig.glassMessagesAlpha;
+            h = h * 31L + LagramConfig.glassBlurLevel;
+            h = h * 31L + LagramConfig.glassTintMode;
+            h = h * 31L + LagramConfig.glassBorderOpacity;
             h = h * 31L + (LagramConfig.glassMessagesBorder ? 1 : 0);
             h = h * 31L + (LagramConfig.glassHighlights ? 1 : 0);
             h = h * 31L + (LagramConfig.showBubbleTails ? 1 : 0);
@@ -1373,8 +1376,7 @@ public final class LagramRealPreviews {
         public static long fingerprint() {
             LagramConfig.ensureLoaded();
             long h = 17L;
-            h = h * 31L + LagramConfig.chatBoxStyle;
-            h = h * 31L + LagramConfig.chatBoxContrast;
+            h = h * 31L + (LagramConfig.ios27BottomBar ? 1 : 0);
             h = h * 31L + (LagramConfig.textAppearAnimation ? 1 : 0);
             h = h * 31L + (LagramConfig.textAnimBlur ? 1 : 0);
             h = h * 31L + (LagramConfig.textAnimSlide ? 1 : 0);
@@ -1403,48 +1405,28 @@ public final class LagramRealPreviews {
             int textColor = Theme.getColor(Theme.key_chat_messagePanelText, resourcesProvider);
             int hintColor = Theme.getColor(Theme.key_chat_messagePanelHint, resourcesProvider);
             int iconColor = Theme.getColor(Theme.key_chat_messagePanelIcons, resourcesProvider);
-            int contrast = Math.max(10, Math.min(100, LagramConfig.chatBoxContrast));
 
             liveInput.setTextColor(textColor);
             liveInput.setHintTextColor(hintColor);
             emojiBtn.setColorFilter(new PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN));
             attachBtn.setColorFilter(new PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN));
 
-            int style = LagramConfig.chatBoxStyle;
-            if (style == LagramConfig.CHAT_BOX_TELEGRAM) {
+            if (LagramConfig.ios27BottomBar) {
+                barContainer.setBackground(null);
+                barContainer.setPadding(dp(8), dp(6), dp(8), dp(2));
+                GradientDrawable gd = new GradientDrawable();
+                gd.setCornerRadius(dp(24));
+                gd.setColor(ColorUtils.setAlphaComponent(isDark ? 0xFF1C2029 : Color.WHITE, isDark ? 205 : 225));
+                gd.setStroke(dp(1), ColorUtils.setAlphaComponent(isDark ? Color.WHITE : Color.BLACK, isDark ? 36 : 20));
+                inputCapsule.setBackground(gd);
+                actionBtn.setBackground(Theme.createCircleDrawable(dp(44), accent));
+                actionBtn.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
+            } else {
                 barContainer.setBackgroundColor(panelBg);
                 barContainer.setPadding(dp(6), dp(2), dp(6), dp(2));
                 inputCapsule.setBackground(null);
                 actionBtn.setBackground(null);
                 actionBtn.setColorFilter(new PorterDuffColorFilter(accent, PorterDuff.Mode.SRC_IN));
-            } else if (style == LagramConfig.CHAT_BOX_BUTTONS) {
-                barContainer.setBackground(null);
-                barContainer.setPadding(dp(8), dp(6), dp(8), dp(2));
-                int pillAlpha = Math.round(255 * (Math.max(15, contrast) / 140f));
-                int pillColor = ColorUtils.setAlphaComponent(isDark ? 0xFF181C24 : Color.WHITE, pillAlpha);
-                inputCapsule.setBackground(Theme.createRoundRectDrawable(dp(22), pillColor));
-                actionBtn.setBackground(Theme.createCircleDrawable(dp(44), pillColor));
-                actionBtn.setColorFilter(new PorterDuffColorFilter(accent, PorterDuff.Mode.SRC_IN));
-            } else if (style == LagramConfig.CHAT_BOX_IOS_GLASS) {
-                barContainer.setBackground(null);
-                barContainer.setPadding(dp(8), dp(6), dp(8), dp(2));
-                int glassAlpha = Math.round(255 * (Math.max(25, contrast) / 115f));
-                GradientDrawable gd = new GradientDrawable();
-                gd.setCornerRadius(dp(24));
-                gd.setColor(ColorUtils.setAlphaComponent(isDark ? 0xFF1C2029 : Color.WHITE, glassAlpha));
-                gd.setStroke(dp(1), ColorUtils.setAlphaComponent(isDark ? Color.WHITE : Color.BLACK, isDark ? 45 : 24));
-                inputCapsule.setBackground(gd);
-                actionBtn.setBackground(Theme.createCircleDrawable(dp(44), accent));
-                actionBtn.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
-            } else {
-                // CHAT_BOX_EXPRESSIVE
-                barContainer.setBackground(null);
-                barContainer.setPadding(dp(8), dp(6), dp(8), dp(2));
-                int expAlpha = Math.round(255 * (Math.max(30, contrast) / 100f));
-                int fill = ColorUtils.setAlphaComponent(panelBg, expAlpha);
-                inputCapsule.setBackground(Theme.createRoundRectDrawable(dp(24), fill));
-                actionBtn.setBackground(Theme.createCircleDrawable(dp(44), accent));
-                actionBtn.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
             }
         }
 
@@ -1569,7 +1551,10 @@ public final class LagramRealPreviews {
                     return sampleMessages.size();
                 }
             });
-            LagramScrollEdgeController.attach(miniList);
+            LagramScrollEdgeController.attach(miniList, (rv, out) -> {
+                out[0] = 0f;
+                out[1] = rv.getHeight();
+            });
             addView(miniList, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 196));
 
             hintView = new TextView(context);
@@ -1963,6 +1948,205 @@ public final class LagramRealPreviews {
             @Override
             public void bindView(View view, UItem item, boolean divider, UniversalAdapter adapter, UniversalRecyclerView listView) {
                 ((RealDeletedMessagePreviewCell) view).bind(item.longValue);
+            }
+
+            @Override public boolean isClickable() { return false; }
+            @Override public boolean equals(UItem a, UItem b) { return a.id == b.id; }
+            @Override public boolean contentsEquals(UItem a, UItem b) { return a.longValue == b.longValue; }
+
+            public static UItem of(int id) {
+                UItem item = UItem.ofFactory(Factory.class);
+                item.id = id;
+                item.longValue = fingerprint();
+                return item;
+            }
+        }
+    }
+
+    // =========================================================================
+    // 8. REAL APP ICON SELECTOR — 6 interactive Lagram launcher icons (3x2 grid)
+    // =========================================================================
+    public static final class RealAppIconSelectorCell extends LinearLayout {
+
+        private final org.telegram.ui.LauncherIconController.LauncherIcon[] icons =
+                org.telegram.ui.LauncherIconController.LauncherIcon.values();
+        private final IconTileView[] tiles;
+        private final TextView hintView;
+        private long lastFingerprint = Long.MIN_VALUE;
+
+        public RealAppIconSelectorCell(Context context) {
+            super(context);
+            setOrientation(VERTICAL);
+            setPadding(dp(14), dp(14), dp(14), dp(12));
+
+            tiles = new IconTileView[icons.length];
+            LinearLayout row1 = new LinearLayout(context);
+            row1.setOrientation(HORIZONTAL);
+            row1.setGravity(Gravity.CENTER);
+            LinearLayout row2 = new LinearLayout(context);
+            row2.setOrientation(HORIZONTAL);
+            row2.setGravity(Gravity.CENTER);
+
+            for (int i = 0; i < icons.length; i++) {
+                final org.telegram.ui.LauncherIconController.LauncherIcon icon = icons[i];
+                IconTileView tile = new IconTileView(context, icon);
+                tile.setOnClickListener(v -> {
+                    if (org.telegram.ui.LauncherIconController.isEnabled(icon)) {
+                        return;
+                    }
+                    try {
+                        v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                    } catch (Throwable ignore) {}
+                    org.telegram.ui.LauncherIconController.setIcon(icon);
+                    tile.animate().scaleX(0.92f).scaleY(0.92f).setDuration(90)
+                            .withEndAction(() -> tile.animate().scaleX(1f).scaleY(1f).setDuration(150).start())
+                            .start();
+                    updateSelection();
+                    org.telegram.messenger.NotificationCenter.getGlobalInstance().postNotificationName(
+                            org.telegram.messenger.NotificationCenter.showBulletin,
+                            org.telegram.ui.Components.Bulletin.TYPE_APP_ICON,
+                            icon
+                    );
+                });
+                tiles[i] = tile;
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
+                lp.setMargins(dp(4), dp(4), dp(4), dp(4));
+                if (i < 3) {
+                    row1.addView(tile, lp);
+                } else {
+                    row2.addView(tile, lp);
+                }
+            }
+
+            addView(row1, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+            addView(row2, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 8, 0, 0));
+
+            hintView = new TextView(context);
+            hintView.setText(LocaleController.getString(R.string.LagramAppIconHint));
+            hintView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12.5f);
+            hintView.setGravity(Gravity.CENTER);
+            hintView.setPadding(dp(8), dp(10), dp(8), dp(2));
+            addView(hintView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+            updateSelection();
+        }
+
+        private void updateSelection() {
+            int subColor = Theme.getColor(Theme.key_windowBackgroundWhiteGrayText);
+            hintView.setTextColor(subColor);
+            for (int i = 0; i < icons.length; i++) {
+                boolean active = org.telegram.ui.LauncherIconController.isEnabled(icons[i]);
+                tiles[i].setSelectedState(active);
+            }
+        }
+
+        public void bind(long fp) {
+            if (fp == lastFingerprint) {
+                return;
+            }
+            lastFingerprint = fp;
+            updateSelection();
+        }
+
+        private static final class IconTileView extends LinearLayout {
+            private final FrameLayout iconFrame;
+            private final View ringView;
+            private final TextView labelView;
+            private boolean selected;
+
+            IconTileView(Context context, org.telegram.ui.LauncherIconController.LauncherIcon icon) {
+                super(context);
+                setOrientation(VERTICAL);
+                setGravity(Gravity.CENTER_HORIZONTAL);
+                setPadding(dp(4), dp(6), dp(4), dp(6));
+
+                iconFrame = new FrameLayout(context);
+
+                ringView = new View(context);
+                iconFrame.addView(ringView, LayoutHelper.createFrame(66, 66, Gravity.CENTER));
+
+                FrameLayout iconClip = new FrameLayout(context);
+                iconClip.setClipToOutline(true);
+                iconClip.setOutlineProvider(new ViewOutlineProvider() {
+                    @Override
+                    public void getOutline(View view, Outline outline) {
+                        outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(15));
+                    }
+                });
+
+                ImageView bgView = new ImageView(context);
+                bgView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                bgView.setImageDrawable(ContextCompat.getDrawable(context, icon.background));
+                iconClip.addView(bgView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+                ImageView fgView = new ImageView(context);
+                fgView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                fgView.setImageDrawable(ContextCompat.getDrawable(context, icon.foreground));
+                // Adaptive foreground uses 108dp canvas with 72dp visible center -> scale slightly so emblem fills squircle cleanly
+                fgView.setScaleX(1.32f);
+                fgView.setScaleY(1.32f);
+                iconClip.addView(fgView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+                iconFrame.addView(iconClip, LayoutHelper.createFrame(56, 56, Gravity.CENTER));
+                addView(iconFrame, LayoutHelper.createLinear(68, 68, Gravity.CENTER_HORIZONTAL));
+
+                labelView = new TextView(context);
+                labelView.setText(LocaleController.getString(icon.title));
+                labelView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12.5f);
+                labelView.setSingleLine(true);
+                labelView.setEllipsize(TextUtils.TruncateAt.END);
+                labelView.setGravity(Gravity.CENTER);
+                labelView.setPadding(0, dp(5), 0, 0);
+                addView(labelView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+            }
+
+            void setSelectedState(boolean isSelected) {
+                selected = isSelected;
+                int accent = Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4);
+                int textPrimary = Theme.getColor(Theme.key_windowBackgroundWhiteBlackText);
+                int textSecondary = Theme.getColor(Theme.key_windowBackgroundWhiteGrayText);
+
+                GradientDrawable ring = new GradientDrawable();
+                ring.setCornerRadius(dp(18));
+                if (selected) {
+                    ring.setColor(ColorUtils.setAlphaComponent(accent, 28));
+                    ring.setStroke(dp(2.2f), accent);
+                    labelView.setTextColor(accent);
+                    labelView.setTypeface(AndroidUtilities.bold());
+                } else {
+                    ring.setColor(Color.TRANSPARENT);
+                    ring.setStroke(dp(1), ColorUtils.setAlphaComponent(textSecondary, 45));
+                    labelView.setTextColor(textPrimary);
+                    labelView.setTypeface(AndroidUtilities.getTypeface(AndroidUtilities.TYPEFACE_ROBOTO_REGULAR));
+                }
+                ringView.setBackground(ring);
+            }
+        }
+
+        public static long fingerprint() {
+            long h = 71L;
+            h = h * 31L + (Theme.isCurrentThemeDark() ? 1 : 0);
+            h = h * 31L + Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4);
+            org.telegram.ui.LauncherIconController.LauncherIcon[] vals = org.telegram.ui.LauncherIconController.LauncherIcon.values();
+            for (int i = 0; i < vals.length; i++) {
+                if (org.telegram.ui.LauncherIconController.isEnabled(vals[i])) {
+                    h = h * 31L + (i + 1);
+                }
+            }
+            return h;
+        }
+
+        public static class Factory extends UItem.UItemFactory<RealAppIconSelectorCell> {
+            static { setup(new Factory()); }
+
+            @Override
+            public RealAppIconSelectorCell createView(Context context, RecyclerListView listView, int currentAccount, int classGuid, Theme.ResourcesProvider resourcesProvider) {
+                return new RealAppIconSelectorCell(context);
+            }
+
+            @Override
+            public void bindView(View view, UItem item, boolean divider, UniversalAdapter adapter, UniversalRecyclerView listView) {
+                ((RealAppIconSelectorCell) view).bind(item.longValue);
             }
 
             @Override public boolean isClickable() { return false; }

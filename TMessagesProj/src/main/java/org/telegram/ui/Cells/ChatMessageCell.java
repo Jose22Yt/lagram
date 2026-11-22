@@ -6244,8 +6244,11 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     }
 
     public MultiLayoutTypingAnimator botDraftTypingAnimator;
+    private boolean lagramIsDeleted;
 
     private void setMessageContent(MessageObject messageObject, MessageObject.GroupedMessages groupedMessages, boolean bottomNear, boolean topNear, boolean firstInChat, boolean lastInChatList) {
+        lagramIsDeleted = messageObject != null
+                && org.telegram.messenger.LagramMessageHistoryDb.isMessageDeleted(messageObject.currentAccount, messageObject.getDialogId(), messageObject.getId());
         if (messageObject.checkLayout() || currentPosition != null && lastHeight != AndroidUtilities.displaySize.y) {
             currentMessageObject = null;
         }
@@ -17262,9 +17265,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             Theme.chat_msgTextCode2Paint.linkColor =
             Theme.chat_msgTextCode3Paint.linkColor = getThemedColor(Theme.key_chat_messageLinkIn);
         }
-        boolean lagramDeletedMsg = currentMessageObject != null
-                && org.telegram.messenger.LagramMessageHistoryDb.isMessageDeleted(currentMessageObject.currentAccount, currentMessageObject.getDialogId(), currentMessageObject.getId());
-        Theme.chat_msgTextPaint.setStrikeThruText(lagramDeletedMsg && org.telegram.messenger.LagramConfig.deletedMessageStrike);
+        Theme.chat_msgTextPaint.setStrikeThruText(lagramIsDeleted && org.telegram.messenger.LagramConfig.deletedMessageStrike);
 
         if (documentAttach != null) {
             if (documentAttachType == DOCUMENT_ATTACH_TYPE_AUDIO || documentAttachType == DOCUMENT_ATTACH_TYPE_ROUND) {
@@ -17992,8 +17993,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             if (fromParent) {
                 alphaInternal *= getAlpha();
             }
-            boolean lagramIsDeletedBubble = currentMessageObject != null
-                    && org.telegram.messenger.LagramMessageHistoryDb.isMessageDeleted(currentMessageObject.currentAccount, currentMessageObject.getDialogId(), currentMessageObject.getId());
+            boolean lagramIsDeletedBubble = lagramIsDeleted;
             if (lagramIsDeletedBubble && org.telegram.messenger.LagramConfig.deletedMessageDim) {
                 alphaInternal *= 0.72f;
             }
@@ -18165,7 +18165,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     }
 
     public boolean drawBackgroundInParent() {
-        if (org.telegram.messenger.LagramConfig.glassMessages) {
+        if (org.telegram.messenger.LagramConfig.glassMessages
+                || (org.telegram.messenger.LagramConfig.scrollEdgeScale && Math.abs(getRotationX()) > 0.05f)) {
             return false;
         }
         if (canDrawBackgroundInParent && currentMessageObject != null && currentMessageObject.isOutOwner()) {
@@ -21486,9 +21487,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 }
             }
         }
-        if (currentMessageObject != null
-                && org.telegram.messenger.LagramConfig.deletedTextColor != 0
-                && org.telegram.messenger.LagramMessageHistoryDb.isMessageDeleted(currentMessageObject.currentAccount, currentMessageObject.getDialogId(), currentMessageObject.getId())) {
+        if (lagramIsDeleted && org.telegram.messenger.LagramConfig.deletedTextColor != 0) {
             Theme.chat_timePaint.setColor(org.telegram.messenger.LagramConfig.deletedTextColor);
         }
         if (getTransitionParams().animateDrawingTimeAlpha) {

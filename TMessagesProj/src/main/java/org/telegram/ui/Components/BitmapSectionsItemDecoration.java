@@ -146,7 +146,6 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
         final int position = holder.getAdapterPosition();
         if (position == RecyclerView.NO_POSITION) return;
         if (position == 0) outRect.top = enableTopPadding ? padding : AndroidUtilities.dp(4);
-        org.telegram.messenger.LagramConfig.ensureLoaded();
         if (position == adapter.getItemCount() - 1) {
             outRect.bottom = padding;
         } else if (!parent.isInsideForcedSection(position)) {

@@ -91,12 +91,15 @@ public class TranslateController extends BaseController {
     }
 
     public boolean isFeatureAvailable() {
-        return isChatTranslateEnabled() && UserConfig.getInstance(currentAccount).isPremium();
+        return isChatTranslateEnabled() && (LagramConfig.nagramTranslateEnabled || UserConfig.getInstance(currentAccount).isPremium());
     }
 
     public boolean isFeatureAvailable(long dialogId) {
         if (!isChatTranslateEnabled()) {
             return false;
+        }
+        if (LagramConfig.nagramTranslateEnabled) {
+            return true;
         }
         final TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
         return (
@@ -109,7 +112,7 @@ public class TranslateController extends BaseController {
     private Boolean contextTranslateEnabled;
 
     public boolean isChatTranslateEnabled() {
-        if (!getMessagesController().isTranslationsAutoEnabled()) {
+        if (!LagramConfig.nagramTranslateEnabled && !getMessagesController().isTranslationsAutoEnabled()) {
             return false;
         }
         if (chatTranslateEnabled == null) {
@@ -119,6 +122,9 @@ public class TranslateController extends BaseController {
     }
 
     public boolean isContextTranslateEnabled() {
+        if (LagramConfig.nagramTranslateEnabled) {
+            return true;
+        }
         if (!getMessagesController().isTranslationsManualEnabled()) {
             return false;
         }
@@ -219,6 +225,9 @@ public class TranslateController extends BaseController {
     private boolean isChatAutoTranslated(long dialogId) {
         if (!isDialogTranslatable(dialogId)) {
             return false;
+        }
+        if (LagramConfig.nagramTranslateEnabled && LagramConfig.autoTranslateChats) {
+            return true;
         }
         final TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
         return chat != null && chat.autotranslation;
@@ -1101,6 +1110,54 @@ public class TranslateController extends BaseController {
                             pendingTranslations.remove(dialogId);
                         }
                     }
+                }
+
+                if (LagramConfig.nagramTranslateEnabled
+                        && LagramConfig.translateProvider != LagramConfig.TRANSLATE_PROVIDER_TELEGRAM) {
+                    final ArrayList<Integer> ids;
+                    final ArrayList<Utilities.Callback4<Boolean, Integer, TLRPC.TL_textWithEntities, String>> callbacks;
+                    final ArrayList<TLRPC.TL_textWithEntities> texts;
+                    final String toLanguage;
+                    synchronized (TranslateController.this) {
+                        ids = new ArrayList<>(pendingTranslation1.messageIds);
+                        callbacks = new ArrayList<>(pendingTranslation1.callbacks);
+                        texts = new ArrayList<>(pendingTranslation1.messageTexts);
+                        toLanguage = pendingTranslation1.language;
+                    }
+                    final ArrayList<String> rawTexts = new ArrayList<>(texts.size());
+                    for (int i = 0; i < texts.size(); i++) {
+                        TLRPC.TL_textWithEntities twe = texts.get(i);
+                        rawTexts.add(twe != null && twe.text != null ? twe.text : "");
+                    }
+                    LagramTranslator.translateBatch(rawTexts, toLanguage, (results, rateLimit) -> {
+                        boolean anySuccess = false;
+                        final int count = Math.min(callbacks.size(), results.length);
+                        for (int i = 0; i < count; i++) {
+                            String tr = results[i];
+                            if (tr != null && !tr.isEmpty()) {
+                                anySuccess = true;
+                                TLRPC.TL_textWithEntities resultWithEntities = new TLRPC.TL_textWithEntities();
+                                resultWithEntities.text = LagramTranslator.formatOutput(rawTexts.get(i), tr);
+                                callbacks.get(i).run(isTranscription, ids.get(i), resultWithEntities, toLanguage);
+                            } else {
+                                callbacks.get(i).run(isTranscription, ids.get(i), null, toLanguage);
+                            }
+                        }
+                        if (!anySuccess && count > 0) {
+                            toggleTranslatingDialog(dialogId, false);
+                            NotificationCenter.getGlobalInstance().postNotificationName(
+                                    NotificationCenter.showBulletin,
+                                    Bulletin.TYPE_ERROR,
+                                    getString(rateLimit ? R.string.TranslationFailedAlert1 : R.string.TranslationFailedAlert2)
+                            );
+                        }
+                        synchronized (TranslateController.this) {
+                            for (int i = 0; i < ids.size(); i++) {
+                                loadingTranslations.remove(ids.get(i));
+                            }
+                        }
+                    });
+                    return;
                 }
 
                 final String method = getMessagesController().translationsAutoEnabled;
