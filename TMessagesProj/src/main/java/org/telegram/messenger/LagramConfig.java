@@ -74,13 +74,39 @@ public final class LagramConfig {
     public static final int AVATAR_SHAPE_ROUNDED = 1;
     public static final int AVATAR_SHAPE_SQUIRCLE = 2;
 
+    // Folder bar visual styles (Opexgram: Telegram / Tabs / Buttons)
+    public static final int FOLDER_BAR_TELEGRAM = 0;
+    public static final int FOLDER_BAR_TABS = 1;
+    public static final int FOLDER_BAR_BUTTONS = 2;
+
+    // Chat box styles (Opexgram: Telegram / Expressive / Buttons)
+    public static final int CHAT_BOX_TELEGRAM = 0;
+    public static final int CHAT_BOX_EXPRESSIVE = 1;
+    public static final int CHAT_BOX_BUTTONS = 2;
+
+    // App bar background modes (Opexgram: Tone / Blur)
+    public static final int APP_BAR_BG_TONE = 0;
+    public static final int APP_BAR_BG_BLUR = 1;
+
+    // Media glow brightness levels
+    public static final int MEDIA_GLOW_SOFT = 0;
+    public static final int MEDIA_GLOW_MEDIUM = 1;
+    public static final int MEDIA_GLOW_STRONG = 2;
+
     // Haptics levels
     public static final int HAPTICS_OFF = 0;
     public static final int HAPTICS_SOFT = 1;
     public static final int HAPTICS_NORMAL = 2;
     public static final int HAPTICS_STRONG = 3;
 
-    // Appearance & UI
+    // Appearance & Material Design 3 Expressive (Opexgram)
+    public static boolean materialContainers = true;
+    public static int sectionSpacingDp = 7;
+    public static boolean materialControls = true;
+    public static boolean materialChatList = true;
+    public static boolean materialAppBar = true;
+    public static int appBarBackground = APP_BAR_BG_BLUR;
+    public static boolean materialProfileTabs = true;
     public static boolean ios27BottomBar = true;
     public static boolean amoledSettingsBackdrop = true;
     public static int animationSpeed = ANIM_SPEED_FAST;
@@ -101,18 +127,22 @@ public final class LagramConfig {
     public static boolean glassHighlights = true;
     public static boolean popupGlass = true;
     public static boolean chatEdgeBlur = true;
+    public static int folderBarStyle = FOLDER_BAR_BUTTONS;
     public static int folderTabsStyle = FOLDER_TABS_ICON_AND_TEXT;
     public static boolean showFolderCounters = true;
     public static boolean rememberLastFolder = false;
     public static int lastFolderTabId = -1;
-    public static int roundingPreset = ROUNDING_DEFAULT;
+    public static int roundingPreset = ROUNDING_ROUND;
     public static int sectionGap = SECTION_GAP_DEFAULT;
     public static int avatarShape = AVATAR_SHAPE_CIRCLE;
     public static boolean chatsHeaderCentered = false;
     public static boolean scrollEdgeScale = true;
-    public static int scrollEdgeMode = SCROLL_EDGE_SCALE;
+    public static int scrollEdgeMode = SCROLL_EDGE_DRUM;
 
-    // Chats & Messages (including Opexgram Message Focus)
+    // Chats & Messages (including Opexgram Message Focus, Expressive Header/Box, Text Anim)
+    public static boolean chatHeaderExpressive = true;
+    public static int chatBoxStyle = CHAT_BOX_EXPRESSIVE;
+    public static int chatBoxContrast = 55;
     public static boolean messageFocusEnabled = true;
     public static boolean messageFocusBlur = true;
     public static int messageFocusStyle = FOCUS_STYLE_CAPSULE;
@@ -133,12 +163,17 @@ public final class LagramConfig {
     public static boolean showPageUpButton = true;
     public static boolean unlimitedSelection = true;
     public static boolean fastSelection = true;
+    public static int selectionScrollSpeed = 5;
     public static boolean showWeekdayInDate = true;
     public static boolean showForwardTime = true;
     public static boolean showPollPreview = true;
     public static boolean showStickerPackOwner = true;
     public static boolean showForwardsCounter = true;
     public static boolean textAppearAnimation = true;
+    public static boolean textAnimBlur = true;
+    public static boolean textAnimSlide = true;
+    public static boolean textAnimScale = true;
+    public static boolean textAnimRotate = false;
     public static boolean bigReactions = false;
 
     // Media & Network
@@ -152,9 +187,11 @@ public final class LagramConfig {
     public static boolean autoplayRoundInRow = true;
     public static boolean autoplayMusicInRow = true;
     public static boolean mediaGlow = true;
+    public static boolean mediaGlowVideos = true;
+    public static int mediaGlowLevel = MEDIA_GLOW_MEDIUM;
     public static boolean compactRoundCamera = false;
 
-    // Performance & General
+    // Performance, General & Lock
     public static boolean highRefreshRateScroll = true;
     public static boolean disableSponsoredMessages = true;
     public static boolean hideSimilarChannels = false;
@@ -162,6 +199,10 @@ public final class LagramConfig {
     public static boolean showJoinDate = true;
     public static boolean profileNameSwitch = true;
     public static boolean openArchiveOnPull = true;
+    public static boolean lockArchive = false;
+    public static boolean lockSecret = false;
+    public static boolean lockSaved = false;
+    public static boolean lockDelete = false;
     public static int hapticsLevel = HAPTICS_NORMAL;
 
     // Privacy & Ghost Mode (AyuGram-style)
@@ -188,7 +229,14 @@ public final class LagramConfig {
         loaded = true;
         final SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
-        // Appearance
+        // Appearance & Material Design 3
+        materialContainers = prefs.getBoolean("materialContainers", true);
+        sectionSpacingDp = prefs.getInt("sectionSpacingDp", 7);
+        materialControls = prefs.getBoolean("materialControls", true);
+        materialChatList = prefs.getBoolean("materialChatList", true);
+        materialAppBar = prefs.getBoolean("materialAppBar", true);
+        appBarBackground = prefs.getInt("appBarBackground", APP_BAR_BG_BLUR);
+        materialProfileTabs = prefs.getBoolean("materialProfileTabs", true);
         ios27BottomBar = prefs.getBoolean("ios27BottomBar", true);
         amoledSettingsBackdrop = prefs.getBoolean("amoledSettingsBackdrop", true);
         animationSpeed = prefs.getInt("animationSpeed", ANIM_SPEED_FAST);
@@ -209,18 +257,22 @@ public final class LagramConfig {
         glassHighlights = prefs.getBoolean("glassHighlights", true);
         popupGlass = prefs.getBoolean("popupGlass", true);
         chatEdgeBlur = prefs.getBoolean("chatEdgeBlur", true);
+        folderBarStyle = prefs.getInt("folderBarStyle", FOLDER_BAR_BUTTONS);
         folderTabsStyle = prefs.getInt("folderTabsStyle", FOLDER_TABS_ICON_AND_TEXT);
         showFolderCounters = prefs.getBoolean("showFolderCounters", true);
         rememberLastFolder = prefs.getBoolean("rememberLastFolder", false);
         lastFolderTabId = prefs.getInt("lastFolderTabId", -1);
-        roundingPreset = prefs.getInt("roundingPreset", ROUNDING_DEFAULT);
+        roundingPreset = prefs.getInt("roundingPreset", ROUNDING_ROUND);
         sectionGap = prefs.getInt("sectionGap", SECTION_GAP_DEFAULT);
         avatarShape = prefs.getInt("avatarShape", AVATAR_SHAPE_CIRCLE);
         chatsHeaderCentered = prefs.getBoolean("chatsHeaderCentered", false);
         scrollEdgeScale = prefs.getBoolean("scrollEdgeScale", true);
-        scrollEdgeMode = prefs.getInt("scrollEdgeMode", SCROLL_EDGE_SCALE);
+        scrollEdgeMode = prefs.getInt("scrollEdgeMode", SCROLL_EDGE_DRUM);
 
         // Chats & Message Focus
+        chatHeaderExpressive = prefs.getBoolean("chatHeaderExpressive", true);
+        chatBoxStyle = prefs.getInt("chatBoxStyle", CHAT_BOX_EXPRESSIVE);
+        chatBoxContrast = prefs.getInt("chatBoxContrast", 55);
         messageFocusEnabled = prefs.getBoolean("messageFocusEnabled", true);
         messageFocusBlur = prefs.getBoolean("messageFocusBlur", true);
         messageFocusStyle = prefs.getInt("messageFocusStyle", FOCUS_STYLE_CAPSULE);
@@ -241,12 +293,17 @@ public final class LagramConfig {
         showPageUpButton = prefs.getBoolean("showPageUpButton", true);
         unlimitedSelection = prefs.getBoolean("unlimitedSelection", true);
         fastSelection = prefs.getBoolean("fastSelection", true);
+        selectionScrollSpeed = prefs.getInt("selectionScrollSpeed", 5);
         showWeekdayInDate = prefs.getBoolean("showWeekdayInDate", true);
         showForwardTime = prefs.getBoolean("showForwardTime", true);
         showPollPreview = prefs.getBoolean("showPollPreview", true);
         showStickerPackOwner = prefs.getBoolean("showStickerPackOwner", true);
         showForwardsCounter = prefs.getBoolean("showForwardsCounter", true);
         textAppearAnimation = prefs.getBoolean("textAppearAnimation", true);
+        textAnimBlur = prefs.getBoolean("textAnimBlur", true);
+        textAnimSlide = prefs.getBoolean("textAnimSlide", true);
+        textAnimScale = prefs.getBoolean("textAnimScale", true);
+        textAnimRotate = prefs.getBoolean("textAnimRotate", false);
         bigReactions = prefs.getBoolean("bigReactions", false);
 
         // Media & Network
@@ -260,9 +317,11 @@ public final class LagramConfig {
         autoplayRoundInRow = prefs.getBoolean("autoplayRoundInRow", true);
         autoplayMusicInRow = prefs.getBoolean("autoplayMusicInRow", true);
         mediaGlow = prefs.getBoolean("mediaGlow", true);
+        mediaGlowVideos = prefs.getBoolean("mediaGlowVideos", true);
+        mediaGlowLevel = prefs.getInt("mediaGlowLevel", MEDIA_GLOW_MEDIUM);
         compactRoundCamera = prefs.getBoolean("compactRoundCamera", false);
 
-        // Performance & General
+        // Performance, General & Lock
         highRefreshRateScroll = prefs.getBoolean("highRefreshRateScroll", true);
         disableSponsoredMessages = prefs.getBoolean("disableSponsoredMessages", true);
         hideSimilarChannels = prefs.getBoolean("hideSimilarChannels", false);
@@ -270,6 +329,10 @@ public final class LagramConfig {
         showJoinDate = prefs.getBoolean("showJoinDate", true);
         profileNameSwitch = prefs.getBoolean("profileNameSwitch", true);
         openArchiveOnPull = prefs.getBoolean("openArchiveOnPull", true);
+        lockArchive = prefs.getBoolean("lockArchive", false);
+        lockSecret = prefs.getBoolean("lockSecret", false);
+        lockSaved = prefs.getBoolean("lockSaved", false);
+        lockDelete = prefs.getBoolean("lockDelete", false);
         hapticsLevel = prefs.getInt("hapticsLevel", HAPTICS_NORMAL);
 
         // Privacy & Ghost Mode
@@ -312,6 +375,154 @@ public final class LagramConfig {
                 .edit()
                 .putInt(key, value)
                 .apply();
+    }
+
+    // --- Material Design 3 & Opexgram Expressive setters/toggles ---
+    public static boolean toggleMaterialContainers() {
+        ensureLoaded();
+        materialContainers = !materialContainers;
+        saveBoolean("materialContainers", materialContainers);
+        return materialContainers;
+    }
+
+    public static void setSectionSpacingDp(int dpVal) {
+        ensureLoaded();
+        sectionSpacingDp = Math.max(0, Math.min(24, dpVal));
+        saveInt("sectionSpacingDp", sectionSpacingDp);
+    }
+
+    public static boolean toggleMaterialControls() {
+        ensureLoaded();
+        materialControls = !materialControls;
+        saveBoolean("materialControls", materialControls);
+        return materialControls;
+    }
+
+    public static boolean toggleMaterialChatList() {
+        ensureLoaded();
+        materialChatList = !materialChatList;
+        saveBoolean("materialChatList", materialChatList);
+        return materialChatList;
+    }
+
+    public static boolean toggleMaterialAppBar() {
+        ensureLoaded();
+        materialAppBar = !materialAppBar;
+        saveBoolean("materialAppBar", materialAppBar);
+        return materialAppBar;
+    }
+
+    public static void setAppBarBackground(int mode) {
+        ensureLoaded();
+        appBarBackground = mode;
+        saveInt("appBarBackground", appBarBackground);
+    }
+
+    public static boolean toggleMaterialProfileTabs() {
+        ensureLoaded();
+        materialProfileTabs = !materialProfileTabs;
+        saveBoolean("materialProfileTabs", materialProfileTabs);
+        return materialProfileTabs;
+    }
+
+    public static void setFolderBarStyle(int style) {
+        ensureLoaded();
+        folderBarStyle = style;
+        saveInt("folderBarStyle", folderBarStyle);
+    }
+
+    public static boolean toggleChatHeaderExpressive() {
+        ensureLoaded();
+        chatHeaderExpressive = !chatHeaderExpressive;
+        saveBoolean("chatHeaderExpressive", chatHeaderExpressive);
+        return chatHeaderExpressive;
+    }
+
+    public static void setChatBoxStyle(int style) {
+        ensureLoaded();
+        chatBoxStyle = style;
+        saveInt("chatBoxStyle", chatBoxStyle);
+    }
+
+    public static void setChatBoxContrast(int contrast) {
+        ensureLoaded();
+        chatBoxContrast = Math.max(5, Math.min(100, contrast));
+        saveInt("chatBoxContrast", chatBoxContrast);
+    }
+
+    public static void setSelectionScrollSpeed(int speed) {
+        ensureLoaded();
+        selectionScrollSpeed = Math.max(2, Math.min(8, speed));
+        saveInt("selectionScrollSpeed", selectionScrollSpeed);
+    }
+
+    public static boolean toggleTextAnimBlur() {
+        ensureLoaded();
+        textAnimBlur = !textAnimBlur;
+        saveBoolean("textAnimBlur", textAnimBlur);
+        return textAnimBlur;
+    }
+
+    public static boolean toggleTextAnimSlide() {
+        ensureLoaded();
+        textAnimSlide = !textAnimSlide;
+        saveBoolean("textAnimSlide", textAnimSlide);
+        return textAnimSlide;
+    }
+
+    public static boolean toggleTextAnimScale() {
+        ensureLoaded();
+        textAnimScale = !textAnimScale;
+        saveBoolean("textAnimScale", textAnimScale);
+        return textAnimScale;
+    }
+
+    public static boolean toggleTextAnimRotate() {
+        ensureLoaded();
+        textAnimRotate = !textAnimRotate;
+        saveBoolean("textAnimRotate", textAnimRotate);
+        return textAnimRotate;
+    }
+
+    public static boolean toggleMediaGlowVideos() {
+        ensureLoaded();
+        mediaGlowVideos = !mediaGlowVideos;
+        saveBoolean("mediaGlowVideos", mediaGlowVideos);
+        return mediaGlowVideos;
+    }
+
+    public static void setMediaGlowLevel(int level) {
+        ensureLoaded();
+        mediaGlowLevel = Math.max(MEDIA_GLOW_SOFT, Math.min(MEDIA_GLOW_STRONG, level));
+        saveInt("mediaGlowLevel", mediaGlowLevel);
+    }
+
+    public static boolean toggleLockArchive() {
+        ensureLoaded();
+        lockArchive = !lockArchive;
+        saveBoolean("lockArchive", lockArchive);
+        return lockArchive;
+    }
+
+    public static boolean toggleLockSecret() {
+        ensureLoaded();
+        lockSecret = !lockSecret;
+        saveBoolean("lockSecret", lockSecret);
+        return lockSecret;
+    }
+
+    public static boolean toggleLockSaved() {
+        ensureLoaded();
+        lockSaved = !lockSaved;
+        saveBoolean("lockSaved", lockSaved);
+        return lockSaved;
+    }
+
+    public static boolean toggleLockDelete() {
+        ensureLoaded();
+        lockDelete = !lockDelete;
+        saveBoolean("lockDelete", lockDelete);
+        return lockDelete;
     }
 
     // --- Appearance setters/toggles ---
@@ -1013,6 +1224,28 @@ public final class LagramConfig {
         try {
             JSONObject obj = new JSONObject();
             obj.put("ios27BottomBar", ios27BottomBar);
+            obj.put("materialContainers", materialContainers);
+            obj.put("sectionSpacingDp", sectionSpacingDp);
+            obj.put("materialControls", materialControls);
+            obj.put("materialChatList", materialChatList);
+            obj.put("materialAppBar", materialAppBar);
+            obj.put("appBarBackground", appBarBackground);
+            obj.put("materialProfileTabs", materialProfileTabs);
+            obj.put("folderBarStyle", folderBarStyle);
+            obj.put("chatHeaderExpressive", chatHeaderExpressive);
+            obj.put("chatBoxStyle", chatBoxStyle);
+            obj.put("chatBoxContrast", chatBoxContrast);
+            obj.put("selectionScrollSpeed", selectionScrollSpeed);
+            obj.put("textAnimBlur", textAnimBlur);
+            obj.put("textAnimSlide", textAnimSlide);
+            obj.put("textAnimScale", textAnimScale);
+            obj.put("textAnimRotate", textAnimRotate);
+            obj.put("mediaGlowVideos", mediaGlowVideos);
+            obj.put("mediaGlowLevel", mediaGlowLevel);
+            obj.put("lockArchive", lockArchive);
+            obj.put("lockSecret", lockSecret);
+            obj.put("lockSaved", lockSaved);
+            obj.put("lockDelete", lockDelete);
             obj.put("amoledSettingsBackdrop", amoledSettingsBackdrop);
             obj.put("animationSpeed", animationSpeed);
             obj.put("hideStories", hideStories);
@@ -1202,6 +1435,28 @@ public final class LagramConfig {
             if (obj.has("saveEditedMessages")) editor.putBoolean("saveEditedMessages", obj.getBoolean("saveEditedMessages"));
             if (obj.has("allowScreenshots")) editor.putBoolean("allowScreenshots", obj.getBoolean("allowScreenshots"));
             if (obj.has("bypassNoForwards")) editor.putBoolean("bypassNoForwards", obj.getBoolean("bypassNoForwards"));
+            if (obj.has("materialContainers")) editor.putBoolean("materialContainers", obj.getBoolean("materialContainers"));
+            if (obj.has("sectionSpacingDp")) editor.putInt("sectionSpacingDp", obj.getInt("sectionSpacingDp"));
+            if (obj.has("materialControls")) editor.putBoolean("materialControls", obj.getBoolean("materialControls"));
+            if (obj.has("materialChatList")) editor.putBoolean("materialChatList", obj.getBoolean("materialChatList"));
+            if (obj.has("materialAppBar")) editor.putBoolean("materialAppBar", obj.getBoolean("materialAppBar"));
+            if (obj.has("appBarBackground")) editor.putInt("appBarBackground", obj.getInt("appBarBackground"));
+            if (obj.has("materialProfileTabs")) editor.putBoolean("materialProfileTabs", obj.getBoolean("materialProfileTabs"));
+            if (obj.has("folderBarStyle")) editor.putInt("folderBarStyle", obj.getInt("folderBarStyle"));
+            if (obj.has("chatHeaderExpressive")) editor.putBoolean("chatHeaderExpressive", obj.getBoolean("chatHeaderExpressive"));
+            if (obj.has("chatBoxStyle")) editor.putInt("chatBoxStyle", obj.getInt("chatBoxStyle"));
+            if (obj.has("chatBoxContrast")) editor.putInt("chatBoxContrast", obj.getInt("chatBoxContrast"));
+            if (obj.has("selectionScrollSpeed")) editor.putInt("selectionScrollSpeed", obj.getInt("selectionScrollSpeed"));
+            if (obj.has("textAnimBlur")) editor.putBoolean("textAnimBlur", obj.getBoolean("textAnimBlur"));
+            if (obj.has("textAnimSlide")) editor.putBoolean("textAnimSlide", obj.getBoolean("textAnimSlide"));
+            if (obj.has("textAnimScale")) editor.putBoolean("textAnimScale", obj.getBoolean("textAnimScale"));
+            if (obj.has("textAnimRotate")) editor.putBoolean("textAnimRotate", obj.getBoolean("textAnimRotate"));
+            if (obj.has("mediaGlowVideos")) editor.putBoolean("mediaGlowVideos", obj.getBoolean("mediaGlowVideos"));
+            if (obj.has("mediaGlowLevel")) editor.putInt("mediaGlowLevel", obj.getInt("mediaGlowLevel"));
+            if (obj.has("lockArchive")) editor.putBoolean("lockArchive", obj.getBoolean("lockArchive"));
+            if (obj.has("lockSecret")) editor.putBoolean("lockSecret", obj.getBoolean("lockSecret"));
+            if (obj.has("lockSaved")) editor.putBoolean("lockSaved", obj.getBoolean("lockSaved"));
+            if (obj.has("lockDelete")) editor.putBoolean("lockDelete", obj.getBoolean("lockDelete"));
             editor.apply();
             loaded = false;
             ensureLoaded();

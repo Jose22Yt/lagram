@@ -146,10 +146,18 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
         final int position = holder.getAdapterPosition();
         if (position == RecyclerView.NO_POSITION) return;
         if (position == 0) outRect.top = enableTopPadding ? padding : AndroidUtilities.dp(4);
+        org.telegram.messenger.LagramConfig.ensureLoaded();
         if (position == adapter.getItemCount() - 1) {
             outRect.bottom = padding;
         } else if (!parent.isInsideForcedSection(position)) {
-            outRect.bottom = AndroidUtilities.dp(4);
+            if (org.telegram.messenger.LagramConfig.materialContainers) {
+                boolean hasNextInGroup = isSectionPosition(position + 1);
+                outRect.bottom = hasNextInGroup
+                        ? AndroidUtilities.dp(3)
+                        : AndroidUtilities.dp(org.telegram.messenger.LagramConfig.sectionSpacingDp);
+            } else {
+                outRect.bottom = 0;
+            }
         }
     }
 
@@ -650,14 +658,15 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
             final float right = left + child.getWidth();
            final boolean hasPrev = isSectionPosition(position - 1);
             final boolean hasNext = isSectionPosition(position + 1);
+            final boolean m3Cards = org.telegram.messenger.LagramConfig.materialContainers;
             if (!hasPrev && !RecyclerListView.hasSectionContentAboveTop(child)) {
                 drawTopCorners(canvas, left, right, RecyclerListView.top(child), 1.0f);
-                } else if (hasPrev) {
+            } else if (hasPrev && m3Cards) {
                 drawTopCorners(canvas, left, right, RecyclerListView.top(child), 0.30f);
             }
             if (!hasNext) {
                 drawBottomCorners(canvas, left, right, RecyclerListView.bottom(child), 1.0f);
-                } else {
+            } else if (m3Cards) {
                 drawBottomCorners(canvas, left, right, RecyclerListView.bottom(child), 0.30f);
             }
         }

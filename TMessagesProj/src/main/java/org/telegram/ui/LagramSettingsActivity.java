@@ -115,6 +115,12 @@ public class LagramSettingsActivity extends UniversalFragment {
         list.add(new SearchEntry(219, R.string.LagramSectionGap, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
         list.add(new SearchEntry(220, R.string.LagramAvatarShape, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
         list.add(new SearchEntry(221, R.string.LagramChatsHeaderCentered, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
+        list.add(new SearchEntry(222, R.string.LagramM3Containers, R.string.LagramM3ContainersInfo, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
+        list.add(new SearchEntry(223, R.string.LagramM3SectionSpacing, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
+        list.add(new SearchEntry(224, R.string.LagramM3ChatList, R.string.LagramM3ChatListInfo, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
+        list.add(new SearchEntry(225, R.string.LagramM3Controls, R.string.LagramM3ControlsInfo, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
+        list.add(new SearchEntry(226, R.string.LagramM3AppBar, R.string.LagramM3AppBarInfo, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
+        list.add(new SearchEntry(227, R.string.LagramFolderBarStyle, 0, catAppearance, R.drawable.msg_folders, ID_CAT_APPEARANCE));
 
         // Chats & Message Focus
         list.add(new SearchEntry(301, R.string.LagramMessageFocus, R.string.LagramMessageFocusInfo, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
@@ -134,6 +140,9 @@ public class LagramSettingsActivity extends UniversalFragment {
         list.add(new SearchEntry(315, R.string.LagramUnlimitedSelection, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
         list.add(new SearchEntry(316, R.string.LagramShowStickerPackOwner, 0, catChats, R.drawable.msg_sticker, ID_CAT_CHATS));
         list.add(new SearchEntry(317, R.string.LagramShowSeconds, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
+        list.add(new SearchEntry(318, R.string.LagramChatHeaderExpressive, R.string.LagramChatHeaderExpressiveInfo, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
+        list.add(new SearchEntry(319, R.string.LagramChatBoxHeader, R.string.LagramChatBoxInfo, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
+        list.add(new SearchEntry(320, R.string.LagramTextAnimHeader, R.string.LagramTextAnimInfo, catChats, R.drawable.msg_edit, ID_CAT_CHATS));
 
         // Media
         list.add(new SearchEntry(401, R.string.LagramDownloadBoost, 0, catMedia, R.drawable.msg_photos, ID_CAT_MEDIA));
@@ -156,6 +165,7 @@ public class LagramSettingsActivity extends UniversalFragment {
         list.add(new SearchEntry(507, R.string.LagramSaveEditedMessages, 0, catPrivacy, R.drawable.msg_secret, ID_CAT_PRIVACY));
         list.add(new SearchEntry(508, R.string.LagramAllowScreenshots, 0, catPrivacy, R.drawable.msg_secret, ID_CAT_PRIVACY));
         list.add(new SearchEntry(509, R.string.LagramBypassNoForwards, 0, catPrivacy, R.drawable.msg_secret, ID_CAT_PRIVACY));
+        list.add(new SearchEntry(510, R.string.LagramLockHeader, 0, catGeneral, R.drawable.msg_secret, ID_CAT_GENERAL));
 
         return list;
     }
@@ -167,6 +177,10 @@ public class LagramSettingsActivity extends UniversalFragment {
         View view = super.createView(context);
         listView.setSections();
         listView.setSectionsDrawBackground(true);
+        if (LagramConfig.amoledSettingsBackdrop && Theme.isCurrentThemeDark()) {
+            fragmentView.setBackgroundColor(0xFF000000);
+            listView.setBackgroundColor(0xFF000000);
+        }
 
         searchItem = actionBar.createMenu()
                 .addItem(1, R.drawable.outline_header_search)
@@ -235,7 +249,11 @@ public class LagramSettingsActivity extends UniversalFragment {
             items.add(UItem.asCustomShadow(headerView, 253));
 
             items.add(UItem.asHeader(LocaleController.getString(R.string.LagramQuickGhostHeader)));
-            items.add(UItem.asCheck(ID_GHOST_MASTER, LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramGhostModeMaster))).setChecked(LagramConfig.ghostModeEnabled));
+            items.add(org.telegram.ui.lagram.OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                    ID_GHOST_MASTER, 0,
+                    LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramGhostModeMaster)),
+                    null,
+                    LagramConfig.ghostModeEnabled));
             items.add(UItem.asShadow(-1, null));
 
             items.add(UItem.asHeader(LocaleController.getString(R.string.LagramCategoriesHeader)));
@@ -250,7 +268,7 @@ public class LagramSettingsActivity extends UniversalFragment {
             items.add(UItem.asButton(ID_BACKUP_EXPORT, R.drawable.msg_copy, LocaleController.getString(R.string.LagramExportSettings)));
             items.add(UItem.asButton(ID_BACKUP_IMPORT, R.drawable.msg_download, LocaleController.getString(R.string.LagramImportSettings)));
             items.add(UItem.asButton(ID_BACKUP_RESET, R.drawable.msg_reset, LocaleController.getString(R.string.LagramResetSettings)).red());
-            items.add(UItem.asShadow(null));
+            items.add(UItem.asShadow(-3, null));
 
             items.add(UItem.asHeader(LocaleController.getString(R.string.LagramLinksHeader)));
             items.add(UItem.asSettingsCell(ID_LINK_GITHUB, R.drawable.msg_channel, LocaleController.getString(R.string.LagramRepoTitle), "GitHub"));
@@ -288,12 +306,16 @@ public class LagramSettingsActivity extends UniversalFragment {
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
         switch (item.id) {
-            case ID_GHOST_MASTER:
-                LagramConfig.toggleGhostMode();
+            case ID_GHOST_MASTER: {
+                boolean enabled = LagramConfig.toggleGhostMode();
+                if (view instanceof org.telegram.ui.lagram.OpexgramStyleWidgets.OpexSwitchCell) {
+                    ((org.telegram.ui.lagram.OpexgramStyleWidgets.OpexSwitchCell) view).setChecked(enabled);
+                }
                 if (listView != null) {
                     listView.adapter.update(true);
                 }
                 break;
+            }
             case ID_CAT_GENERAL:
                 presentFragment(new LagramGeneralActivity());
                 break;

@@ -84,49 +84,49 @@ public class LagramPrivacyActivity extends UniversalFragment {
 
         if (subPage == SUB_GHOST_DETAILS) {
             items.add(UItem.asHeader(LocaleController.getString(R.string.LagramGhostModeHeader)));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                     ID_GHOST_MASTER,
                     R.drawable.msg_secret,
                     LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramGhostModeMaster)),
                     "Interruptor maestro que activa las reglas invisibles seleccionadas abajo",
                     LagramConfig.ghostModeEnabled
             ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                     ID_GHOST_DONT_READ_MSG,
                     R.drawable.msg_seen,
                     LocaleController.getString(R.string.LagramGhostDontReadMessages),
                     "Leer chats sin marcar el doble check azul al remitente",
                     LagramConfig.ghostDontReadMessages
             ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                     ID_GHOST_DONT_READ_STORIES,
                     R.drawable.msg_menu_stories,
                     LocaleController.getString(R.string.LagramGhostDontReadStories),
                     "Ver historias de forma anónima sin aparecer en la lista de vistos",
                     LagramConfig.ghostDontReadStories
             ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                     ID_GHOST_DONT_SEND_TYPING,
                     R.drawable.msg_edit,
                     LocaleController.getString(R.string.LagramGhostDontSendTyping),
                     "Ocultar indicadores de 'escribiendo...' o 'grabando audio...'",
                     LagramConfig.ghostDontSendTyping
             ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                     ID_GHOST_DONT_SEND_ONLINE,
                     R.drawable.msg_contacts,
                     LocaleController.getString(R.string.LagramGhostDontSendOnline),
                     "Mantener estado desconectado incluso con Lagram abierto",
                     LagramConfig.ghostDontSendOnline
             ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                     ID_GHOST_OFFLINE_AFTER_SEND,
                     R.drawable.msg_send,
                     LocaleController.getString(R.string.LagramGhostOfflineAfterSend),
                     "Enviar paquete de desconexión inmediatamente tras enviar un mensaje",
                     LagramConfig.ghostSendOfflineAfterSend
             ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                     ID_GHOST_MARK_READ_ON_SEND,
                     R.drawable.msg_check_s,
                     LocaleController.getString(R.string.LagramGhostMarkReadOnSend),
@@ -139,7 +139,7 @@ public class LagramPrivacyActivity extends UniversalFragment {
 
         // SUB_HOME: Compact Hub with Ghost Master + Sub-fragment card + Anti-Delete + Anti-Restrictions
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramGhostModeHeader)));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                 ID_GHOST_MASTER,
                 R.drawable.msg_secret,
                 LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramGhostModeMaster)),
@@ -158,14 +158,14 @@ public class LagramPrivacyActivity extends UniversalFragment {
 
         // Section 2: Anti-Delete & Edit History
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramHistoryHeader)));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                 ID_SAVE_DELETED,
                 R.drawable.msg_delete,
                 LocaleController.getString(R.string.LagramSaveDeletedMessages),
                 "Conservar localmente los mensajes que otros usuarios eliminen",
                 LagramConfig.saveDeletedMessages
         ));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                 ID_SAVE_EDITED,
                 R.drawable.msg_edit,
                 LocaleController.getString(R.string.LagramSaveEditedMessages),
@@ -177,14 +177,14 @@ public class LagramPrivacyActivity extends UniversalFragment {
 
         // Section 3: Anti-Restrictions
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAntiRestrictHeader)));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                 ID_ALLOW_SCREENSHOTS,
                 R.drawable.msg_camera,
                 LocaleController.getString(R.string.LagramAllowScreenshots),
                 "Permitir capturas de pantalla en chats secretos y contenido restringido",
                 LagramConfig.allowScreenshots
         ));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
                 ID_BYPASS_NO_FORWARDS,
                 R.drawable.msg_copy,
                 LocaleController.getString(R.string.LagramBypassNoForwards),
@@ -262,8 +262,8 @@ public class LagramPrivacyActivity extends UniversalFragment {
                 checkChanged = true;
                 break;
         }
-        if (checkChanged && view instanceof LagramSettingsComponents.IconSwitchCell) {
-            ((LagramSettingsComponents.IconSwitchCell) view).setChecked(newVal);
+        if (checkChanged && view instanceof OpexgramStyleWidgets.OpexSwitchCell) {
+            ((OpexgramStyleWidgets.OpexSwitchCell) view).setChecked(newVal);
         }
     }
 

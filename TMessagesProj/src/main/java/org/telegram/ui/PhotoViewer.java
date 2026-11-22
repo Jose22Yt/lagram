@@ -19511,6 +19511,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private Bitmap lastGlowBitmap;
     private int lastGlowWidth;
     private int lastGlowHeight;
+    private int lastGlowLevel = -1;
     private Paint mediaGlowPaint;
 
     private void drawMediaAmbientGlow(Canvas canvas, Bitmap bmp) {
@@ -19522,10 +19523,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         if (mediaGlowPaint == null) {
             mediaGlowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         }
-        if (bmp != lastGlowBitmap || w != lastGlowWidth || h != lastGlowHeight) {
+        int level = org.telegram.messenger.LagramConfig.mediaGlowLevel;
+        if (bmp != lastGlowBitmap || w != lastGlowWidth || h != lastGlowHeight || level != lastGlowLevel) {
             lastGlowBitmap = bmp;
             lastGlowWidth = w;
             lastGlowHeight = h;
+            lastGlowLevel = level;
             int bw = bmp.getWidth();
             int bh = bmp.getHeight();
             int c1 = bmp.getPixel(bw / 2, bh / 2);
@@ -19534,8 +19537,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             int r = (Color.red(c1) + Color.red(c2) + Color.red(c3)) / 3;
             int g = (Color.green(c1) + Color.green(c2) + Color.green(c3)) / 3;
             int b = (Color.blue(c1) + Color.blue(c2) + Color.blue(c3)) / 3;
-            int glowCenter = Color.argb(95, r, g, b);
-            int glowMid = Color.argb(42, r, g, b);
+            int aCenter = level == org.telegram.messenger.LagramConfig.MEDIA_GLOW_SOFT ? 55
+                    : (level == org.telegram.messenger.LagramConfig.MEDIA_GLOW_STRONG ? 150 : 95);
+            int aMid = level == org.telegram.messenger.LagramConfig.MEDIA_GLOW_SOFT ? 24
+                    : (level == org.telegram.messenger.LagramConfig.MEDIA_GLOW_STRONG ? 72 : 42);
+            int glowCenter = Color.argb(aCenter, r, g, b);
+            int glowMid = Color.argb(aMid, r, g, b);
             float radius = Math.max(w, h) * 0.65f;
             mediaGlowPaint.setShader(new android.graphics.RadialGradient(
                     w * 0.5f, h * 0.5f, radius,
@@ -19654,7 +19661,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             return;
         }
 
-        if (org.telegram.messenger.LagramConfig.mediaGlow && centerImage != null) {
+        if ((org.telegram.messenger.LagramConfig.mediaGlow || org.telegram.messenger.LagramConfig.mediaGlowVideos) && centerImage != null) {
             Bitmap glowBmp = centerImage.getBitmap();
             if (glowBmp != null && !glowBmp.isRecycled()) {
                 drawMediaAmbientGlow(canvas, glowBmp);

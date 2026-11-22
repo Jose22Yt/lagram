@@ -5,6 +5,7 @@ import android.view.View;
 
 import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.UItem;
@@ -15,19 +16,33 @@ import java.util.ArrayList;
 
 public class LagramGeneralActivity extends UniversalFragment {
 
-    private static final int ID_SHOW_ID_DC = 1;
-    private static final int ID_ID_BOT_API = 2;
-    private static final int ID_SHOW_JOIN_DATE = 3;
-    private static final int ID_PROFILE_NAME_SWITCH = 4;
-    private static final int ID_HIDE_PHONE_NUMBER = 5;
+    // Profile
+    private static final int ID_HIDE_PHONE_NUMBER = 1;
+    private static final int ID_SHOW_ID_DC = 2;
+    private static final int ID_ID_BOT_API = 3;
+    private static final int ID_SHOW_JOIN_DATE = 4;
+    private static final int ID_PROFILE_NAME_SWITCH = 5;
 
-    private static final int ID_HIGH_REFRESH = 10;
-    private static final int ID_PERF_CLASS = 11;
-    private static final int ID_HAPTICS_LEVEL = 12;
+    // Stories & Archive
+    private static final int ID_HIDE_STORIES = 10;
+    private static final int ID_HIDE_STORIES_PROFILE = 11;
+    private static final int ID_HIDE_STORY_POSTING = 12;
+    private static final int ID_OPEN_ARCHIVE_PULL = 13;
 
-    private static final int ID_OPEN_ARCHIVE_PULL = 20;
-    private static final int ID_DISABLE_SPONSORED = 21;
-    private static final int ID_HIDE_SIMILAR = 22;
+    // Lock
+    private static final int ID_LOCK_ARCHIVE = 20;
+    private static final int ID_LOCK_SECRET = 21;
+    private static final int ID_LOCK_SAVED = 22;
+    private static final int ID_LOCK_DELETE = 23;
+
+    // Performance & Haptics
+    private static final int ID_HIGH_REFRESH = 30;
+    private static final int ID_PERF_CLASS = 31;
+    private static final int ID_HAPTICS_LEVEL = 32;
+
+    // Cleanup
+    private static final int ID_DISABLE_SPONSORED = 40;
+    private static final int ID_HIDE_SIMILAR = 41;
 
     @Override
     protected CharSequence getTitle() {
@@ -45,9 +60,7 @@ public class LagramGeneralActivity extends UniversalFragment {
     }
 
     private void updateBackdropColor() {
-        if (fragmentView == null || listView == null) {
-            return;
-        }
+        if (fragmentView == null || listView == null) return;
         if (LagramConfig.amoledSettingsBackdrop && Theme.isCurrentThemeDark()) {
             fragmentView.setBackgroundColor(0xFF000000);
             listView.setBackgroundColor(0xFF000000);
@@ -58,55 +71,103 @@ public class LagramGeneralActivity extends UniversalFragment {
         }
     }
 
+    private void refreshList() {
+        if (listView != null && listView.adapter != null) {
+            listView.adapter.update(true);
+        }
+    }
+
     @Override
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         LagramConfig.ensureLoaded();
 
-        // Card 1: Profile & Peer Identifiers
+        // 1. Profile (Exact Opexgram General top section - Sheet 2 Frame 9)
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramDetailsHeader)));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_SHOW_ID_DC,
-                R.drawable.msg_info,
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_HIDE_PHONE_NUMBER, 0,
+                LocaleController.getString(R.string.LagramHidePhoneNumber),
+                null,
+                LagramConfig.hidePhoneNumber));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_SHOW_ID_DC, 0,
                 LocaleController.getString(R.string.LagramShowIdAndDc),
                 null,
                 LagramConfig.showIdAndDc));
         if (LagramConfig.showIdAndDc) {
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_ID_BOT_API,
-                    R.drawable.msg_bot,
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                    ID_ID_BOT_API, 0,
                     LocaleController.getString(R.string.LagramIdFormatBotApi),
                     null,
                     LagramConfig.idFormatBotApi));
         }
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_SHOW_JOIN_DATE,
-                R.drawable.msg_calendar2,
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_SHOW_JOIN_DATE, 0,
                 LocaleController.getString(R.string.LagramShowJoinDate),
                 null,
                 LagramConfig.showJoinDate));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_PROFILE_NAME_SWITCH,
-                R.drawable.msg_copy,
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_PROFILE_NAME_SWITCH, 0,
                 LocaleController.getString(R.string.LagramProfileNameSwitch),
                 LocaleController.getString(R.string.LagramProfileNameSwitchInfo),
                 LagramConfig.profileNameSwitch));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_HIDE_PHONE_NUMBER,
-                R.drawable.msg_calls,
-                LocaleController.getString(R.string.LagramHidePhoneNumber),
-                null,
-                LagramConfig.hidePhoneNumber));
         items.add(UItem.asShadow(-1, null));
 
-        // Card 2: Performance & Haptics
+        // 2. Stories and archive (Exact Opexgram Sheet 1 Frame 1)
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramStoriesArchiveHeader)));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_HIDE_STORIES, 0,
+                LocaleController.getString(R.string.LagramHideStories),
+                null,
+                LagramConfig.hideStories));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_HIDE_STORIES_PROFILE, 0,
+                LocaleController.getString(R.string.LagramHideStoriesProfile),
+                null,
+                LagramConfig.hideStoriesInProfile));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_HIDE_STORY_POSTING, 0,
+                LocaleController.getString(R.string.LagramHideStoryPosting),
+                null,
+                LagramConfig.hideStoryPosting));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_OPEN_ARCHIVE_PULL, 0,
+                LocaleController.getString(R.string.LagramOpenArchiveOnPull),
+                null,
+                LagramConfig.openArchiveOnPull));
+        items.add(UItem.asShadow(-2, null));
+
+        // 3. Lock (Exact Opexgram Sheet 1 Frame 1)
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramLockHeader)));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_LOCK_ARCHIVE, 0,
+                LocaleController.getString(R.string.LagramLockArchive),
+                null,
+                LagramConfig.lockArchive));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_LOCK_SECRET, 0,
+                LocaleController.getString(R.string.LagramLockSecret),
+                null,
+                LagramConfig.lockSecret));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_LOCK_SAVED, 0,
+                LocaleController.getString(R.string.LagramLockSaved),
+                null,
+                LagramConfig.lockSaved));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_LOCK_DELETE, 0,
+                LocaleController.getString(R.string.LagramLockDelete),
+                null,
+                LagramConfig.lockDelete));
+        items.add(UItem.asShadow(-3, null));
+
+        // 4. Performance & Haptics
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramPerformanceHeader)));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_HIGH_REFRESH,
-                R.drawable.msg_speed,
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_HIGH_REFRESH, 0,
                 LocaleController.getString(R.string.LagramHighRefreshRate),
                 null,
                 LagramConfig.highRefreshRateScroll));
-        items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+        items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
                 ID_PERF_CLASS,
                 LocaleController.getString(R.string.LagramForcePerfClass),
                 new String[]{
@@ -120,7 +181,7 @@ public class LagramGeneralActivity extends UniversalFragment {
                     LagramConfig.setForcePerformanceClass(idx - 1);
                     refreshList();
                 }));
-        items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+        items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
                 ID_HAPTICS_LEVEL,
                 LocaleController.getString(R.string.LagramHapticsLevel),
                 new String[]{
@@ -134,76 +195,83 @@ public class LagramGeneralActivity extends UniversalFragment {
                     LagramConfig.setHapticsLevel(idx);
                     refreshList();
                 }));
-        items.add(UItem.asShadow(-2, null));
+        items.add(UItem.asShadow(-4, LocaleController.getString(R.string.LagramGeneralInfo)));
 
-        // Card 3: Behavior & Clean Feed
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramBehaviorHeader)));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_OPEN_ARCHIVE_PULL,
-                R.drawable.msg_archive,
-                LocaleController.getString(R.string.LagramOpenArchiveOnPull),
-                null,
-                LagramConfig.openArchiveOnPull));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_DISABLE_SPONSORED,
-                R.drawable.msg_block,
+        // 5. Cleanup
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAntiBloatHeader)));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_DISABLE_SPONSORED, 0,
                 LocaleController.getString(R.string.LagramDisableSponsored),
                 null,
                 LagramConfig.disableSponsoredMessages));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_HIDE_SIMILAR,
-                R.drawable.msg_channel,
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_HIDE_SIMILAR, 0,
                 LocaleController.getString(R.string.LagramHideSimilarChannels),
                 null,
                 LagramConfig.hideSimilarChannels));
-        items.add(UItem.asShadow(-3, null));
+        items.add(UItem.asShadow(-5, null));
     }
 
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
         switch (item.id) {
+            case ID_HIDE_PHONE_NUMBER:
+                toggle(view, LagramConfig.toggleHidePhoneNumber());
+                return;
             case ID_SHOW_ID_DC:
-                LagramConfig.toggleShowIdAndDc();
-                refreshList();
+                toggle(view, LagramConfig.toggleShowIdAndDc());
                 return;
             case ID_ID_BOT_API:
-                toggleSwitch(view, LagramConfig.toggleIdFormatBotApi());
+                toggle(view, LagramConfig.toggleIdFormatBotApi());
                 return;
             case ID_SHOW_JOIN_DATE:
-                toggleSwitch(view, LagramConfig.toggleShowJoinDate());
+                toggle(view, LagramConfig.toggleShowJoinDate());
                 return;
             case ID_PROFILE_NAME_SWITCH:
-                toggleSwitch(view, LagramConfig.toggleProfileNameSwitch());
+                toggle(view, LagramConfig.toggleProfileNameSwitch());
                 return;
-            case ID_HIDE_PHONE_NUMBER:
-                toggleSwitch(view, LagramConfig.toggleHidePhoneNumber());
+            case ID_HIDE_STORIES:
+                toggle(view, LagramConfig.toggleHideStories());
+                NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.storiesUpdated);
                 return;
-            case ID_HIGH_REFRESH:
-                toggleSwitch(view, LagramConfig.toggleHighRefreshRateScroll());
+            case ID_HIDE_STORIES_PROFILE:
+                toggle(view, LagramConfig.toggleHideStoriesInProfile());
+                return;
+            case ID_HIDE_STORY_POSTING:
+                toggle(view, LagramConfig.toggleHideStoryPosting());
                 return;
             case ID_OPEN_ARCHIVE_PULL:
-                toggleSwitch(view, LagramConfig.toggleOpenArchiveOnPull());
+                toggle(view, LagramConfig.toggleOpenArchiveOnPull());
+                return;
+            case ID_LOCK_ARCHIVE:
+                toggle(view, LagramConfig.toggleLockArchive());
+                return;
+            case ID_LOCK_SECRET:
+                toggle(view, LagramConfig.toggleLockSecret());
+                return;
+            case ID_LOCK_SAVED:
+                toggle(view, LagramConfig.toggleLockSaved());
+                return;
+            case ID_LOCK_DELETE:
+                toggle(view, LagramConfig.toggleLockDelete());
+                return;
+            case ID_HIGH_REFRESH:
+                toggle(view, LagramConfig.toggleHighRefreshRateScroll());
                 return;
             case ID_DISABLE_SPONSORED:
-                toggleSwitch(view, LagramConfig.toggleDisableSponsoredMessages());
+                toggle(view, LagramConfig.toggleDisableSponsoredMessages());
                 return;
             case ID_HIDE_SIMILAR:
-                toggleSwitch(view, LagramConfig.toggleHideSimilarChannels());
+                toggle(view, LagramConfig.toggleHideSimilarChannels());
                 return;
         }
     }
 
-    private void toggleSwitch(View view, boolean checked) {
-        if (view instanceof LagramSettingsComponents.IconSwitchCell) {
-            ((LagramSettingsComponents.IconSwitchCell) view).setChecked(checked, true);
+    private void toggle(View view, boolean checked) {
+        if (view instanceof OpexgramStyleWidgets.OpexSwitchCell) {
+            ((OpexgramStyleWidgets.OpexSwitchCell) view).setChecked(checked);
         }
         refreshList();
-    }
-
-    private void refreshList() {
-        if (listView != null && listView.adapter != null) {
-            listView.adapter.update(true);
-        }
     }
 
     @Override

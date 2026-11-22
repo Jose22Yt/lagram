@@ -568,6 +568,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
 
     public boolean useForceThreeLines;
     public boolean useSeparator;
+    private Paint lagramCardPaint;
     public boolean fullSeparator;
     public boolean fullSeparator2;
 
@@ -3868,6 +3869,28 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
         float gtx = 0, gty = 0;
         boolean emojiStatusVisible = false;
 
+        if (org.telegram.messenger.LagramConfig.materialChatList && !isTopic && !drawArchive && rightFragmentOpenedProgress == 0f) {
+            int cw = getMeasuredWidth();
+            int ch = getMeasuredHeight();
+            if (cw > 0 && ch > 0) {
+                if (lagramCardPaint == null) {
+                    lagramCardPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                }
+                int cardColor = Theme.isCurrentThemeDark()
+                        ? (org.telegram.messenger.LagramConfig.amoledSettingsBackdrop ? 0xFF151515 : Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider))
+                        : Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider);
+                int bgColor = Theme.isCurrentThemeDark()
+                        ? (org.telegram.messenger.LagramConfig.amoledSettingsBackdrop ? 0xFF000000 : Theme.getColor(Theme.key_windowBackgroundGray, resourcesProvider))
+                        : Theme.getColor(Theme.key_windowBackgroundGray, resourcesProvider);
+                lagramCardPaint.setColor(bgColor);
+                canvas.drawRect(0, 0, cw, ch, lagramCardPaint);
+                lagramCardPaint.setColor(cardColor);
+                AndroidUtilities.rectTmp.set(dp(8), dp(2.5f), cw - dp(8), ch - dp(2.5f));
+                float cardRad = dp(18);
+                canvas.drawRoundRect(AndroidUtilities.rectTmp, cardRad, cardRad, lagramCardPaint);
+            }
+        }
+
         final boolean clipArchive = drawArchive && (currentDialogFolderId != 0 || isTopic && forumTopic != null && forumTopic.id == 1) && archivedChatsDrawable != null && translationX == 0.0f && parentFragment != null && parentFragment.hasHiddenArchive()
             && (parentFragment.rightSlidingDialogContainer == null || !parentFragment.rightSlidingDialogContainer.hasFragment());
         final float archivePullProgress = archivedChatsDrawable != null ? archivedChatsDrawable.getPullProgress() : 1f;
@@ -4870,7 +4893,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
             canvas.restore();
         }
 
-        if (useSeparator) {
+        if (useSeparator && !(org.telegram.messenger.LagramConfig.materialChatList && !isTopic && !drawArchive && rightFragmentOpenedProgress == 0f)) {
             int left;
             if (fullSeparator || currentDialogFolderId != 0 && archiveHidden && !fullSeparator2 || fullSeparator2 && !archiveHidden) {
                 left = 0;

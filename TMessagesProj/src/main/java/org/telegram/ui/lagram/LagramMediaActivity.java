@@ -15,18 +15,19 @@ import java.util.ArrayList;
 
 public class LagramMediaActivity extends UniversalFragment {
 
-    private static final int ID_DOWNLOAD_BOOST = 1;
-    private static final int ID_TURBO_UPLOADS = 2;
-    private static final int ID_SEND_HD = 3;
+    private static final int ID_PLAY_IN_ROW = 1;
+    private static final int ID_PAUSE_ON_MINIMIZE = 2;
 
-    private static final int ID_MEDIA_GLOW = 10;
-    private static final int ID_AUTOPLAY_VOICE = 11;
-    private static final int ID_AUTOPLAY_ROUND = 12;
-    private static final int ID_AUTOPLAY_MUSIC = 13;
-    private static final int ID_PAUSE_ON_MINIMIZE = 14;
+    private static final int ID_MEDIA_GLOW_PHOTOS = 10;
+    private static final int ID_MEDIA_GLOW_VIDEOS = 11;
+    private static final int ID_MEDIA_GLOW_BRIGHTNESS = 12;
 
     private static final int ID_REAR_CAMERA_ROUND = 20;
     private static final int ID_COMPACT_ROUND_CAMERA = 21;
+
+    private static final int ID_DOWNLOAD_BOOST = 30;
+    private static final int ID_TURBO_UPLOADS = 31;
+    private static final int ID_SEND_HD = 32;
 
     @Override
     protected CharSequence getTitle() {
@@ -44,9 +45,7 @@ public class LagramMediaActivity extends UniversalFragment {
     }
 
     private void updateBackdropColor() {
-        if (fragmentView == null || listView == null) {
-            return;
-        }
+        if (fragmentView == null || listView == null) return;
         if (LagramConfig.amoledSettingsBackdrop && Theme.isCurrentThemeDark()) {
             fragmentView.setBackgroundColor(0xFF000000);
             listView.setBackgroundColor(0xFF000000);
@@ -57,13 +56,89 @@ public class LagramMediaActivity extends UniversalFragment {
         }
     }
 
+    private void refreshList() {
+        if (listView != null && listView.adapter != null) {
+            listView.adapter.update(true);
+        }
+    }
+
     @Override
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         LagramConfig.ensureLoaded();
 
-        // Card 1: Network & Turbo Transfers
+        // 1. Playback (Exact Opexgram multi-select [✓ Voice] [✓ Round] [✓ Music] pills!)
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAutoplayHeader)));
+        int playMask = (LagramConfig.autoplayVoiceInRow ? 1 : 0)
+                | (LagramConfig.autoplayRoundInRow ? 2 : 0)
+                | (LagramConfig.autoplayMusicInRow ? 4 : 0);
+        items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.multi(
+                ID_PLAY_IN_ROW,
+                LocaleController.getString(R.string.LagramPlayInARow),
+                new String[]{
+                        LocaleController.getString(R.string.LagramPlayVoiceShort),
+                        LocaleController.getString(R.string.LagramPlayRoundShort),
+                        LocaleController.getString(R.string.LagramPlayMusicShort)
+                },
+                playMask,
+                idx -> {
+                    if (idx == 0) LagramConfig.toggleAutoplayVoiceInRow();
+                    else if (idx == 1) LagramConfig.toggleAutoplayRoundInRow();
+                    else if (idx == 2) LagramConfig.toggleAutoplayMusicInRow();
+                    refreshList();
+                }));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_PAUSE_ON_MINIMIZE, 0,
+                LocaleController.getString(R.string.LagramPauseVideoMinimize),
+                null,
+                LagramConfig.pauseVideoOnMinimize));
+        items.add(UItem.asShadow(-1, null));
+
+        // 2. Media Glow (Exact Opexgram Sheet 2 Frame 6: Photos / Videos / Brightness)
+        items.add(UItem.asHeader(LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramMediaGlow))));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_MEDIA_GLOW_PHOTOS, 0,
+                LocaleController.getString(R.string.LagramMediaGlowPhotos),
+                null,
+                LagramConfig.mediaGlow));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_MEDIA_GLOW_VIDEOS, 0,
+                LocaleController.getString(R.string.LagramMediaGlowVideos),
+                null,
+                LagramConfig.mediaGlowVideos));
+        if (LagramConfig.mediaGlow || LagramConfig.mediaGlowVideos) {
+            items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
+                    ID_MEDIA_GLOW_BRIGHTNESS,
+                    LocaleController.getString(R.string.LagramMediaGlowBrightness),
+                    new String[]{
+                            LocaleController.getString(R.string.LagramMediaGlowSoft),
+                            LocaleController.getString(R.string.LagramMediaGlowMedium),
+                            LocaleController.getString(R.string.LagramMediaGlowStrong)
+                    },
+                    LagramConfig.mediaGlowLevel,
+                    idx -> {
+                        LagramConfig.setMediaGlowLevel(idx);
+                        refreshList();
+                    }));
+        }
+        items.add(UItem.asShadow(-2, null));
+
+        // 3. Camera
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramMediaHeader)));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_REAR_CAMERA_ROUND, R.drawable.msg_camera,
+                LocaleController.getString(R.string.LagramRearCameraRound),
+                null,
+                LagramConfig.rearCameraForRoundVideo));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_COMPACT_ROUND_CAMERA, R.drawable.msg_camera,
+                LocaleController.getString(R.string.LagramCompactRoundCamera),
+                null,
+                LagramConfig.compactRoundCamera));
+        items.add(UItem.asShadow(-3, null));
+
+        // 4. Lagram Turbo Network Acceleration
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramNetworkHeader)));
-        items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+        items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
                 ID_DOWNLOAD_BOOST,
                 LocaleController.getString(R.string.LagramDownloadBoost),
                 new String[]{
@@ -74,115 +149,53 @@ public class LagramMediaActivity extends UniversalFragment {
                 LagramConfig.downloadSpeedBoost,
                 idx -> {
                     LagramConfig.setDownloadSpeedBoost(idx);
-                    if (listView != null && listView.adapter != null) {
-                        listView.adapter.update(true);
-                    }
+                    refreshList();
                 }));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_TURBO_UPLOADS,
-                R.drawable.msg_speed,
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_TURBO_UPLOADS, R.drawable.msg_speed,
                 LocaleController.getString(R.string.LagramTurboUploads),
                 null,
                 LagramConfig.turboUploads));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_SEND_HD,
-                R.drawable.msg_photos,
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_SEND_HD, R.drawable.msg_photos,
                 LocaleController.getString(R.string.LagramSendPhotosHd),
                 null,
                 LagramConfig.sendPhotosInHd));
-        items.add(UItem.asShadow(-1, null));
-
-        // Card 2: Playback & Ambient Glow
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAutoplayHeader)));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_MEDIA_GLOW,
-                R.drawable.msg_photo_blur,
-                LocaleController.getString(R.string.LagramMediaGlow),
-                null,
-                LagramConfig.mediaGlow));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_AUTOPLAY_VOICE,
-                R.drawable.msg_voicechat,
-                LocaleController.getString(R.string.LagramAutoplayVoice),
-                null,
-                LagramConfig.autoplayVoiceInRow));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_AUTOPLAY_ROUND,
-                R.drawable.msg_videocall,
-                LocaleController.getString(R.string.LagramAutoplayRound),
-                null,
-                LagramConfig.autoplayRoundInRow));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_AUTOPLAY_MUSIC,
-                R.drawable.msg_played,
-                LocaleController.getString(R.string.LagramAutoplayMusic),
-                null,
-                LagramConfig.autoplayMusicInRow));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_PAUSE_ON_MINIMIZE,
-                R.drawable.msg_media,
-                LocaleController.getString(R.string.LagramPauseVideoMinimize),
-                null,
-                LagramConfig.pauseVideoOnMinimize));
-        items.add(UItem.asShadow(-2, null));
-
-        // Card 3: Round Video Camera
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramMediaHeader)));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_REAR_CAMERA_ROUND,
-                R.drawable.msg_camera,
-                LocaleController.getString(R.string.LagramRearCameraRound),
-                null,
-                LagramConfig.rearCameraForRoundVideo));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_COMPACT_ROUND_CAMERA,
-                R.drawable.msg_camera,
-                LocaleController.getString(R.string.LagramCompactRoundCamera),
-                null,
-                LagramConfig.compactRoundCamera));
-        items.add(UItem.asShadow(-3, null));
+        items.add(UItem.asShadow(-4, LocaleController.getString(R.string.LagramMediaInfo)));
     }
 
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
         switch (item.id) {
-            case ID_TURBO_UPLOADS:
-                toggleSwitch(view, LagramConfig.toggleTurboUploads());
-                return;
-            case ID_SEND_HD:
-                toggleSwitch(view, LagramConfig.toggleSendPhotosInHd());
-                return;
-            case ID_MEDIA_GLOW:
-                toggleSwitch(view, LagramConfig.toggleMediaGlow());
-                return;
-            case ID_AUTOPLAY_VOICE:
-                toggleSwitch(view, LagramConfig.toggleAutoplayVoiceInRow());
-                return;
-            case ID_AUTOPLAY_ROUND:
-                toggleSwitch(view, LagramConfig.toggleAutoplayRoundInRow());
-                return;
-            case ID_AUTOPLAY_MUSIC:
-                toggleSwitch(view, LagramConfig.toggleAutoplayMusicInRow());
-                return;
             case ID_PAUSE_ON_MINIMIZE:
-                toggleSwitch(view, LagramConfig.togglePauseVideoOnMinimize());
+                toggle(view, LagramConfig.togglePauseVideoOnMinimize());
+                return;
+            case ID_MEDIA_GLOW_PHOTOS:
+                toggle(view, LagramConfig.toggleMediaGlow());
+                return;
+            case ID_MEDIA_GLOW_VIDEOS:
+                toggle(view, LagramConfig.toggleMediaGlowVideos());
                 return;
             case ID_REAR_CAMERA_ROUND:
-                toggleSwitch(view, LagramConfig.toggleRearCameraForRoundVideo());
+                toggle(view, LagramConfig.toggleRearCameraForRoundVideo());
                 return;
             case ID_COMPACT_ROUND_CAMERA:
-                toggleSwitch(view, LagramConfig.toggleCompactRoundCamera());
+                toggle(view, LagramConfig.toggleCompactRoundCamera());
+                return;
+            case ID_TURBO_UPLOADS:
+                toggle(view, LagramConfig.toggleTurboUploads());
+                return;
+            case ID_SEND_HD:
+                toggle(view, LagramConfig.toggleSendPhotosInHd());
                 return;
         }
     }
 
-    private void toggleSwitch(View view, boolean checked) {
-        if (view instanceof LagramSettingsComponents.IconSwitchCell) {
-            ((LagramSettingsComponents.IconSwitchCell) view).setChecked(checked, true);
+    private void toggle(View view, boolean checked) {
+        if (view instanceof OpexgramStyleWidgets.OpexSwitchCell) {
+            ((OpexgramStyleWidgets.OpexSwitchCell) view).setChecked(checked);
         }
-        if (listView != null && listView.adapter != null) {
-            listView.adapter.update(true);
-        }
+        refreshList();
     }
 
     @Override

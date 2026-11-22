@@ -2280,9 +2280,21 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 }
                                 LagramConfig.ensureLoaded();
                                 if (LagramConfig.openArchiveOnPull) {
-                                    Bundle args = new Bundle();
-                                    args.putInt("folderId", 1);
-                                    presentFragment(new DialogsActivity(args));
+                                    Runnable openArchive = () -> {
+                                        Bundle args = new Bundle();
+                                        args.putInt("folderId", 1);
+                                        presentFragment(new DialogsActivity(args));
+                                    };
+                                    if (LagramConfig.lockArchive && getParentActivity() != null) {
+                                        AlertDialog.Builder lb = new AlertDialog.Builder(getParentActivity(), getResourceProvider());
+                                        lb.setTitle(LocaleController.getString(R.string.LagramLockConfirmTitle));
+                                        lb.setMessage(LocaleController.getString(R.string.LagramLockConfirmMessage));
+                                        lb.setPositiveButton(LocaleController.getString(R.string.OK), (d, w) -> openArchive.run());
+                                        lb.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+                                        showDialog(lb.create());
+                                    } else {
+                                        openArchive.run();
+                                    }
                                 }
                             }
                         }
@@ -9597,6 +9609,20 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void performDeleteOrClearDialogAction(int action, long selectedDialog, TLRPC.Chat chat, boolean isBot, boolean revoke) {
+        LagramConfig.ensureLoaded();
+        if (LagramConfig.lockDelete && getParentActivity() != null) {
+            AlertDialog.Builder lb = new AlertDialog.Builder(getParentActivity(), getResourceProvider());
+            lb.setTitle(LocaleController.getString(R.string.LagramLockConfirmTitle));
+            lb.setMessage(LocaleController.getString(R.string.LagramLockConfirmMessage));
+            lb.setPositiveButton(LocaleController.getString(R.string.OK), (d, w) -> performDeleteOrClearDialogActionInternal(action, selectedDialog, chat, isBot, revoke));
+            lb.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+            showDialog(lb.create());
+            return;
+        }
+        performDeleteOrClearDialogActionInternal(action, selectedDialog, chat, isBot, revoke);
+    }
+
+    private void performDeleteOrClearDialogActionInternal(int action, long selectedDialog, TLRPC.Chat chat, boolean isBot, boolean revoke) {
         if (action == clear) {
             getMessagesController().deleteDialog(selectedDialog, 1, revoke);
         } else {

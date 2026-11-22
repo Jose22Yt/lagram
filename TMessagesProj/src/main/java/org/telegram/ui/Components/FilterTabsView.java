@@ -1512,10 +1512,23 @@ public class FilterTabsView extends FrameLayout {
 
             final float add = additionalTabWidth / 2f;
 
-            final int y = height / 2 - dp(14);
-            selectorDrawable.setBounds((int) (indicatorX - dp(TAB_INTERNAL_PADDING) - add), y, (int) (indicatorX + indicatorWidth + dp(TAB_INTERNAL_PADDING) + add), y + dp(28));
-            selectorDrawable.setAlpha(31);
-            selectorDrawable.draw(canvas);
+            final int barStyle = org.telegram.messenger.LagramConfig.folderBarStyle;
+            if (barStyle == org.telegram.messenger.LagramConfig.FOLDER_BAR_TABS) {
+                final int y = height - dp(4);
+                selectorDrawable.setBounds((int) (indicatorX - add), y, (int) (indicatorX + indicatorWidth + add), height - dp(1));
+                selectorDrawable.setAlpha(255);
+                selectorDrawable.draw(canvas);
+            } else if (barStyle == org.telegram.messenger.LagramConfig.FOLDER_BAR_BUTTONS) {
+                final int y = height / 2 - dp(15);
+                selectorDrawable.setBounds((int) (indicatorX - dp(TAB_INTERNAL_PADDING + 2) - add), y, (int) (indicatorX + indicatorWidth + dp(TAB_INTERNAL_PADDING + 2) + add), y + dp(30));
+                selectorDrawable.setAlpha(185);
+                selectorDrawable.draw(canvas);
+            } else {
+                final int y = height / 2 - dp(14);
+                selectorDrawable.setBounds((int) (indicatorX - dp(TAB_INTERNAL_PADDING) - add), y, (int) (indicatorX + indicatorWidth + dp(TAB_INTERNAL_PADDING) + add), y + dp(28));
+                selectorDrawable.setAlpha(31);
+                selectorDrawable.draw(canvas);
+            }
             canvas.restore();
         }
     }
