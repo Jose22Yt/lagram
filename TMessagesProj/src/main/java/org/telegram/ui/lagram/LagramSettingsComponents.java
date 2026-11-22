@@ -387,6 +387,10 @@ public final class LagramSettingsComponents {
             invalidate();
         }
 
+        public void setChecked(boolean checked) {
+            setChecked(checked, true);
+        }
+
         public void setChecked(boolean checked, boolean animated) {
             switchView.setChecked(checked, animated);
             if (iconView.getVisibility() == VISIBLE) {
@@ -872,12 +876,7 @@ public final class LagramSettingsComponents {
             setClipToOutline(true);
 
             for (int i = 0; i < cells.length; i++) {
-                ChatMessageCell cell = new ChatMessageCell(context, currentAccount, false, null, resourcesProvider) {
-                    @Override
-                    public boolean isChat() {
-                        return false;
-                    }
-                };
+                ChatMessageCell cell = new ChatMessageCell(context, currentAccount, false, null, resourcesProvider);
                 cell.setDelegate(new ChatMessageCell.ChatMessageCellDelegate() {
                     @Override
                     public boolean canPerformActions() {
