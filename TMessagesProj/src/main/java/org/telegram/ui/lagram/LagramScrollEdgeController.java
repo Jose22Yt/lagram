@@ -114,13 +114,24 @@ public final class LagramScrollEdgeController {
         if (child instanceof ChatMessageCell) {
             ChatMessageCell cell = (ChatMessageCell) child;
             boolean isOut = cell.getMessageObject() != null && cell.getMessageObject().isOutOwner();
-            child.setPivotX(isOut ? child.getWidth() * 0.82f : child.getWidth() * 0.18f);
+            float targetPivotX = isOut ? child.getWidth() * 0.82f : child.getWidth() * 0.18f;
+            if (Math.abs(child.getPivotX() - targetPivotX) > 1f) {
+                child.setPivotX(targetPivotX);
+            }
         } else {
-            child.setPivotX(child.getWidth() * 0.5f);
+            float targetPivotX = child.getWidth() * 0.5f;
+            if (Math.abs(child.getPivotX() - targetPivotX) > 1f) {
+                child.setPivotX(targetPivotX);
+            }
         }
-        child.setPivotY(distFromTop < distFromBottom ? child.getHeight() : 0f);
-        child.setScaleX(scale);
-        child.setScaleY(scale);
+        float targetPivotY = distFromTop < distFromBottom ? child.getHeight() : 0f;
+        if (Math.abs(child.getPivotY() - targetPivotY) > 1f) {
+            child.setPivotY(targetPivotY);
+        }
+        if (Math.abs(child.getScaleX() - scale) > 0.002f) {
+            child.setScaleX(scale);
+            child.setScaleY(scale);
+        }
     }
 
     private static void animateResetAllChildren(RecyclerView rv) {
@@ -128,7 +139,8 @@ public final class LagramScrollEdgeController {
         for (int i = 0; i < count; i++) {
             View child = rv.getChildAt(i);
             if (child != null && (Math.abs(child.getScaleX() - 1f) > 0.002f || Math.abs(child.getScaleY() - 1f) > 0.002f)) {
-                child.animate().scaleX(1f).scaleY(1f).setDuration(150).start();
+                child.animate().cancel();
+                child.animate().scaleX(1f).scaleY(1f).setDuration(140).start();
             }
         }
     }
@@ -144,6 +156,7 @@ public final class LagramScrollEdgeController {
     }
 
     private static void resetChild(View child) {
+        child.animate().cancel();
         if (child.getScaleX() != 1f) {
             child.setScaleX(1f);
         }

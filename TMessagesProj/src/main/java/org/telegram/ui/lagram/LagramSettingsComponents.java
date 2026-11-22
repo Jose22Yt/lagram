@@ -528,7 +528,14 @@ public final class LagramSettingsComponents {
         private final RectF cardRect = new RectF();
         private final RectF bubbleRect = new RectF();
         private final RectF barRect = new RectF();
+        private final RectF badgeRect = new RectF();
         private final Path tailPath = new Path();
+        private final SimpleDateFormat fmtHm = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        private final SimpleDateFormat fmtHms = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+        private final Date reusableDate = new Date();
+        private int lastCardW = -1;
+        private int lastCardH = -1;
+        private boolean lastIsDark;
         private int mode = MODE_BUBBLES_AND_GLASS;
 
         public ChatAppearancePreviewCell(Context context, Theme.ResourcesProvider resourcesProvider) {
@@ -574,13 +581,18 @@ public final class LagramSettingsComponents {
             cardRect.set(cardPadH, cardPadV, w - cardPadH, h - cardPadV);
             float cardRadius = dp(16);
 
-            // Rich gradient wallpaper backdrop inside preview card
-            int bgStart = isDark ? 0xFF131B2E : 0xFFD4E6F8;
-            int bgEnd = isDark ? 0xFF1E293B : 0xFFE5F0DC;
-            cardBgPaint.setShader(new LinearGradient(
-                    cardRect.left, cardRect.top, cardRect.right, cardRect.bottom,
-                    new int[]{bgStart, bgEnd}, null, Shader.TileMode.CLAMP
-            ));
+            // Cache gradient wallpaper backdrop shader per dimensions & theme
+            if (w != lastCardW || h != lastCardH || isDark != lastIsDark) {
+                lastCardW = w;
+                lastCardH = h;
+                lastIsDark = isDark;
+                int bgStart = isDark ? 0xFF131B2E : 0xFFD4E6F8;
+                int bgEnd = isDark ? 0xFF1E293B : 0xFFE5F0DC;
+                cardBgPaint.setShader(new LinearGradient(
+                        cardRect.left, cardRect.top, cardRect.right, cardRect.bottom,
+                        new int[]{bgStart, bgEnd}, null, Shader.TileMode.CLAMP
+                ));
+            }
             canvas.drawRoundRect(cardRect, cardRadius, cardRadius, cardBgPaint);
 
             // Subtle ambient orbs to visibly demonstrate Liquid Glass translucency
@@ -602,8 +614,8 @@ public final class LagramSettingsComponents {
             inBubblePaint.setColor(ColorUtils.setAlphaComponent(rawInColor, inAlpha));
             outBubblePaint.setColor(ColorUtils.setAlphaComponent(rawOutColor, outAlpha));
 
-            SimpleDateFormat sdf = new SimpleDateFormat(LagramConfig.showSecondsInTime ? "HH:mm:ss" : "HH:mm", Locale.getDefault());
-            String timeStr = sdf.format(new Date());
+            reusableDate.setTime(System.currentTimeMillis());
+            String timeStr = (LagramConfig.showSecondsInTime ? fmtHms : fmtHm).format(reusableDate);
 
             // Top live status pill badge
             String badgeLabel;
@@ -617,7 +629,7 @@ public final class LagramSettingsComponents {
                         + (tails ? "  •  Colas" : "");
             }
             float badgeW = badgeTextPaint.measureText(badgeLabel) + dp(18);
-            RectF badgeRect = new RectF(cardRect.centerX() - badgeW / 2f, cardRect.top + dp(8),
+            badgeRect.set(cardRect.centerX() - badgeW / 2f, cardRect.top + dp(8),
                     cardRect.centerX() + badgeW / 2f, cardRect.top + dp(26));
             pillBadgePaint.setColor(isDark ? 0x66000000 : 0x55FFFFFF);
             canvas.drawRoundRect(badgeRect, dp(9), dp(9), pillBadgePaint);
@@ -706,19 +718,11 @@ public final class LagramSettingsComponents {
         }
 
         private void drawGlassOverlay(Canvas canvas, RectF rect, float radius, boolean isDark, boolean drawBorder) {
-            glassSheenPaint.setShader(new LinearGradient(
-                    rect.left, rect.top, rect.left, rect.bottom,
-                    new int[]{isDark ? 0x26FFFFFF : 0x44FFFFFF, 0x00FFFFFF},
-                    null, Shader.TileMode.CLAMP
-            ));
+            glassSheenPaint.setColor(isDark ? 0x16FFFFFF : 0x26FFFFFF);
             canvas.drawRoundRect(rect, radius, radius, glassSheenPaint);
 
             if (drawBorder) {
-                glassBorderPaint.setShader(new LinearGradient(
-                        rect.left, rect.top, rect.right, rect.bottom,
-                        new int[]{isDark ? 0x66FFFFFF : 0x99FFFFFF, isDark ? 0x1AFFFFFF : 0x28FFFFFF},
-                        null, Shader.TileMode.CLAMP
-                ));
+                glassBorderPaint.setColor(isDark ? 0x48FFFFFF : 0x78FFFFFF);
                 canvas.drawRoundRect(rect, radius, radius, glassBorderPaint);
             }
         }
@@ -766,6 +770,7 @@ public final class LagramSettingsComponents {
         private final RectF cardRect = new RectF();
         private final RectF pillRect = new RectF();
         private final RectF badgeRect = new RectF();
+        private final Drawable[] cachedTabDrawables = new Drawable[4];
         private boolean needDivider;
 
         private static final String[] TAB_NAMES = new String[]{"Todos", "Personal", "Grupos", "Canales"};
@@ -784,6 +789,12 @@ public final class LagramSettingsComponents {
             tabTextPaint.setTypeface(AndroidUtilities.bold());
             counterTextPaint.setTextSize(dp(10.5f));
             counterTextPaint.setTypeface(AndroidUtilities.bold());
+            for (int i = 0; i < TAB_ICONS.length; i++) {
+                Drawable d = ContextCompat.getDrawable(context, TAB_ICONS[i]);
+                if (d != null) {
+                    cachedTabDrawables[i] = d.mutate();
+                }
+            }
         }
 
         public void setNeedDivider(boolean divider) {
@@ -849,9 +860,8 @@ public final class LagramSettingsComponents {
                 float curX = (slotLeft + slotRight - totalW) / 2f;
 
                 if (showIcons) {
-                    Drawable d = ContextCompat.getDrawable(getContext(), TAB_ICONS[i]);
+                    Drawable d = cachedTabDrawables[i];
                     if (d != null) {
-                        d = d.mutate();
                         d.setTint(fgColor);
                         int iy = (int) (cy - dp(8));
                         d.setBounds((int) curX, iy, (int) (curX + dp(16)), iy + dp(16));

@@ -43,6 +43,15 @@ public class MessageDrawable extends Drawable {
     private int lastGlassBoundsLeft = Integer.MIN_VALUE;
     private int lastGlassBoundsRight = Integer.MIN_VALUE;
     private boolean lastGlassDark;
+    private int lastDirectPathLeft = Integer.MIN_VALUE;
+    private int lastDirectPathTop = Integer.MIN_VALUE;
+    private int lastDirectPathRight = Integer.MIN_VALUE;
+    private int lastDirectPathBottom = Integer.MIN_VALUE;
+    private int lastDirectPathRad = -1;
+    private int lastDirectPathNearRad = -1;
+    private boolean lastDirectPathTails;
+    private boolean lastDirectPathTopNear;
+    private boolean lastDirectPathBottomNear;
     private int currentColor;
     private int currentGradientColor1;
     private int currentGradientColor2;
@@ -654,9 +663,25 @@ public class MessageDrawable extends Drawable {
             invalidatePath = pathDrawCacheParams.invalidatePath(bounds, drawFullBottom, drawFullTop);
         } else {
             path = this.path;
-            invalidatePath = true;
+            invalidatePath = lastDirectPathLeft != bounds.left || lastDirectPathTop != bounds.top
+                    || lastDirectPathRight != bounds.right || lastDirectPathBottom != bounds.bottom
+                    || lastDirectPathRad != rad || lastDirectPathNearRad != nearRad
+                    || lastDirectPathTails != LagramConfig.showBubbleTails
+                    || lastDirectPathTopNear != isTopNear || lastDirectPathBottomNear != isBottomNear;
         }
-        if (invalidatePath || overrideRoundRadius != 0) {
+        if (invalidatePath || overrideRoundRadius != 0 || forceInvalidatePath) {
+            forceInvalidatePath = false;
+            if (path == this.path) {
+                lastDirectPathLeft = bounds.left;
+                lastDirectPathTop = bounds.top;
+                lastDirectPathRight = bounds.right;
+                lastDirectPathBottom = bounds.bottom;
+                lastDirectPathRad = rad;
+                lastDirectPathNearRad = nearRad;
+                lastDirectPathTails = LagramConfig.showBubbleTails;
+                lastDirectPathTopNear = isTopNear;
+                lastDirectPathBottomNear = isBottomNear;
+            }
             generatePath(path, bounds, padding, rad, smallRad, nearRad, top, drawFullBottom, drawFullTop, paintToUse != null);
         }
 
