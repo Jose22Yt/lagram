@@ -2130,10 +2130,20 @@ public class LocaleController {
             date *= 1000;
 
             calendar.setTimeInMillis(date);
+            String formatted;
             if (checkYear && currentYear == calendar.get(Calendar.YEAR) || !checkYear && Math.abs(System.currentTimeMillis() - date) < 31536000000L) {
-                return getInstance().getChatDate().format(date);
+                formatted = getInstance().getChatDate().format(date);
+            } else {
+                formatted = getInstance().getChatFullDate().format(date);
             }
-            return getInstance().getChatFullDate().format(date);
+            LagramConfig.ensureLoaded();
+            if (LagramConfig.showWeekdayInDate) {
+                String weekday = getInstance().getFormatterWeek().format(date);
+                if (weekday != null && !weekday.isEmpty() && !formatted.toLowerCase().contains(weekday.toLowerCase())) {
+                    return weekday + ", " + formatted;
+                }
+            }
+            return formatted;
         } catch (Exception e) {
             FileLog.e(e);
         }

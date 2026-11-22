@@ -22,6 +22,7 @@ import android.graphics.drawable.NinePatchDrawable;
 import androidx.core.graphics.ColorUtils;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.Components.MotionBackgroundDrawable;
 import org.telegram.ui.Components.blur3.utils.NinePatchBuilder;
@@ -35,6 +36,13 @@ public class MessageDrawable extends Drawable {
     private int currentBackgroundHeight;
     public Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint selectedPaint;
+    private Paint glassSheenPaint;
+    private Paint glassBorderPaint;
+    private int lastGlassBoundsTop = Integer.MIN_VALUE;
+    private int lastGlassBoundsBottom = Integer.MIN_VALUE;
+    private int lastGlassBoundsLeft = Integer.MIN_VALUE;
+    private int lastGlassBoundsRight = Integer.MIN_VALUE;
+    private boolean lastGlassDark;
     private int currentColor;
     private int currentGradientColor1;
     private int currentGradientColor2;
@@ -347,6 +355,10 @@ public class MessageDrawable extends Drawable {
         return shadowDrawable;
     }
 
+    private int getEffectiveBubbleRadiusPx() {
+        return dp(LagramConfig.getEffectiveBubbleRadiusDp());
+    }
+
     public Drawable getBackgroundDrawable() {
         int newRad;
         if (overrideRoundRadius != 0) {
@@ -354,7 +366,7 @@ public class MessageDrawable extends Drawable {
         } else if (overrideRounding > 0) {
             newRad = 0;
         } else {
-            newRad = dp(SharedConfig.bubbleRadius);
+            newRad = getEffectiveBubbleRadiusPx() + (LagramConfig.showBubbleTails ? 0 : 1000);
         }
         int idx;
         if (isTopNear && isBottomNear) {
@@ -478,7 +490,7 @@ public class MessageDrawable extends Drawable {
         if (gradientShader == null && !isSelected && crossfadeFromDrawable == null) {
             return null;
         }
-        int newRad = dp(SharedConfig.bubbleRadius);
+        int newRad = getEffectiveBubbleRadiusPx();
         int idx;
         if (isTopNear && isBottomNear) {
             idx = 3;
@@ -588,7 +600,8 @@ public class MessageDrawable extends Drawable {
             return;
         }
         Rect bounds = getBounds();
-        if (paintToUse == null && paint.getStyle() == Paint.Style.FILL && gradientShader == null && overrideRoundRadius == 0 && overrideRounding <= 0) {
+        boolean useGlass = LagramConfig.glassMessages && !renderingBackgroundCache && currentType != TYPE_PREVIEW;
+        if (!useGlass && paintToUse == null && paint.getStyle() == Paint.Style.FILL && gradientShader == null && overrideRoundRadius == 0 && overrideRounding <= 0) {
             Drawable background = getBackgroundDrawable();
             if (background != null) {
                 background.setBounds(bounds);
@@ -597,6 +610,7 @@ public class MessageDrawable extends Drawable {
             }
         }
 
+        int effectiveBubbleRadDp = LagramConfig.getEffectiveBubbleRadiusDp();
         int padding = dp(2);
         int rad;
         int nearRad;
@@ -604,14 +618,14 @@ public class MessageDrawable extends Drawable {
             rad = overrideRoundRadius;
             nearRad = overrideRoundRadius;
         } else if (overrideRounding > 0) {
-            rad = AndroidUtilities.lerp(dp(SharedConfig.bubbleRadius), Math.min(bounds.width(), bounds.height()) / 2, overrideRounding);
-            nearRad = AndroidUtilities.lerp(dp(Math.min(6, SharedConfig.bubbleRadius)), Math.min(bounds.width(), bounds.height()) / 2, overrideRounding);
+            rad = AndroidUtilities.lerp(dp(effectiveBubbleRadDp), Math.min(bounds.width(), bounds.height()) / 2, overrideRounding);
+            nearRad = AndroidUtilities.lerp(dp(Math.min(6, effectiveBubbleRadDp)), Math.min(bounds.width(), bounds.height()) / 2, overrideRounding);
         } else if (currentType == TYPE_PREVIEW) {
             rad = dp(6);
             nearRad = dp(6);
         } else {
-            rad = dp(SharedConfig.bubbleRadius);
-            nearRad = dp(Math.min(6, SharedConfig.bubbleRadius));
+            rad = dp(effectiveBubbleRadDp);
+            nearRad = dp(Math.min(6, effectiveBubbleRadDp));
         }
         int smallRad = dp(6);
 
@@ -646,11 +660,64 @@ public class MessageDrawable extends Drawable {
             generatePath(path, bounds, padding, rad, smallRad, nearRad, top, drawFullBottom, drawFullTop, paintToUse != null);
         }
 
+        int savedPaintAlpha = p.getAlpha();
+        if (useGlass && paintToUse == null) {
+            int glassAlpha = Math.round(savedPaintAlpha * (Math.max(20, Math.min(100, LagramConfig.glassMessagesAlpha)) / 100f));
+            p.setAlpha(glassAlpha);
+        }
         canvas.drawPath(path, p);
+        if (useGlass && paintToUse == null) {
+            p.setAlpha(savedPaintAlpha);
+            drawLiquidGlassOverlay(canvas, path, bounds);
+        }
         if (gradientShader != null && isSelected && paintToUse == null) {
             int color = getColor(Theme.key_chat_outBubbleGradientSelectedOverlay);
             selectedPaint.setColor(ColorUtils.setAlphaComponent(color, (int) (Color.alpha(color) * alpha / 255f)));
             canvas.drawPath(path, selectedPaint);
+        }
+    }
+
+    private void drawLiquidGlassOverlay(Canvas canvas, Path bubblePath, Rect bounds) {
+        if (bounds.width() <= 0 || bounds.height() <= 0) {
+            return;
+        }
+        boolean isDark = Theme.isCurrentThemeDark();
+        if (glassSheenPaint == null) {
+            glassSheenPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            glassSheenPaint.setStyle(Paint.Style.FILL);
+        }
+        if (glassBorderPaint == null) {
+            glassBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            glassBorderPaint.setStyle(Paint.Style.STROKE);
+            glassBorderPaint.setStrokeWidth(AndroidUtilities.dpf2(1.05f));
+        }
+        if (bounds.top != lastGlassBoundsTop || bounds.bottom != lastGlassBoundsBottom
+                || bounds.left != lastGlassBoundsLeft || bounds.right != lastGlassBoundsRight
+                || isDark != lastGlassDark) {
+            lastGlassBoundsTop = bounds.top;
+            lastGlassBoundsBottom = bounds.bottom;
+            lastGlassBoundsLeft = bounds.left;
+            lastGlassBoundsRight = bounds.right;
+            lastGlassDark = isDark;
+
+            int sheenTopColor = isDark ? 0x20FFFFFF : 0x3AFFFFFF;
+            glassSheenPaint.setShader(new LinearGradient(
+                    bounds.left, bounds.top, bounds.left, bounds.bottom,
+                    new int[]{sheenTopColor, 0x00FFFFFF}, null, Shader.TileMode.CLAMP
+            ));
+            int borderTopLeft = isDark ? 0x58FFFFFF : 0x88FFFFFF;
+            int borderBottomRight = isDark ? 0x16FFFFFF : 0x26FFFFFF;
+            glassBorderPaint.setShader(new LinearGradient(
+                    bounds.left, bounds.top, bounds.right, bounds.bottom,
+                    new int[]{borderTopLeft, borderBottomRight}, null, Shader.TileMode.CLAMP
+            ));
+        }
+        int alphaScale = Math.round(alpha);
+        glassSheenPaint.setAlpha(alphaScale);
+        canvas.drawPath(bubblePath, glassSheenPaint);
+        if (LagramConfig.glassMessagesBorder) {
+            glassBorderPaint.setAlpha(alphaScale);
+            canvas.drawPath(bubblePath, glassBorderPaint);
         }
     }
 
@@ -660,6 +727,7 @@ public class MessageDrawable extends Drawable {
 
     public Path makePath(PathDrawParams pathDrawCacheParams) {
         Rect bounds = getBounds();
+        int effectiveBubbleRadDp = LagramConfig.getEffectiveBubbleRadiusDp();
         int padding = dp(2);
         int rad;
         int nearRad;
@@ -667,14 +735,14 @@ public class MessageDrawable extends Drawable {
             rad = overrideRoundRadius;
             nearRad = overrideRoundRadius;
         } else if (overrideRounding > 0) {
-            rad = AndroidUtilities.lerp(dp(SharedConfig.bubbleRadius), Math.min(bounds.width(), bounds.height()) / 2, overrideRounding);
-            nearRad = AndroidUtilities.lerp(dp(Math.min(6, SharedConfig.bubbleRadius)), Math.min(bounds.width(), bounds.height()) / 2, overrideRounding);
+            rad = AndroidUtilities.lerp(dp(effectiveBubbleRadDp), Math.min(bounds.width(), bounds.height()) / 2, overrideRounding);
+            nearRad = AndroidUtilities.lerp(dp(Math.min(6, effectiveBubbleRadDp)), Math.min(bounds.width(), bounds.height()) / 2, overrideRounding);
         } else if (currentType == TYPE_PREVIEW) {
             rad = dp(6);
             nearRad = dp(6);
         } else {
-            rad = dp(SharedConfig.bubbleRadius);
-            nearRad = dp(Math.min(6, SharedConfig.bubbleRadius));
+            rad = dp(effectiveBubbleRadDp);
+            nearRad = dp(Math.min(6, effectiveBubbleRadDp));
         }
         int smallRad = dp(6);
         int top = Math.max(bounds.top, 0);
@@ -707,12 +775,14 @@ public class MessageDrawable extends Drawable {
         if (rad > heightHalf) {
             rad = heightHalf;
         }
+        boolean noTail = currentType == TYPE_MEDIA || !LagramConfig.showBubbleTails;
         if (isOut) {
             // LEFT-BOTTOM <- RIGHT-BOTTOM
             if (drawFullBubble || currentType == TYPE_PREVIEW || customPaint || drawFullBottom) {
                 int radToUse = botButtonsBottom ? nearRad : rad;
-                if (currentType == TYPE_MEDIA) {
-                    path.moveTo(bounds.right - dp(8) - radToUse, bounds.bottom - padding);
+                if (noTail) {
+                    int rightEdge = currentType == TYPE_MEDIA ? (bounds.right - dp(8)) : (bounds.right - dp(8));
+                    path.moveTo(rightEdge - radToUse, bounds.bottom - padding);
                 } else {
                     path.moveTo(bounds.right - dp(2.6f), bounds.bottom - padding);
                 }
@@ -761,6 +831,16 @@ public class MessageDrawable extends Drawable {
                 } else {
                     path.lineTo(bounds.right - padding, top - topY + currentBackgroundHeight);
                 }
+            } else if (!LagramConfig.showBubbleTails) {
+                if (drawFullBubble || currentType == TYPE_PREVIEW || customPaint || drawFullBottom) {
+                    int radToUse = isBottomNear || botButtonsBottom ? nearRad : rad;
+                    int rightEdge = bounds.right - dp(8);
+                    path.lineTo(rightEdge, bounds.bottom - padding - radToUse);
+                    rect.set(rightEdge - radToUse * 2, bounds.bottom - padding - radToUse * 2, rightEdge, bounds.bottom - padding);
+                    path.arcTo(rect, 0, 90, false);
+                } else {
+                    path.lineTo(bounds.right - dp(8), top - topY + currentBackgroundHeight);
+                }
             } else {
                 if (drawFullBubble || currentType == TYPE_PREVIEW || customPaint || drawFullBottom) {
                     path.lineTo(bounds.right - dp(8), bounds.bottom - padding - smallRad - dp(3));
@@ -774,7 +854,7 @@ public class MessageDrawable extends Drawable {
             if (drawFullBubble || currentType == TYPE_PREVIEW || customPaint || drawFullBottom) {
                 int radToUse = botButtonsBottom ? nearRad : rad;
 
-                if (currentType == TYPE_MEDIA) {
+                if (noTail) {
                     path.moveTo(bounds.left + dp(8) + radToUse, bounds.bottom - padding);
                 } else {
                     path.moveTo(bounds.left + dp(2.6f), bounds.bottom - padding);
@@ -817,6 +897,16 @@ public class MessageDrawable extends Drawable {
                     path.arcTo(rect, 180, -90, false);
                 } else {
                     path.lineTo(bounds.left + padding, top - topY + currentBackgroundHeight);
+                }
+            } else if (!LagramConfig.showBubbleTails) {
+                if (drawFullBubble || currentType == TYPE_PREVIEW || customPaint || drawFullBottom) {
+                    int radToUse = isBottomNear || botButtonsBottom ? nearRad : rad;
+                    int leftEdge = bounds.left + dp(8);
+                    path.lineTo(leftEdge, bounds.bottom - padding - radToUse);
+                    rect.set(leftEdge, bounds.bottom - padding - radToUse * 2, leftEdge + radToUse * 2, bounds.bottom - padding);
+                    path.arcTo(rect, 180, -90, false);
+                } else {
+                    path.lineTo(bounds.left + dp(8), top - topY + currentBackgroundHeight);
                 }
             } else {
                 if (drawFullBubble || currentType == TYPE_PREVIEW || customPaint || drawFullBottom) {

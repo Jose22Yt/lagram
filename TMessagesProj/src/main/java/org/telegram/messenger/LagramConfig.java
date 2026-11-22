@@ -433,6 +433,21 @@ public final class LagramConfig {
         saveInt("roundingPreset", roundingPreset);
     }
 
+    public static int getEffectiveBubbleRadiusDp() {
+        ensureLoaded();
+        switch (roundingPreset) {
+            case ROUNDING_ROUND:
+                return 24;
+            case ROUNDING_SQUIRCLE:
+                return 20;
+            case ROUNDING_SQUARE:
+                return 8;
+            case ROUNDING_DEFAULT:
+            default:
+                return SharedConfig.bubbleRadius > 0 ? SharedConfig.bubbleRadius : 17;
+        }
+    }
+
     public static boolean toggleScrollEdgeScale() {
         ensureLoaded();
         scrollEdgeScale = !scrollEdgeScale;

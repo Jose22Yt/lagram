@@ -1,184 +1,132 @@
 package org.telegram.ui.lagram;
 
+import android.content.Context;
 import android.view.View;
-
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.ui.Cells.HeaderCell;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.TextCheckCell;
-import org.telegram.ui.Cells.TextInfoPrivacyCell;
-import org.telegram.ui.Cells.TextSettingsCell;
+import org.telegram.ui.Components.UItem;
+import org.telegram.ui.Components.UniversalAdapter;
+import org.telegram.ui.Components.UniversalFragment;
 
-public class LagramGeneralActivity extends BaseLagramSettingsActivity {
+import java.util.ArrayList;
 
-    private int performanceHeaderRow;
-    private int highRefreshRateRow;
-    private int forcePerfClassRow;
-    private int hapticsLevelRow;
-    private int divider1Row;
+public class LagramGeneralActivity extends UniversalFragment {
 
-    private int behaviorHeaderRow;
-    private int showJoinDateRow;
-    private int openArchiveOnPullRow;
-    private int dividerBehaviorRow;
+    private static final int ID_HIGH_REFRESH = 1;
+    private static final int ID_PERF_CLASS = 2;
+    private static final int ID_HAPTICS_LEVEL = 3;
 
-    private int cleanupHeaderRow;
-    private int disableSponsoredRow;
-    private int hideSimilarChannelsRow;
-    private int infoRow;
+    private static final int ID_SHOW_JOIN_DATE = 10;
+    private static final int ID_OPEN_ARCHIVE_PULL = 11;
+
+    private static final int ID_DISABLE_SPONSORED = 20;
+    private static final int ID_HIDE_SIMILAR_CHANNELS = 21;
 
     @Override
-    protected String getActionBarTitle() {
+    protected CharSequence getTitle() {
         return LocaleController.getString(R.string.LagramCategoryGeneral);
     }
 
     @Override
-    protected void updateRows() {
-        rowCount = 0;
-        performanceHeaderRow = rowCount++;
-        highRefreshRateRow = rowCount++;
-        forcePerfClassRow = rowCount++;
-        hapticsLevelRow = rowCount++;
-        divider1Row = rowCount++;
-
-        behaviorHeaderRow = rowCount++;
-        showJoinDateRow = rowCount++;
-        openArchiveOnPullRow = rowCount++;
-        dividerBehaviorRow = rowCount++;
-
-        cleanupHeaderRow = rowCount++;
-        disableSponsoredRow = rowCount++;
-        hideSimilarChannelsRow = rowCount++;
-        infoRow = rowCount++;
+    public View createView(Context context) {
+        LagramConfig.ensureLoaded();
+        View view = super.createView(context);
+        listView.setSections();
+        if (LagramConfig.amoledSettingsBackdrop && Theme.isCurrentThemeDark()) {
+            fragmentView.setBackgroundColor(0xFF000000);
+            listView.setBackgroundColor(0xFF000000);
+        }
+        return view;
     }
 
     @Override
-    protected int getItemViewType(int position) {
-        if (position == performanceHeaderRow || position == behaviorHeaderRow || position == cleanupHeaderRow) {
-            return VIEW_TYPE_HEADER;
-        } else if (position == forcePerfClassRow || position == hapticsLevelRow) {
-            return VIEW_TYPE_SETTINGS;
-        } else if (position == infoRow) {
-            return VIEW_TYPE_INFO;
-        } else if (position == divider1Row || position == dividerBehaviorRow) {
-            return VIEW_TYPE_SHADOW;
-        }
-        return VIEW_TYPE_CHECK;
-    }
+    protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
+        LagramConfig.ensureLoaded();
 
-    private String getPerfClassLabel() {
-        switch (LagramConfig.forcePerformanceClass) {
-            case 0:
-                return LocaleController.getString(R.string.LagramPerfLow);
-            case 1:
-                return LocaleController.getString(R.string.LagramPerfAverage);
-            case 2:
-                return LocaleController.getString(R.string.LagramPerfHigh);
-            default:
-                return LocaleController.getString(R.string.LagramPerfAuto);
-        }
-    }
+        // Section 1: Performance & Haptics with Segmented Pill Selectors
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramPerformanceHeader)));
+        items.add(UItem.asCheck(ID_HIGH_REFRESH, LocaleController.getString(R.string.LagramHighRefreshRate))
+                .setChecked(LagramConfig.highRefreshRateScroll));
+        items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+                ID_PERF_CLASS,
+                LocaleController.getString(R.string.LagramForcePerfClass),
+                new String[]{
+                        LocaleController.getString(R.string.LagramPerfAuto),
+                        LocaleController.getString(R.string.LagramPerfLow),
+                        LocaleController.getString(R.string.LagramPerfAverage),
+                        LocaleController.getString(R.string.LagramPerfHigh)
+                },
+                LagramConfig.forcePerformanceClass + 1,
+                which -> LagramConfig.setForcePerformanceClass(which - 1)
+        ));
+        items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+                ID_HAPTICS_LEVEL,
+                LocaleController.getString(R.string.LagramHapticsLevel),
+                new String[]{
+                        LocaleController.getString(R.string.LagramHapticsOff),
+                        LocaleController.getString(R.string.LagramHapticsSoft),
+                        LocaleController.getString(R.string.LagramHapticsNormal),
+                        LocaleController.getString(R.string.LagramHapticsStrong)
+                },
+                LagramConfig.hapticsLevel,
+                LagramConfig::setHapticsLevel
+        ));
+        items.add(UItem.asShadow(null));
 
-    private String getHapticsLabel() {
-        switch (LagramConfig.hapticsLevel) {
-            case LagramConfig.HAPTICS_OFF:
-                return LocaleController.getString(R.string.LagramHapticsOff);
-            case LagramConfig.HAPTICS_SOFT:
-                return LocaleController.getString(R.string.LagramHapticsSoft);
-            case LagramConfig.HAPTICS_STRONG:
-                return LocaleController.getString(R.string.LagramHapticsStrong);
-            case LagramConfig.HAPTICS_NORMAL:
-            default:
-                return LocaleController.getString(R.string.LagramHapticsNormal);
-        }
+        // Section 2: Profile & Chat List Behavior
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramBehaviorHeader)));
+        items.add(UItem.asCheck(ID_SHOW_JOIN_DATE, LocaleController.getString(R.string.LagramShowJoinDate))
+                .setChecked(LagramConfig.showJoinDate));
+        items.add(UItem.asCheck(ID_OPEN_ARCHIVE_PULL, LocaleController.getString(R.string.LagramOpenArchiveOnPull))
+                .setChecked(LagramConfig.openArchiveOnPull));
+        items.add(UItem.asShadow(null));
+
+        // Section 3: Anti-Bloat & Sponsored Cleanup
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAntiBloatHeader)));
+        items.add(UItem.asCheck(ID_DISABLE_SPONSORED, LocaleController.getString(R.string.LagramDisableSponsored))
+                .setChecked(LagramConfig.disableSponsoredMessages));
+        items.add(UItem.asCheck(ID_HIDE_SIMILAR_CHANNELS, LocaleController.getString(R.string.LagramHideSimilarChannels))
+                .setChecked(LagramConfig.hideSimilarChannels));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.LagramGeneralInfo)));
     }
 
     @Override
-    protected void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        switch (holder.getItemViewType()) {
-            case VIEW_TYPE_HEADER: {
-                HeaderCell cell = (HeaderCell) holder.itemView;
-                if (position == performanceHeaderRow) {
-                    cell.setText(LocaleController.getString(R.string.LagramPerformanceHeader));
-                } else if (position == behaviorHeaderRow) {
-                    cell.setText(LocaleController.getString(R.string.LagramBehaviorHeader));
-                } else if (position == cleanupHeaderRow) {
-                    cell.setText(LocaleController.getString(R.string.LagramAntiBloatHeader));
-                }
+    protected void onClick(UItem item, View view, int position, float x, float y) {
+        boolean checkChanged = false;
+        boolean newVal = false;
+        switch (item.id) {
+            case ID_HIGH_REFRESH:
+                newVal = LagramConfig.toggleHighRefreshRateScroll();
+                checkChanged = true;
                 break;
-            }
-            case VIEW_TYPE_SETTINGS: {
-                TextSettingsCell cell = (TextSettingsCell) holder.itemView;
-                if (position == forcePerfClassRow) {
-                    cell.setTextAndValue(LocaleController.getString(R.string.LagramForcePerfClass), getPerfClassLabel(), true);
-                } else if (position == hapticsLevelRow) {
-                    cell.setTextAndValue(LocaleController.getString(R.string.LagramHapticsLevel), getHapticsLabel(), false);
-                }
+            case ID_SHOW_JOIN_DATE:
+                newVal = LagramConfig.toggleShowJoinDate();
+                checkChanged = true;
                 break;
-            }
-            case VIEW_TYPE_CHECK: {
-                TextCheckCell cell = (TextCheckCell) holder.itemView;
-                if (position == highRefreshRateRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramHighRefreshRate), LagramConfig.highRefreshRateScroll, true);
-                } else if (position == showJoinDateRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramShowJoinDate), LagramConfig.showJoinDate, true);
-                } else if (position == openArchiveOnPullRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramOpenArchiveOnPull), LagramConfig.openArchiveOnPull, false);
-                } else if (position == disableSponsoredRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramDisableSponsored), LagramConfig.disableSponsoredMessages, true);
-                } else if (position == hideSimilarChannelsRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramHideSimilarChannels), LagramConfig.hideSimilarChannels, false);
-                }
+            case ID_OPEN_ARCHIVE_PULL:
+                newVal = LagramConfig.toggleOpenArchiveOnPull();
+                checkChanged = true;
                 break;
-            }
-            case VIEW_TYPE_INFO: {
-                ((TextInfoPrivacyCell) holder.itemView).setText(LocaleController.getString(R.string.LagramGeneralInfo));
+            case ID_DISABLE_SPONSORED:
+                newVal = LagramConfig.toggleDisableSponsoredMessages();
+                checkChanged = true;
                 break;
-            }
+            case ID_HIDE_SIMILAR_CHANNELS:
+                newVal = LagramConfig.toggleHideSimilarChannels();
+                checkChanged = true;
+                break;
+        }
+        if (checkChanged && view instanceof TextCheckCell) {
+            ((TextCheckCell) view).setChecked(newVal);
         }
     }
 
     @Override
-    protected void onItemClick(View view, int position) {
-        if (position == forcePerfClassRow) {
-            String[] options = new String[]{
-                    LocaleController.getString(R.string.LagramPerfAuto),
-                    LocaleController.getString(R.string.LagramPerfLow),
-                    LocaleController.getString(R.string.LagramPerfAverage),
-                    LocaleController.getString(R.string.LagramPerfHigh)
-            };
-            int selected = LagramConfig.forcePerformanceClass + 1;
-            showSelectorDialog(LocaleController.getString(R.string.LagramForcePerfClass), options, selected, which -> LagramConfig.setForcePerformanceClass(which - 1));
-            return;
-        }
-        if (position == hapticsLevelRow) {
-            String[] options = new String[]{
-                    LocaleController.getString(R.string.LagramHapticsOff),
-                    LocaleController.getString(R.string.LagramHapticsSoft),
-                    LocaleController.getString(R.string.LagramHapticsNormal),
-                    LocaleController.getString(R.string.LagramHapticsStrong)
-            };
-            showSelectorDialog(LocaleController.getString(R.string.LagramHapticsLevel), options, LagramConfig.hapticsLevel, LagramConfig::setHapticsLevel);
-            return;
-        }
-        if (!(view instanceof TextCheckCell)) {
-            return;
-        }
-        TextCheckCell cell = (TextCheckCell) view;
-        if (position == highRefreshRateRow) {
-            cell.setChecked(LagramConfig.toggleHighRefreshRateScroll());
-        } else if (position == showJoinDateRow) {
-            cell.setChecked(LagramConfig.toggleShowJoinDate());
-        } else if (position == openArchiveOnPullRow) {
-            cell.setChecked(LagramConfig.toggleOpenArchiveOnPull());
-        } else if (position == disableSponsoredRow) {
-            cell.setChecked(LagramConfig.toggleDisableSponsoredMessages());
-        } else if (position == hideSimilarChannelsRow) {
-            cell.setChecked(LagramConfig.toggleHideSimilarChannels());
-        }
+    protected boolean onLongClick(UItem item, View view, int position, float x, float y) {
+        return false;
     }
 }

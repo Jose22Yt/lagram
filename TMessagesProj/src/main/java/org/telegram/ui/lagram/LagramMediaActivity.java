@@ -1,177 +1,146 @@
 package org.telegram.ui.lagram;
 
+import android.content.Context;
 import android.view.View;
-
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.ui.Cells.HeaderCell;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.TextCheckCell;
-import org.telegram.ui.Cells.TextInfoPrivacyCell;
-import org.telegram.ui.Cells.TextSettingsCell;
+import org.telegram.ui.Components.UItem;
+import org.telegram.ui.Components.UniversalAdapter;
+import org.telegram.ui.Components.UniversalFragment;
 
-public class LagramMediaActivity extends BaseLagramSettingsActivity {
+import java.util.ArrayList;
 
-    private int networkHeaderRow;
-    private int downloadBoostRow;
-    private int turboUploadsRow;
-    private int divider1Row;
+public class LagramMediaActivity extends UniversalFragment {
 
-    private int autoplayHeaderRow;
-    private int autoplayVoiceRow;
-    private int autoplayRoundRow;
-    private int autoplayMusicRow;
-    private int dividerAutoplayRow;
+    private static final int ID_DOWNLOAD_BOOST = 1;
+    private static final int ID_TURBO_UPLOADS = 2;
 
-    private int mediaHeaderRow;
-    private int sendPhotosHdRow;
-    private int rearCameraRoundRow;
-    private int compactRoundCameraRow;
-    private int mediaGlowRow;
-    private int pauseVideoMinimizeRow;
-    private int infoRow;
+    private static final int ID_AUTOPLAY_VOICE = 10;
+    private static final int ID_AUTOPLAY_ROUND = 11;
+    private static final int ID_AUTOPLAY_MUSIC = 12;
+
+    private static final int ID_SEND_PHOTOS_HD = 20;
+    private static final int ID_REAR_CAMERA_ROUND = 21;
+    private static final int ID_COMPACT_ROUND_CAMERA = 22;
+    private static final int ID_MEDIA_GLOW = 23;
+    private static final int ID_PAUSE_VIDEO_MINIMIZE = 24;
 
     @Override
-    protected String getActionBarTitle() {
+    protected CharSequence getTitle() {
         return LocaleController.getString(R.string.LagramCategoryMedia);
     }
 
     @Override
-    protected void updateRows() {
-        rowCount = 0;
-        networkHeaderRow = rowCount++;
-        downloadBoostRow = rowCount++;
-        turboUploadsRow = rowCount++;
-        divider1Row = rowCount++;
-
-        autoplayHeaderRow = rowCount++;
-        autoplayVoiceRow = rowCount++;
-        autoplayRoundRow = rowCount++;
-        autoplayMusicRow = rowCount++;
-        dividerAutoplayRow = rowCount++;
-
-        mediaHeaderRow = rowCount++;
-        sendPhotosHdRow = rowCount++;
-        rearCameraRoundRow = rowCount++;
-        compactRoundCameraRow = rowCount++;
-        mediaGlowRow = rowCount++;
-        pauseVideoMinimizeRow = rowCount++;
-        infoRow = rowCount++;
+    public View createView(Context context) {
+        LagramConfig.ensureLoaded();
+        View view = super.createView(context);
+        listView.setSections();
+        if (LagramConfig.amoledSettingsBackdrop && Theme.isCurrentThemeDark()) {
+            fragmentView.setBackgroundColor(0xFF000000);
+            listView.setBackgroundColor(0xFF000000);
+        }
+        return view;
     }
 
     @Override
-    protected int getItemViewType(int position) {
-        if (position == networkHeaderRow || position == autoplayHeaderRow || position == mediaHeaderRow) {
-            return VIEW_TYPE_HEADER;
-        } else if (position == downloadBoostRow) {
-            return VIEW_TYPE_SETTINGS;
-        } else if (position == infoRow) {
-            return VIEW_TYPE_INFO;
-        } else if (position == divider1Row || position == dividerAutoplayRow) {
-            return VIEW_TYPE_SHADOW;
-        }
-        return VIEW_TYPE_CHECK;
+    protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
+        LagramConfig.ensureLoaded();
+
+        // Section 1: Network & Turbo Boost
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramNetworkHeader)));
+        items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+                ID_DOWNLOAD_BOOST,
+                LocaleController.getString(R.string.LagramDownloadBoost),
+                new String[]{
+                        LocaleController.getString(R.string.LagramBoostOff),
+                        LocaleController.getString(R.string.LagramBoostFast),
+                        LocaleController.getString(R.string.LagramBoostExtreme)
+                },
+                LagramConfig.downloadSpeedBoost,
+                LagramConfig::setDownloadSpeedBoost
+        ));
+        items.add(UItem.asCheck(ID_TURBO_UPLOADS, LocaleController.getString(R.string.LagramTurboUploads))
+                .setChecked(LagramConfig.turboUploads));
+        items.add(UItem.asShadow(null));
+
+        // Section 2: Sequential Autoplay
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAutoplayHeader)));
+        items.add(UItem.asCheck(ID_AUTOPLAY_VOICE, LocaleController.getString(R.string.LagramAutoplayVoice))
+                .setChecked(LagramConfig.autoplayVoiceInRow));
+        items.add(UItem.asCheck(ID_AUTOPLAY_ROUND, LocaleController.getString(R.string.LagramAutoplayRound))
+                .setChecked(LagramConfig.autoplayRoundInRow));
+        items.add(UItem.asCheck(ID_AUTOPLAY_MUSIC, LocaleController.getString(R.string.LagramAutoplayMusic))
+                .setChecked(LagramConfig.autoplayMusicInRow));
+        items.add(UItem.asShadow(null));
+
+        // Section 3: Camera, HD Photos & Ambient Glow
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramMediaHeader)));
+        items.add(UItem.asCheck(ID_SEND_PHOTOS_HD, LocaleController.getString(R.string.LagramSendPhotosHd))
+                .setChecked(LagramConfig.sendPhotosInHd));
+        items.add(UItem.asCheck(ID_REAR_CAMERA_ROUND, LocaleController.getString(R.string.LagramRearCameraRound))
+                .setChecked(LagramConfig.rearCameraForRoundVideo));
+        items.add(UItem.asCheck(ID_COMPACT_ROUND_CAMERA, LocaleController.getString(R.string.LagramCompactRoundCamera))
+                .setChecked(LagramConfig.compactRoundCamera));
+        items.add(UItem.asCheck(ID_MEDIA_GLOW, LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramMediaGlow)))
+                .setChecked(LagramConfig.mediaGlow));
+        items.add(UItem.asCheck(ID_PAUSE_VIDEO_MINIMIZE, LocaleController.getString(R.string.LagramPauseVideoMinimize))
+                .setChecked(LagramConfig.pauseVideoOnMinimize));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.LagramMediaInfo)));
     }
 
-    private String getDownloadBoostLabel() {
-        switch (LagramConfig.downloadSpeedBoost) {
-            case LagramConfig.DOWNLOAD_BOOST_OFF:
-                return LocaleController.getString(R.string.LagramBoostOff);
-            case LagramConfig.DOWNLOAD_BOOST_EXTREME:
-                return LocaleController.getString(R.string.LagramBoostExtreme);
-            case LagramConfig.DOWNLOAD_BOOST_FAST:
-            default:
-                return LocaleController.getString(R.string.LagramBoostFast);
+    @Override
+    protected void onClick(UItem item, View view, int position, float x, float y) {
+        boolean checkChanged = false;
+        boolean newVal = false;
+        switch (item.id) {
+            case ID_TURBO_UPLOADS:
+                newVal = LagramConfig.toggleTurboUploads();
+                checkChanged = true;
+                break;
+            case ID_AUTOPLAY_VOICE:
+                newVal = LagramConfig.toggleAutoplayVoiceInRow();
+                checkChanged = true;
+                break;
+            case ID_AUTOPLAY_ROUND:
+                newVal = LagramConfig.toggleAutoplayRoundInRow();
+                checkChanged = true;
+                break;
+            case ID_AUTOPLAY_MUSIC:
+                newVal = LagramConfig.toggleAutoplayMusicInRow();
+                checkChanged = true;
+                break;
+            case ID_SEND_PHOTOS_HD:
+                newVal = LagramConfig.toggleSendPhotosInHd();
+                checkChanged = true;
+                break;
+            case ID_REAR_CAMERA_ROUND:
+                newVal = LagramConfig.toggleRearCameraForRoundVideo();
+                checkChanged = true;
+                break;
+            case ID_COMPACT_ROUND_CAMERA:
+                newVal = LagramConfig.toggleCompactRoundCamera();
+                checkChanged = true;
+                break;
+            case ID_MEDIA_GLOW:
+                newVal = LagramConfig.toggleMediaGlow();
+                checkChanged = true;
+                break;
+            case ID_PAUSE_VIDEO_MINIMIZE:
+                newVal = LagramConfig.togglePauseVideoOnMinimize();
+                checkChanged = true;
+                break;
+        }
+        if (checkChanged && view instanceof TextCheckCell) {
+            ((TextCheckCell) view).setChecked(newVal);
         }
     }
 
     @Override
-    protected void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        switch (holder.getItemViewType()) {
-            case VIEW_TYPE_HEADER: {
-                HeaderCell cell = (HeaderCell) holder.itemView;
-                if (position == networkHeaderRow) {
-                    cell.setText(LocaleController.getString(R.string.LagramNetworkHeader));
-                } else if (position == autoplayHeaderRow) {
-                    cell.setText(LocaleController.getString(R.string.LagramAutoplayHeader));
-                } else if (position == mediaHeaderRow) {
-                    cell.setText(LocaleController.getString(R.string.LagramMediaHeader));
-                }
-                break;
-            }
-            case VIEW_TYPE_SETTINGS: {
-                TextSettingsCell cell = (TextSettingsCell) holder.itemView;
-                if (position == downloadBoostRow) {
-                    cell.setTextAndValue(LocaleController.getString(R.string.LagramDownloadBoost), getDownloadBoostLabel(), true);
-                }
-                break;
-            }
-            case VIEW_TYPE_CHECK: {
-                TextCheckCell cell = (TextCheckCell) holder.itemView;
-                if (position == turboUploadsRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramTurboUploads), LagramConfig.turboUploads, false);
-                } else if (position == autoplayVoiceRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramAutoplayVoice), LagramConfig.autoplayVoiceInRow, true);
-                } else if (position == autoplayRoundRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramAutoplayRound), LagramConfig.autoplayRoundInRow, true);
-                } else if (position == autoplayMusicRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramAutoplayMusic), LagramConfig.autoplayMusicInRow, false);
-                } else if (position == sendPhotosHdRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramSendPhotosHd), LagramConfig.sendPhotosInHd, true);
-                } else if (position == rearCameraRoundRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramRearCameraRound), LagramConfig.rearCameraForRoundVideo, true);
-                } else if (position == compactRoundCameraRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramCompactRoundCamera), LagramConfig.compactRoundCamera, true);
-                } else if (position == mediaGlowRow) {
-                    cell.setTextAndCheck(LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramMediaGlow)), LagramConfig.mediaGlow, true);
-                } else if (position == pauseVideoMinimizeRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramPauseVideoMinimize), LagramConfig.pauseVideoOnMinimize, false);
-                }
-                break;
-            }
-            case VIEW_TYPE_INFO: {
-                ((TextInfoPrivacyCell) holder.itemView).setText(LocaleController.getString(R.string.LagramMediaInfo));
-                break;
-            }
-        }
-    }
-
-    @Override
-    protected void onItemClick(View view, int position) {
-        if (position == downloadBoostRow) {
-            String[] options = new String[]{
-                    LocaleController.getString(R.string.LagramBoostOff),
-                    LocaleController.getString(R.string.LagramBoostFast),
-                    LocaleController.getString(R.string.LagramBoostExtreme)
-            };
-            showSelectorDialog(LocaleController.getString(R.string.LagramDownloadBoost), options, LagramConfig.downloadSpeedBoost, LagramConfig::setDownloadSpeedBoost);
-            return;
-        }
-        if (!(view instanceof TextCheckCell)) {
-            return;
-        }
-        TextCheckCell cell = (TextCheckCell) view;
-        if (position == turboUploadsRow) {
-            cell.setChecked(LagramConfig.toggleTurboUploads());
-        } else if (position == autoplayVoiceRow) {
-            cell.setChecked(LagramConfig.toggleAutoplayVoiceInRow());
-        } else if (position == autoplayRoundRow) {
-            cell.setChecked(LagramConfig.toggleAutoplayRoundInRow());
-        } else if (position == autoplayMusicRow) {
-            cell.setChecked(LagramConfig.toggleAutoplayMusicInRow());
-        } else if (position == sendPhotosHdRow) {
-            cell.setChecked(LagramConfig.toggleSendPhotosInHd());
-        } else if (position == rearCameraRoundRow) {
-            cell.setChecked(LagramConfig.toggleRearCameraForRoundVideo());
-        } else if (position == compactRoundCameraRow) {
-            cell.setChecked(LagramConfig.toggleCompactRoundCamera());
-        } else if (position == mediaGlowRow) {
-            cell.setChecked(LagramConfig.toggleMediaGlow());
-        } else if (position == pauseVideoMinimizeRow) {
-            cell.setChecked(LagramConfig.togglePauseVideoOnMinimize());
-        }
+    protected boolean onLongClick(UItem item, View view, int position, float x, float y) {
+        return false;
     }
 }

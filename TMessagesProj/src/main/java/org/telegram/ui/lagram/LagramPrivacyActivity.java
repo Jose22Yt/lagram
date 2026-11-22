@@ -1,181 +1,163 @@
 package org.telegram.ui.lagram;
 
+import android.content.Context;
 import android.view.View;
-
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.LagramMessageHistoryDb;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.ui.Cells.HeaderCell;
-import org.telegram.ui.Cells.TextCell;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.TextCheckCell;
-import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Components.BulletinFactory;
+import org.telegram.ui.Components.UItem;
+import org.telegram.ui.Components.UniversalAdapter;
+import org.telegram.ui.Components.UniversalFragment;
 
-public class LagramPrivacyActivity extends BaseLagramSettingsActivity {
+import java.util.ArrayList;
 
-    private int ghostHeaderRow;
-    private int ghostMasterRow;
-    private int ghostDontReadMessagesRow;
-    private int ghostDontReadStoriesRow;
-    private int ghostDontSendTypingRow;
-    private int ghostDontSendOnlineRow;
-    private int ghostOfflineAfterSendRow;
-    private int ghostMarkReadOnSendRow;
-    private int divider1Row;
+public class LagramPrivacyActivity extends UniversalFragment {
 
-    private int historyHeaderRow;
-    private int saveDeletedMessagesRow;
-    private int saveEditedMessagesRow;
-    private int clearHistoryDbRow;
-    private int divider2Row;
+    private static final int ID_GHOST_MASTER = 1;
+    private static final int ID_GHOST_DONT_READ_MSG = 2;
+    private static final int ID_GHOST_DONT_READ_STORIES = 3;
+    private static final int ID_GHOST_DONT_SEND_TYPING = 4;
+    private static final int ID_GHOST_DONT_SEND_ONLINE = 5;
+    private static final int ID_GHOST_OFFLINE_AFTER_SEND = 6;
+    private static final int ID_GHOST_MARK_READ_ON_SEND = 7;
 
-    private int antiRestrictHeaderRow;
-    private int allowScreenshotsRow;
-    private int bypassNoForwardsRow;
-    private int infoRow;
+    private static final int ID_SAVE_DELETED = 10;
+    private static final int ID_SAVE_EDITED = 11;
+    private static final int ID_CLEAR_HISTORY_DB = 12;
+
+    private static final int ID_ALLOW_SCREENSHOTS = 20;
+    private static final int ID_BYPASS_NO_FORWARDS = 21;
 
     @Override
-    protected String getActionBarTitle() {
+    protected CharSequence getTitle() {
         return LocaleController.getString(R.string.LagramCategoryPrivacy);
     }
 
     @Override
-    protected void updateRows() {
-        rowCount = 0;
-        ghostHeaderRow = rowCount++;
-        ghostMasterRow = rowCount++;
-        ghostDontReadMessagesRow = rowCount++;
-        ghostDontReadStoriesRow = rowCount++;
-        ghostDontSendTypingRow = rowCount++;
-        ghostDontSendOnlineRow = rowCount++;
-        ghostOfflineAfterSendRow = rowCount++;
-        ghostMarkReadOnSendRow = rowCount++;
-        divider1Row = rowCount++;
-
-        historyHeaderRow = rowCount++;
-        saveDeletedMessagesRow = rowCount++;
-        saveEditedMessagesRow = rowCount++;
-        clearHistoryDbRow = rowCount++;
-        divider2Row = rowCount++;
-
-        antiRestrictHeaderRow = rowCount++;
-        allowScreenshotsRow = rowCount++;
-        bypassNoForwardsRow = rowCount++;
-        infoRow = rowCount++;
-    }
-
-    @Override
-    protected int getItemViewType(int position) {
-        if (position == ghostHeaderRow || position == historyHeaderRow || position == antiRestrictHeaderRow) {
-            return VIEW_TYPE_HEADER;
-        } else if (position == clearHistoryDbRow) {
-            return VIEW_TYPE_TEXT_ICON;
-        } else if (position == infoRow) {
-            return VIEW_TYPE_INFO;
-        } else if (position == divider1Row || position == divider2Row) {
-            return VIEW_TYPE_SHADOW;
+    public View createView(Context context) {
+        LagramConfig.ensureLoaded();
+        View view = super.createView(context);
+        listView.setSections();
+        if (LagramConfig.amoledSettingsBackdrop && Theme.isCurrentThemeDark()) {
+            fragmentView.setBackgroundColor(0xFF000000);
+            listView.setBackgroundColor(0xFF000000);
         }
-        return VIEW_TYPE_CHECK;
+        return view;
     }
 
     @Override
-    protected void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        switch (holder.getItemViewType()) {
-            case VIEW_TYPE_HEADER: {
-                HeaderCell cell = (HeaderCell) holder.itemView;
-                if (position == ghostHeaderRow) {
-                    cell.setText(LocaleController.getString(R.string.LagramGhostModeHeader));
-                } else if (position == historyHeaderRow) {
-                    cell.setText(LocaleController.getString(R.string.LagramHistoryHeader));
-                } else if (position == antiRestrictHeaderRow) {
-                    cell.setText(LocaleController.getString(R.string.LagramAntiRestrictHeader));
-                }
-                break;
-            }
-            case VIEW_TYPE_TEXT_ICON: {
-                TextCell cell = (TextCell) holder.itemView;
-                if (position == clearHistoryDbRow) {
-                    cell.setTextAndIcon(LocaleController.getString(R.string.LagramClearHistoryDb), R.drawable.msg_delete, false);
-                }
-                break;
-            }
-            case VIEW_TYPE_CHECK: {
-                TextCheckCell cell = (TextCheckCell) holder.itemView;
-                if (position == ghostMasterRow) {
-                    cell.setTextAndCheck(LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramGhostModeMaster)), LagramConfig.ghostModeEnabled, true);
-                } else if (position == ghostDontReadMessagesRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramGhostDontReadMessages), LagramConfig.ghostDontReadMessages, true);
-                } else if (position == ghostDontReadStoriesRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramGhostDontReadStories), LagramConfig.ghostDontReadStories, true);
-                } else if (position == ghostDontSendTypingRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramGhostDontSendTyping), LagramConfig.ghostDontSendTyping, true);
-                } else if (position == ghostDontSendOnlineRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramGhostDontSendOnline), LagramConfig.ghostDontSendOnline, true);
-                } else if (position == ghostOfflineAfterSendRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramGhostOfflineAfterSend), LagramConfig.ghostSendOfflineAfterSend, true);
-                } else if (position == ghostMarkReadOnSendRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramGhostMarkReadOnSend), LagramConfig.ghostMarkReadOnSend, false);
-                } else if (position == saveDeletedMessagesRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramSaveDeletedMessages), LagramConfig.saveDeletedMessages, true);
-                } else if (position == saveEditedMessagesRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramSaveEditedMessages), LagramConfig.saveEditedMessages, true);
-                } else if (position == allowScreenshotsRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramAllowScreenshots), LagramConfig.allowScreenshots, true);
-                } else if (position == bypassNoForwardsRow) {
-                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramBypassNoForwards), LagramConfig.bypassNoForwards, false);
-                }
-                break;
-            }
-            case VIEW_TYPE_INFO: {
-                ((TextInfoPrivacyCell) holder.itemView).setText(LocaleController.getString(R.string.LagramPrivacyInfo));
-                break;
-            }
-        }
+    protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
+        LagramConfig.ensureLoaded();
+
+        // Section 1: Ghost Mode
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramGhostModeHeader)));
+        items.add(UItem.asCheck(ID_GHOST_MASTER, LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramGhostModeMaster)))
+                .setChecked(LagramConfig.ghostModeEnabled));
+        items.add(UItem.asCheck(ID_GHOST_DONT_READ_MSG, LocaleController.getString(R.string.LagramGhostDontReadMessages))
+                .setChecked(LagramConfig.ghostDontReadMessages));
+        items.add(UItem.asCheck(ID_GHOST_DONT_READ_STORIES, LocaleController.getString(R.string.LagramGhostDontReadStories))
+                .setChecked(LagramConfig.ghostDontReadStories));
+        items.add(UItem.asCheck(ID_GHOST_DONT_SEND_TYPING, LocaleController.getString(R.string.LagramGhostDontSendTyping))
+                .setChecked(LagramConfig.ghostDontSendTyping));
+        items.add(UItem.asCheck(ID_GHOST_DONT_SEND_ONLINE, LocaleController.getString(R.string.LagramGhostDontSendOnline))
+                .setChecked(LagramConfig.ghostDontSendOnline));
+        items.add(UItem.asCheck(ID_GHOST_OFFLINE_AFTER_SEND, LocaleController.getString(R.string.LagramGhostOfflineAfterSend))
+                .setChecked(LagramConfig.ghostSendOfflineAfterSend));
+        items.add(UItem.asCheck(ID_GHOST_MARK_READ_ON_SEND, LocaleController.getString(R.string.LagramGhostMarkReadOnSend))
+                .setChecked(LagramConfig.ghostMarkReadOnSend));
+        items.add(UItem.asShadow(null));
+
+        // Section 2: Anti-Delete & Edit History
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramHistoryHeader)));
+        items.add(UItem.asCheck(ID_SAVE_DELETED, LocaleController.getString(R.string.LagramSaveDeletedMessages))
+                .setChecked(LagramConfig.saveDeletedMessages));
+        items.add(UItem.asCheck(ID_SAVE_EDITED, LocaleController.getString(R.string.LagramSaveEditedMessages))
+                .setChecked(LagramConfig.saveEditedMessages));
+        items.add(UItem.asButton(ID_CLEAR_HISTORY_DB, R.drawable.msg_delete, LocaleController.getString(R.string.LagramClearHistoryDb)).red());
+        items.add(UItem.asShadow(null));
+
+        // Section 3: Anti-Restrictions
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAntiRestrictHeader)));
+        items.add(UItem.asCheck(ID_ALLOW_SCREENSHOTS, LocaleController.getString(R.string.LagramAllowScreenshots))
+                .setChecked(LagramConfig.allowScreenshots));
+        items.add(UItem.asCheck(ID_BYPASS_NO_FORWARDS, LocaleController.getString(R.string.LagramBypassNoForwards))
+                .setChecked(LagramConfig.bypassNoForwards));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.LagramPrivacyInfo)));
     }
 
     @Override
-    protected void onItemClick(View view, int position) {
-        if (position == clearHistoryDbRow) {
+    protected void onClick(UItem item, View view, int position, float x, float y) {
+        if (item.id == ID_CLEAR_HISTORY_DB) {
             LagramMessageHistoryDb.clearAll();
             BulletinFactory.of(this).createSimpleBulletin(R.raw.ic_delete, LocaleController.getString(R.string.LagramHistoryClearedToast)).show();
             return;
         }
-        if (!(view instanceof TextCheckCell)) {
-            return;
+        boolean checkChanged = false;
+        boolean newVal = false;
+        switch (item.id) {
+            case ID_GHOST_MASTER:
+                newVal = LagramConfig.toggleGhostMode();
+                checkChanged = true;
+                break;
+            case ID_GHOST_DONT_READ_MSG:
+                newVal = LagramConfig.toggleGhostDontReadMessages();
+                checkChanged = true;
+                break;
+            case ID_GHOST_DONT_READ_STORIES:
+                newVal = LagramConfig.toggleGhostDontReadStories();
+                checkChanged = true;
+                break;
+            case ID_GHOST_DONT_SEND_TYPING:
+                newVal = LagramConfig.toggleGhostDontSendTyping();
+                checkChanged = true;
+                break;
+            case ID_GHOST_DONT_SEND_ONLINE:
+                newVal = LagramConfig.toggleGhostDontSendOnline();
+                checkChanged = true;
+                break;
+            case ID_GHOST_OFFLINE_AFTER_SEND:
+                newVal = LagramConfig.toggleGhostSendOfflineAfterSend();
+                checkChanged = true;
+                break;
+            case ID_GHOST_MARK_READ_ON_SEND:
+                newVal = LagramConfig.toggleGhostMarkReadOnSend();
+                checkChanged = true;
+                break;
+            case ID_SAVE_DELETED:
+                newVal = LagramConfig.toggleSaveDeletedMessages();
+                if (LagramConfig.saveDeletedMessages) {
+                    LagramMessageHistoryDb.ensureCacheLoaded();
+                }
+                checkChanged = true;
+                break;
+            case ID_SAVE_EDITED:
+                newVal = LagramConfig.toggleSaveEditedMessages();
+                if (LagramConfig.saveEditedMessages) {
+                    LagramMessageHistoryDb.ensureCacheLoaded();
+                }
+                checkChanged = true;
+                break;
+            case ID_ALLOW_SCREENSHOTS:
+                newVal = LagramConfig.toggleAllowScreenshots();
+                checkChanged = true;
+                break;
+            case ID_BYPASS_NO_FORWARDS:
+                newVal = LagramConfig.toggleBypassNoForwards();
+                checkChanged = true;
+                break;
         }
-        TextCheckCell cell = (TextCheckCell) view;
-        if (position == ghostMasterRow) {
-            cell.setChecked(LagramConfig.toggleGhostMode());
-        } else if (position == ghostDontReadMessagesRow) {
-            cell.setChecked(LagramConfig.toggleGhostDontReadMessages());
-        } else if (position == ghostDontReadStoriesRow) {
-            cell.setChecked(LagramConfig.toggleGhostDontReadStories());
-        } else if (position == ghostDontSendTypingRow) {
-            cell.setChecked(LagramConfig.toggleGhostDontSendTyping());
-        } else if (position == ghostDontSendOnlineRow) {
-            cell.setChecked(LagramConfig.toggleGhostDontSendOnline());
-        } else if (position == ghostOfflineAfterSendRow) {
-            cell.setChecked(LagramConfig.toggleGhostSendOfflineAfterSend());
-        } else if (position == ghostMarkReadOnSendRow) {
-            cell.setChecked(LagramConfig.toggleGhostMarkReadOnSend());
-        } else if (position == saveDeletedMessagesRow) {
-            cell.setChecked(LagramConfig.toggleSaveDeletedMessages());
-            if (LagramConfig.saveDeletedMessages) {
-                LagramMessageHistoryDb.ensureCacheLoaded();
-            }
-        } else if (position == saveEditedMessagesRow) {
-            cell.setChecked(LagramConfig.toggleSaveEditedMessages());
-            if (LagramConfig.saveEditedMessages) {
-                LagramMessageHistoryDb.ensureCacheLoaded();
-            }
-        } else if (position == allowScreenshotsRow) {
-            cell.setChecked(LagramConfig.toggleAllowScreenshots());
-        } else if (position == bypassNoForwardsRow) {
-            cell.setChecked(LagramConfig.toggleBypassNoForwards());
+        if (checkChanged && view instanceof TextCheckCell) {
+            ((TextCheckCell) view).setChecked(newVal);
         }
+    }
+
+    @Override
+    protected boolean onLongClick(UItem item, View view, int position, float x, float y) {
+        return false;
     }
 }

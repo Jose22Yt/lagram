@@ -135,7 +135,12 @@ public class FilterTabsView extends FrameLayout {
         public int getWidth(boolean store) {
             int width = titleWidth = (int) Math.ceil(HintView2.measureCorrectly(title, textPaint));
             int c;
-            if (store) {
+            if (!org.telegram.messenger.LagramConfig.showFolderCounters) {
+                c = 0;
+                if (store) {
+                    counter = 0;
+                }
+            } else if (store) {
                 c = delegate.getTabCounter(id);
                 if (c < 0) {
                     c = 0;

@@ -9296,6 +9296,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     if (w == 0 || h == 0) {
                         w = h = dp(150);
                     }
+                    if ((messageObject.type == MessageObject.TYPE_GIF || documentAttachType == DOCUMENT_ATTACH_TYPE_GIF) && currentMessagesGroup == null) {
+                        org.telegram.messenger.LagramConfig.ensureLoaded();
+                        if (org.telegram.messenger.LagramConfig.gifSize != 14) {
+                            float gifScale = org.telegram.messenger.LagramConfig.gifSize / 14.0f;
+                            w = Math.max(dp(96), Math.round(w * gifScale));
+                            h = Math.max(dp(96), Math.round(h * gifScale));
+                        }
+                    }
                     if (messageObject.type == MessageObject.TYPE_VIDEO) {
                         if (w < infoWidth + dp(16 + 24)) {
                             w = infoWidth + dp(16 + 24);

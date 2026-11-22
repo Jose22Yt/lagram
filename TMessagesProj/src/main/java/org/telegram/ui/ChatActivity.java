@@ -1823,7 +1823,7 @@ public class ChatActivity extends BaseFragment implements
                         return;
                     }
                     if (messageObject.contentType == 0) {
-                        if (selected && selectedMessagesIds[0].size() + selectedMessagesIds[1].size() >= 100) {
+                        if (selected && !org.telegram.messenger.LagramConfig.unlimitedSelection && selectedMessagesIds[0].size() + selectedMessagesIds[1].size() >= 100) {
                             limitReached = true;
                         } else {
                             limitReached = false;
@@ -6518,6 +6518,7 @@ public class ChatActivity extends BaseFragment implements
         chatListViewPaddingTop = 0;
         paddingTopHeight = 0;
         botDraftHeightController.setRecyclerView(chatListView);
+        org.telegram.ui.lagram.LagramScrollEdgeController.attach(chatListView);
         invalidateChatListViewTopPadding();
         if (MessagesController.getGlobalMainSettings().getBoolean("view_animations", true)) {
             chatListItemAnimator = new ChatListItemAnimator(this, chatListView, themeDelegate) {
