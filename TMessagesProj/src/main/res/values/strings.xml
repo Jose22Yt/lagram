@@ -11868,4 +11868,23 @@
     <string name="LagramHapticsSoft">Soft</string>
     <string name="LagramHapticsNormal">Normal</string>
     <string name="LagramHapticsStrong">Strong</string>
+
+    <string name="LagramScrollAndMotionHeader">SCROLL &amp; MOTION</string>
+    <string name="LagramScrollEdgeMode">Scroll edge animation style</string>
+    <string name="LagramScrollEdgeModeScale">Elastic Scale</string>
+    <string name="LagramScrollEdgeModeDrum">3D Drum (AGSL)</string>
+    <string name="LagramGlassHighlights">Specular top highlight on glass bubbles</string>
+    <string name="LagramPopupGlass">Frosted glass popup menus</string>
+    <string name="LagramSectionGap">Settings card spacing</string>
+    <string name="LagramSectionGapCompact">Compact</string>
+    <string name="LagramSectionGapDefault">Normal</string>
+    <string name="LagramSectionGapWide">Wide</string>
+    <string name="LagramAvatarShape">Chat list avatar shape</string>
+    <string name="LagramAvatarShapeCircle">Circle</string>
+    <string name="LagramAvatarShapeRounded">Rounded</string>
+    <string name="LagramAvatarShapeSquircle">Squircle</string>
+    <string name="LagramChatsHeaderCentered">Center chats header title</string>
+    <string name="LagramBigReactions">Larger reaction emojis in chats</string>
+    <string name="LagramProfileNameSwitch">Tap profile name to copy username</string>
+    <string name="LagramProfileNameSwitchInfo">Quickly copy the user\'s @username or display name by tapping their profile title.</string>
 </resources>

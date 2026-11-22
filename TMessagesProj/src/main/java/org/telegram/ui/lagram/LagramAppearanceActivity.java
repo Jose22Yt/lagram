@@ -1,6 +1,7 @@
 package org.telegram.ui.lagram;
 
 import android.content.Context;
+import android.os.Build;
 import android.view.View;
 
 import org.telegram.messenger.LagramConfig;
@@ -19,45 +20,52 @@ public class LagramAppearanceActivity extends UniversalFragment {
 
     public static final int SUB_HOME = 0;
     public static final int SUB_BUBBLES_AND_GLASS = 1;
-    public static final int SUB_FOLDERS = 2;
-    public static final int SUB_CLEAN_UI = 3;
-    public static final int SUB_INTERFACE_DETAILS = 4;
+    public static final int SUB_SCROLL_AND_MOTION = 2;
+    public static final int SUB_FOLDERS = 3;
+    public static final int SUB_DESIGN_AND_UI = 4;
 
     private final int subPage;
 
+    // Hub navigation cards
     private static final int ID_NAV_BUBBLES = 100;
-    private static final int ID_NAV_FOLDERS = 101;
-    private static final int ID_NAV_CLEAN_UI = 102;
-    private static final int ID_NAV_DETAILS = 103;
+    private static final int ID_NAV_SCROLL = 101;
+    private static final int ID_NAV_FOLDERS = 102;
+    private static final int ID_NAV_DESIGN = 103;
 
+    // Bubbles & Glass
     private static final int ID_PREVIEW_BUBBLES = 1;
     private static final int ID_GLASS_MESSAGES = 2;
     private static final int ID_GLASS_ALPHA = 3;
     private static final int ID_GLASS_BORDER = 4;
-    private static final int ID_BUBBLE_TAILS = 5;
-    private static final int ID_ROUNDING_PRESET = 6;
-    private static final int ID_CHAT_EDGE_BLUR = 7;
-    private static final int ID_SCROLL_EDGE_SCALE = 8;
-    private static final int ID_IOS27_BOTTOM_BAR = 9;
-    private static final int ID_AMOLED_BACKDROP = 10;
-    private static final int ID_ANIM_SPEED = 11;
-    private static final int ID_SYSTEM_FONTS = 12;
+    private static final int ID_GLASS_HIGHLIGHTS = 5;
+    private static final int ID_POPUP_GLASS = 6;
+    private static final int ID_BUBBLE_TAILS = 7;
+    private static final int ID_ROUNDING_PRESET = 8;
+    private static final int ID_CHAT_EDGE_BLUR = 9;
 
-    private static final int ID_PREVIEW_FOLDERS = 20;
-    private static final int ID_FOLDER_TABS_STYLE = 21;
-    private static final int ID_FOLDER_COUNTERS = 22;
-    private static final int ID_HIDE_ALL_CHATS = 23;
-    private static final int ID_REMEMBER_LAST_FOLDER = 24;
+    // Scroll & Motion
+    private static final int ID_SCROLL_EDGE_SCALE = 20;
+    private static final int ID_SCROLL_EDGE_MODE = 21;
+    private static final int ID_ANIM_SPEED = 22;
 
-    private static final int ID_HIDE_STORIES = 30;
-    private static final int ID_HIDE_STORIES_PROFILE = 31;
-    private static final int ID_HIDE_STORY_POSTING = 32;
-    private static final int ID_HIDE_PHONE_NUMBER = 33;
-    private static final int ID_HIDE_TELEGRAM_BLOAT = 34;
+    // Folders & Header
+    private static final int ID_PREVIEW_FOLDERS = 30;
+    private static final int ID_FOLDER_TABS_STYLE = 31;
+    private static final int ID_FOLDER_COUNTERS = 32;
+    private static final int ID_HIDE_ALL_CHATS = 33;
+    private static final int ID_REMEMBER_LAST_FOLDER = 34;
+    private static final int ID_CHATS_HEADER_CENTERED = 35;
 
-    private static final int ID_SHOW_SECONDS = 40;
-    private static final int ID_SHOW_ID_DC = 41;
-    private static final int ID_ID_BOT_API = 42;
+    // Design, Avatars & UI Visibility
+    private static final int ID_AVATAR_SHAPE = 40;
+    private static final int ID_SECTION_GAP = 41;
+    private static final int ID_IOS27_BOTTOM_BAR = 42;
+    private static final int ID_AMOLED_BACKDROP = 43;
+    private static final int ID_SYSTEM_FONTS = 44;
+    private static final int ID_HIDE_STORIES = 45;
+    private static final int ID_HIDE_STORIES_PROFILE = 46;
+    private static final int ID_HIDE_STORY_POSTING = 47;
+    private static final int ID_HIDE_TELEGRAM_BLOAT = 48;
 
     public LagramAppearanceActivity() {
         this(SUB_HOME);
@@ -73,12 +81,12 @@ public class LagramAppearanceActivity extends UniversalFragment {
         switch (subPage) {
             case SUB_BUBBLES_AND_GLASS:
                 return LocaleController.getString(R.string.LagramLiquidGlassHeader);
+            case SUB_SCROLL_AND_MOTION:
+                return LocaleController.getString(R.string.LagramScrollAndMotionHeader);
             case SUB_FOLDERS:
                 return LocaleController.getString(R.string.LagramFoldersHeader);
-            case SUB_CLEAN_UI:
+            case SUB_DESIGN_AND_UI:
                 return LocaleController.getString(R.string.LagramUiVisibilityHeader);
-            case SUB_INTERFACE_DETAILS:
-                return LocaleController.getString(R.string.LagramDetailsHeader);
             case SUB_HOME:
             default:
                 return LocaleController.getString(R.string.LagramCategoryAppearance);
@@ -90,6 +98,7 @@ public class LagramAppearanceActivity extends UniversalFragment {
         LagramConfig.ensureLoaded();
         View view = super.createView(context);
         listView.setSections();
+        listView.setSectionsDrawBackground(true);
         updateBackdropColor();
         return view;
     }
@@ -100,7 +109,6 @@ public class LagramAppearanceActivity extends UniversalFragment {
         if (listView != null && listView.adapter != null) {
             listView.adapter.update(true);
         }
-        refreshLivePreviews();
     }
 
     private void updateBackdropColor() {
@@ -117,286 +125,358 @@ public class LagramAppearanceActivity extends UniversalFragment {
         }
     }
 
-    private void refreshLivePreviews() {
-        if (listView == null) {
-            return;
-        }
-        for (int i = 0, count = listView.getChildCount(); i < count; i++) {
-            View child = listView.getChildAt(i);
-            if (child instanceof LagramSettingsComponents.RealChatMessagesPreviewCell) {
-                ((LagramSettingsComponents.RealChatMessagesPreviewCell) child).refreshPreview();
-            } else if (child instanceof LagramSettingsComponents.RealFolderTabsPreviewCell) {
-                ((LagramSettingsComponents.RealFolderTabsPreviewCell) child).rebuildTabs();
-            }
+    private void updatePreviewAndAdapter() {
+        if (listView != null && listView.adapter != null) {
+            listView.adapter.update(true);
         }
     }
 
     @Override
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         LagramConfig.ensureLoaded();
+        switch (subPage) {
+            case SUB_BUBBLES_AND_GLASS:
+                fillBubblesAndGlass(items);
+                break;
+            case SUB_SCROLL_AND_MOTION:
+                fillScrollAndMotion(items);
+                break;
+            case SUB_FOLDERS:
+                fillFoldersAndHeader(items);
+                break;
+            case SUB_DESIGN_AND_UI:
+                fillDesignAndUi(items);
+                break;
+            case SUB_HOME:
+            default:
+                fillHomeHub(items);
+                break;
+        }
+    }
 
-        if (subPage == SUB_HOME) {
-            // Compact Hub with Real Live Chat Preview + Grouped Sub-Fragment Cards
-            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramLiquidGlassHeader)));
-            items.add(LagramSettingsComponents.RealChatMessagesPreviewCell.Factory.of(
-                    ID_PREVIEW_BUBBLES, LagramSettingsComponents.RealChatMessagesPreviewCell.MODE_BUBBLES_AND_GLASS));
+    private void fillHomeHub(ArrayList<UItem> items) {
+        // Card 1: Real Live Chat Bubbles Preview
+        items.add(LagramSettingsComponents.RealChatMessagesPreviewCell.Factory.of(
+                ID_PREVIEW_BUBBLES,
+                LagramSettingsComponents.RealChatMessagesPreviewCell.MODE_BUBBLES_AND_GLASS));
+        items.add(UItem.asShadow(-1, null));
+
+        // Card 2: Categorized Sub-Fragments
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramCategoryAppearance)));
+        items.add(LagramSettingsComponents.SubCategoryCardCell.Factory.of(
+                ID_NAV_BUBBLES,
+                IconBackgroundColors.BLUE,
+                R.drawable.msg_palette,
+                LocaleController.getString(R.string.LagramLiquidGlassHeader),
+                LocaleController.getString(R.string.LagramGlassMessages),
+                LagramConfig.glassMessages ? ("Glass " + LagramConfig.glassMessagesAlpha + "%") : (LagramConfig.getEffectiveBubbleRadiusDp() + "dp")));
+
+        items.add(LagramSettingsComponents.SubCategoryCardCell.Factory.of(
+                ID_NAV_SCROLL,
+                IconBackgroundColors.PURPLE,
+                R.drawable.msg_speed,
+                LocaleController.getString(R.string.LagramScrollAndMotionHeader),
+                LocaleController.getString(R.string.LagramScrollEdgeScale),
+                getScrollBadge()));
+
+        items.add(LagramSettingsComponents.SubCategoryCardCell.Factory.of(
+                ID_NAV_FOLDERS,
+                IconBackgroundColors.CYAN,
+                R.drawable.msg_folders,
+                LocaleController.getString(R.string.LagramFoldersHeader),
+                LocaleController.getString(R.string.LagramFolderTabsStyle),
+                getFolderStyleShort()));
+
+        items.add(LagramSettingsComponents.SubCategoryCardCell.Factory.of(
+                ID_NAV_DESIGN,
+                IconBackgroundColors.ORANGE,
+                R.drawable.msg_theme,
+                LocaleController.getString(R.string.LagramUiVisibilityHeader),
+                LocaleController.getString(R.string.LagramAvatarShape),
+                getAvatarShapeShort()));
+        items.add(UItem.asShadow(-2, null));
+
+        // Card 3: Quick Toggles
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramLiquidGlassHeader)));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_GLASS_MESSAGES,
+                R.drawable.msg_palette,
+                LocaleController.getString(R.string.LagramGlassMessages),
+                null,
+                LagramConfig.glassMessages));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_SCROLL_EDGE_SCALE,
+                R.drawable.msg_speed,
+                LocaleController.getString(R.string.LagramScrollEdgeScale),
+                null,
+                LagramConfig.scrollEdgeScale));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_AMOLED_BACKDROP,
+                R.drawable.msg_theme,
+                LocaleController.getString(R.string.LagramAmoledSettings),
+                null,
+                LagramConfig.amoledSettingsBackdrop));
+        items.add(UItem.asShadow(-3, null));
+    }
+
+    private void fillBubblesAndGlass(ArrayList<UItem> items) {
+        // Standalone Preview Card
+        items.add(LagramSettingsComponents.RealChatMessagesPreviewCell.Factory.of(
+                ID_PREVIEW_BUBBLES,
+                LagramSettingsComponents.RealChatMessagesPreviewCell.MODE_BUBBLES_AND_GLASS));
+        items.add(UItem.asShadow(-10, null));
+
+        // Card 1: Liquid Glass Engine
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramLiquidGlassHeader)));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_GLASS_MESSAGES,
+                R.drawable.msg_palette,
+                LocaleController.getString(R.string.LagramGlassMessages),
+                null,
+                LagramConfig.glassMessages));
+
+        if (LagramConfig.glassMessages) {
+            items.add(LagramSettingsComponents.InlineSliderCell.Factory.of(
+                    ID_GLASS_ALPHA,
+                    LocaleController.getString(R.string.LagramGlassMessagesAlpha),
+                    20, 95, 55, LagramConfig.glassMessagesAlpha, "%",
+                    val -> {
+                        LagramConfig.setGlassMessagesAlpha(val);
+                        updatePreviewAndAdapter();
+                    }));
             items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_GLASS_MESSAGES,
-                    R.drawable.msg_theme,
-                    LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramGlassMessages)),
+                    ID_GLASS_BORDER,
+                    R.drawable.msg_photo_settings,
                     LocaleController.getString(R.string.LagramGlassMessagesBorder),
-                    LagramConfig.glassMessages
-            ));
-            items.add(UItem.asShadow(null));
-
-            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramCategoriesHeader)));
-            items.add(LagramSettingsComponents.SubCategoryCardCell.Factory.of(
-                    ID_NAV_BUBBLES,
-                    IconBackgroundColors.PURPLE,
-                    R.drawable.msg_theme,
-                    "Burbujas, Liquid Glass y Bordes",
-                    "Opacidad cristalina, borde especular, colas y redondeo",
-                    LagramConfig.glassMessages ? (LagramConfig.glassMessagesAlpha + "%") : (LagramConfig.getEffectiveBubbleRadiusDp() + "dp")
-            ));
-            items.add(LagramSettingsComponents.SubCategoryCardCell.Factory.of(
-                    ID_NAV_FOLDERS,
-                    IconBackgroundColors.BLUE,
-                    R.drawable.msg_folders,
-                    "Pestañas de Carpetas",
-                    "Iconos, contadores y vista previa real de FilterTabsView",
-                    LagramConfig.folderTabsStyle == LagramConfig.FOLDER_TABS_ICON_ONLY ? "Iconos"
-                            : (LagramConfig.folderTabsStyle == LagramConfig.FOLDER_TABS_TEXT_ONLY ? "Texto" : "Ambos")
-            ));
-            items.add(LagramSettingsComponents.SubCategoryCardCell.Factory.of(
-                    ID_NAV_CLEAN_UI,
-                    IconBackgroundColors.ORANGE,
-                    R.drawable.msg_menu_stories,
-                    "Visibilidad e Interfaz Limpia",
-                    "Ocultar historias, botón de cámara, teléfono y publicidad",
-                    null
-            ));
-            items.add(LagramSettingsComponents.SubCategoryCardCell.Factory.of(
-                    ID_NAV_DETAILS,
-                    IconBackgroundColors.CYAN,
-                    R.drawable.msg_info,
-                    "Barra iOS 27, Animaciones y Detalles",
-                    "Fondo AMOLED, segundos en hora, ID/DC y velocidad",
-                    null
-            ));
-            items.add(UItem.asShadow(LocaleController.getString(R.string.LagramAppearanceInfo)));
-            return;
-        }
-
-        if (subPage == SUB_BUBBLES_AND_GLASS) {
-            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramLiquidGlassHeader)));
-            items.add(LagramSettingsComponents.RealChatMessagesPreviewCell.Factory.of(
-                    ID_PREVIEW_BUBBLES, LagramSettingsComponents.RealChatMessagesPreviewCell.MODE_BUBBLES_AND_GLASS));
+                    null,
+                    LagramConfig.glassMessagesBorder));
             items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_GLASS_MESSAGES,
-                    R.drawable.msg_theme,
-                    LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramGlassMessages)),
-                    "Burbujas traslúcidas reales sobre el fondo del chat",
-                    LagramConfig.glassMessages
-            ));
-            if (LagramConfig.glassMessages) {
-                items.add(LagramSettingsComponents.InlineSliderCell.Factory.of(
-                        ID_GLASS_ALPHA,
-                        LocaleController.getString(R.string.LagramGlassMessagesAlpha),
-                        25, 100, LagramConfig.glassMessagesAlpha, 75, "%",
-                        val -> {
-                            LagramConfig.setGlassMessagesAlpha(val);
-                            refreshLivePreviews();
-                        }
-                ));
-                items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                        ID_GLASS_BORDER,
-                        R.drawable.msg_photos,
-                        LocaleController.getString(R.string.LagramGlassMessagesBorder),
-                        "Reflejo cristalino degradado en el contorno de cada burbuja",
-                        LagramConfig.glassMessagesBorder
-                ));
-            }
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_BUBBLE_TAILS,
-                    R.drawable.msg_discussion,
-                    LocaleController.getString(R.string.LagramShowBubbleTails),
-                    "Mostrar la esquina con cola en el último mensaje del grupo",
-                    LagramConfig.showBubbleTails
-            ));
-            items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
-                    ID_ROUNDING_PRESET,
-                    LocaleController.getString(R.string.LagramRoundingPreset),
-                    new String[]{
-                            LocaleController.getString(R.string.LagramRoundingDefault),
-                            LocaleController.getString(R.string.LagramRoundingRound),
-                            LocaleController.getString(R.string.LagramRoundingSquircle),
-                            LocaleController.getString(R.string.LagramRoundingSquare)
-                    },
-                    LagramConfig.roundingPreset,
-                    which -> {
-                        LagramConfig.setRoundingPreset(which);
-                        refreshLivePreviews();
-                    }
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_CHAT_EDGE_BLUR,
+                    ID_GLASS_HIGHLIGHTS,
                     R.drawable.msg_photo_blur,
-                    LocaleController.getString(R.string.LagramChatEdgeBlur),
-                    "Desenfoque en tiempo real detrás de la barra superior e inferior",
-                    LagramConfig.chatEdgeBlur
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_SCROLL_EDGE_SCALE,
-                    R.drawable.msg_speed,
-                    LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramScrollEdgeScale)),
-                    "Compresión elástica suave en los bordes al deslizar el chat",
-                    LagramConfig.scrollEdgeScale
-            ));
-            items.add(UItem.asShadow(null));
-            return;
+                    LocaleController.getString(R.string.LagramGlassHighlights),
+                    null,
+                    LagramConfig.glassHighlights));
         }
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_POPUP_GLASS,
+                R.drawable.msg_list,
+                LocaleController.getString(R.string.LagramPopupGlass),
+                null,
+                LagramConfig.popupGlass));
+        items.add(UItem.asShadow(-11, null));
 
-        if (subPage == SUB_FOLDERS) {
-            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramFoldersHeader)));
-            items.add(LagramSettingsComponents.RealFolderTabsPreviewCell.Factory.of(ID_PREVIEW_FOLDERS));
+        // Card 2: Shape & Blur
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramRoundingPreset)));
+        items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+                ID_ROUNDING_PRESET,
+                LocaleController.getString(R.string.LagramRoundingPreset),
+                new String[]{
+                        LocaleController.getString(R.string.LagramRoundingDefault),
+                        LocaleController.getString(R.string.LagramRoundingRound),
+                        LocaleController.getString(R.string.LagramRoundingSquircle),
+                        LocaleController.getString(R.string.LagramRoundingSquare)
+                },
+                LagramConfig.roundingPreset,
+                idx -> {
+                    LagramConfig.setRoundingPreset(idx);
+                    updatePreviewAndAdapter();
+                }));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_BUBBLE_TAILS,
+                R.drawable.msg_msgbubble3,
+                LocaleController.getString(R.string.LagramShowBubbleTails),
+                null,
+                LagramConfig.showBubbleTails));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_CHAT_EDGE_BLUR,
+                R.drawable.msg_photo_blur,
+                LocaleController.getString(R.string.LagramChatEdgeBlur),
+                null,
+                LagramConfig.chatEdgeBlur));
+        items.add(UItem.asShadow(-12, null));
+    }
+
+    private void fillScrollAndMotion(ArrayList<UItem> items) {
+        // Card 1: Opexgram Scroll Edge Engine
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramScrollAndMotionHeader)));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_SCROLL_EDGE_SCALE,
+                R.drawable.msg_speed,
+                LocaleController.getString(R.string.LagramScrollEdgeScale),
+                null,
+                LagramConfig.scrollEdgeScale));
+
+        if (LagramConfig.scrollEdgeScale && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
-                    ID_FOLDER_TABS_STYLE,
-                    LocaleController.getString(R.string.LagramFolderTabsStyle),
+                    ID_SCROLL_EDGE_MODE,
+                    LocaleController.getString(R.string.LagramScrollEdgeMode),
                     new String[]{
-                            LocaleController.getString(R.string.LagramFolderTabsIconText),
-                            LocaleController.getString(R.string.LagramFolderTabsIconOnly),
-                            LocaleController.getString(R.string.LagramFolderTabsTextOnly)
+                            LocaleController.getString(R.string.LagramScrollEdgeModeScale),
+                            LocaleController.getString(R.string.LagramScrollEdgeModeDrum)
                     },
-                    LagramConfig.folderTabsStyle,
-                    which -> {
-                        LagramConfig.setFolderTabsStyle(which);
-                        refreshLivePreviews();
-                        getNotificationCenter().postNotificationName(NotificationCenter.dialogFiltersUpdated);
+                    LagramConfig.scrollEdgeMode,
+                    idx -> {
+                        LagramConfig.setScrollEdgeMode(idx);
+                        updatePreviewAndAdapter();
+                    }));
+        }
+        items.add(UItem.asShadow(-20, null));
+
+        // Card 2: Global Animation Speed
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAnimationSpeed)));
+        items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+                ID_ANIM_SPEED,
+                LocaleController.getString(R.string.LagramAnimationSpeed),
+                new String[]{
+                        LocaleController.getString(R.string.LagramAnimNormal),
+                        LocaleController.getString(R.string.LagramAnimFast),
+                        LocaleController.getString(R.string.LagramAnimInstant)
+                },
+                LagramConfig.animationSpeed,
+                idx -> {
+                    LagramConfig.setAnimationSpeed(idx);
+                    updatePreviewAndAdapter();
+                }));
+        items.add(UItem.asShadow(-21, null));
+    }
+
+    private void fillFoldersAndHeader(ArrayList<UItem> items) {
+        // Standalone Real FilterTabsView Preview Card
+        items.add(LagramSettingsComponents.RealFolderTabsPreviewCell.Factory.of(ID_PREVIEW_FOLDERS));
+        items.add(UItem.asShadow(-30, null));
+
+        // Card 1: Folder Tabs
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramFoldersHeader)));
+        items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+                ID_FOLDER_TABS_STYLE,
+                LocaleController.getString(R.string.LagramFolderTabsStyle),
+                new String[]{
+                        LocaleController.getString(R.string.LagramFolderTabsIconText),
+                        LocaleController.getString(R.string.LagramFolderTabsIconOnly),
+                        LocaleController.getString(R.string.LagramFolderTabsTextOnly)
+                },
+                LagramConfig.folderTabsStyle,
+                idx -> {
+                    LagramConfig.setFolderTabsStyle(idx);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogFiltersUpdated);
+                    updatePreviewAndAdapter();
+                }));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_FOLDER_COUNTERS,
+                R.drawable.msg_folders,
+                LocaleController.getString(R.string.LagramShowFolderCounters),
+                null,
+                LagramConfig.showFolderCounters));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_HIDE_ALL_CHATS,
+                R.drawable.msg_folders,
+                LocaleController.getString(R.string.LagramHideAllChats),
+                null,
+                LagramConfig.hideAllChatsFolder));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_REMEMBER_LAST_FOLDER,
+                R.drawable.msg_pin,
+                LocaleController.getString(R.string.LagramRememberLastFolder),
+                null,
+                LagramConfig.rememberLastFolder));
+        items.add(UItem.asShadow(-31, null));
+
+        // Card 2: Chats Header
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramUiVisibilityHeader)));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_CHATS_HEADER_CENTERED,
+                R.drawable.msg_list,
+                LocaleController.getString(R.string.LagramChatsHeaderCentered),
+                null,
+                LagramConfig.chatsHeaderCentered));
+        items.add(UItem.asShadow(-32, null));
+    }
+
+    private void fillDesignAndUi(ArrayList<UItem> items) {
+        // Card 1: Avatars & Card Spacing
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAvatarShape)));
+        items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+                ID_AVATAR_SHAPE,
+                LocaleController.getString(R.string.LagramAvatarShape),
+                new String[]{
+                        LocaleController.getString(R.string.LagramAvatarShapeCircle),
+                        LocaleController.getString(R.string.LagramAvatarShapeRounded),
+                        LocaleController.getString(R.string.LagramAvatarShapeSquircle)
+                },
+                LagramConfig.avatarShape,
+                idx -> {
+                    LagramConfig.setAvatarShape(idx);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogsNeedReload);
+                    updatePreviewAndAdapter();
+                }));
+        items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+                ID_SECTION_GAP,
+                LocaleController.getString(R.string.LagramSectionGap),
+                new String[]{
+                        LocaleController.getString(R.string.LagramSectionGapCompact),
+                        LocaleController.getString(R.string.LagramSectionGapDefault),
+                        LocaleController.getString(R.string.LagramSectionGapWide)
+                },
+                LagramConfig.sectionGap,
+                idx -> {
+                    LagramConfig.setSectionGap(idx);
+                    if (listView != null) {
+                        listView.setSections();
+                        listView.invalidateItemDecorations();
                     }
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_FOLDER_COUNTERS,
-                    R.drawable.msg_notifications,
-                    LocaleController.getString(R.string.LagramShowFolderCounters),
-                    "Mostrar burbujas con el número de chats sin leer en cada carpeta",
-                    LagramConfig.showFolderCounters
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_HIDE_ALL_CHATS,
-                    R.drawable.msg_folders,
-                    LocaleController.getString(R.string.LagramHideAllChats),
-                    "Ocultar la pestaña 'Todos' cuando tienes carpetas personalizadas",
-                    LagramConfig.hideAllChatsFolder
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_REMEMBER_LAST_FOLDER,
-                    R.drawable.msg_pin,
-                    LocaleController.getString(R.string.LagramRememberLastFolder),
-                    "Abrir Lagram en la última carpeta usada",
-                    LagramConfig.rememberLastFolder
-            ));
-            items.add(UItem.asShadow(null));
-            return;
-        }
+                    updatePreviewAndAdapter();
+                }));
+        items.add(UItem.asShadow(-40, null));
 
-        if (subPage == SUB_CLEAN_UI) {
-            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramUiVisibilityHeader)));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_HIDE_STORIES,
-                    R.drawable.msg_menu_stories,
-                    LocaleController.getString(R.string.LagramHideStories),
-                    "Ocultar la barra superior de historias en la lista de chats",
-                    LagramConfig.hideStories
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_HIDE_STORIES_PROFILE,
-                    R.drawable.msg_openprofile,
-                    LocaleController.getString(R.string.LagramHideStoriesProfile),
-                    "Desactivar el aro de historias en avatares de perfiles",
-                    LagramConfig.hideStoriesInProfile
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_HIDE_STORY_POSTING,
-                    R.drawable.msg_camera,
-                    LocaleController.getString(R.string.LagramHideStoryPosting),
-                    "Ocultar el botón flotante de cámara para publicar historias",
-                    LagramConfig.hideStoryPosting
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_HIDE_PHONE_NUMBER,
-                    R.drawable.msg_calls,
-                    LocaleController.getString(R.string.LagramHidePhoneNumber),
-                    "Ocultar tu número telefónico en ajustes y menú lateral",
-                    LagramConfig.hidePhoneNumber
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_HIDE_TELEGRAM_BLOAT,
-                    R.drawable.msg_clear,
-                    LocaleController.getString(R.string.LagramHideTelegramBloat),
-                    "Ocultar secciones promocionales de Estrellas, Regalos y Negocios",
-                    LagramConfig.hideTelegramBloat
-            ));
-            items.add(UItem.asShadow(null));
-            return;
-        }
+        // Card 2: Theme & Navigation
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramLiquidGlassHeader)));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_IOS27_BOTTOM_BAR,
+                R.drawable.menu_add_tab_24,
+                LocaleController.getString(R.string.LagramIos27BottomBar),
+                null,
+                LagramConfig.ios27BottomBar));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_AMOLED_BACKDROP,
+                R.drawable.msg_theme,
+                LocaleController.getString(R.string.LagramAmoledSettings),
+                null,
+                LagramConfig.amoledSettingsBackdrop));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_SYSTEM_FONTS,
+                R.drawable.msg_photo_text_regular,
+                LocaleController.getString(R.string.LagramUseSystemFonts),
+                null,
+                LagramConfig.useSystemFonts));
+        items.add(UItem.asShadow(-41, null));
 
-        if (subPage == SUB_INTERFACE_DETAILS) {
-            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramDetailsHeader)));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_IOS27_BOTTOM_BAR,
-                    R.drawable.msg_theme,
-                    LocaleController.getString(R.string.LagramIos27BottomBar),
-                    "Barra inferior flotante estilo cápsula Liquid Glass",
-                    LagramConfig.ios27BottomBar
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_AMOLED_BACKDROP,
-                    R.drawable.msg_theme,
-                    LocaleController.getString(R.string.LagramAmoledSettings),
-                    "Usar negro puro (#000000) detrás de las tarjetas en modo oscuro",
-                    LagramConfig.amoledSettingsBackdrop
-            ));
-            items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
-                    ID_ANIM_SPEED,
-                    LocaleController.getString(R.string.LagramAnimationSpeed),
-                    new String[]{
-                            LocaleController.getString(R.string.LagramAnimNormal),
-                            LocaleController.getString(R.string.LagramAnimFast),
-                            LocaleController.getString(R.string.LagramAnimInstant)
-                    },
-                    LagramConfig.animationSpeed,
-                    LagramConfig::setAnimationSpeed
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_SYSTEM_FONTS,
-                    R.drawable.msg_photo_text2,
-                    LocaleController.getString(R.string.LagramUseSystemFonts),
-                    "Usar la tipografía nativa del sistema Android en toda la app",
-                    LagramConfig.useSystemFonts
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_SHOW_SECONDS,
-                    R.drawable.msg_recent,
-                    LocaleController.getString(R.string.LagramShowSeconds),
-                    "Formato HH:mm:ss en las marcas de hora de los mensajes",
-                    LagramConfig.showSecondsInTime
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_SHOW_ID_DC,
-                    R.drawable.msg_info,
-                    LocaleController.getString(R.string.LagramShowIdAndDc),
-                    "Mostrar ID de usuario/canal y Datacenter (DC) en perfiles",
-                    LagramConfig.showIdAndDc
-            ));
-            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                    ID_ID_BOT_API,
-                    R.drawable.msg_bot,
-                    LocaleController.getString(R.string.LagramIdFormatBotApi),
-                    "Añadir prefijo -100 a los IDs de supergrupos y canales",
-                    LagramConfig.idFormatBotApi
-            ));
-            items.add(UItem.asShadow(LocaleController.getString(R.string.LagramAppearanceInfo)));
-        }
+        // Card 3: Stories & Clean UI
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramUiVisibilityHeader)));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_HIDE_STORIES,
+                R.drawable.msg_stories_archive,
+                LocaleController.getString(R.string.LagramHideStories),
+                null,
+                LagramConfig.hideStories));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_HIDE_STORIES_PROFILE,
+                R.drawable.msg_openprofile,
+                LocaleController.getString(R.string.LagramHideStoriesProfile),
+                null,
+                LagramConfig.hideStoriesInProfile));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_HIDE_STORY_POSTING,
+                R.drawable.msg_camera,
+                LocaleController.getString(R.string.LagramHideStoryPosting),
+                null,
+                LagramConfig.hideStoryPosting));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_HIDE_TELEGRAM_BLOAT,
+                R.drawable.msg_clear,
+                LocaleController.getString(R.string.LagramHideTelegramBloat),
+                null,
+                LagramConfig.hideTelegramBloat));
+        items.add(UItem.asShadow(-42, null));
     }
 
     @Override
@@ -405,120 +485,129 @@ public class LagramAppearanceActivity extends UniversalFragment {
             case ID_NAV_BUBBLES:
                 presentFragment(new LagramAppearanceActivity(SUB_BUBBLES_AND_GLASS));
                 return;
+            case ID_NAV_SCROLL:
+                presentFragment(new LagramAppearanceActivity(SUB_SCROLL_AND_MOTION));
+                return;
             case ID_NAV_FOLDERS:
                 presentFragment(new LagramAppearanceActivity(SUB_FOLDERS));
                 return;
-            case ID_NAV_CLEAN_UI:
-                presentFragment(new LagramAppearanceActivity(SUB_CLEAN_UI));
+            case ID_NAV_DESIGN:
+                presentFragment(new LagramAppearanceActivity(SUB_DESIGN_AND_UI));
                 return;
-            case ID_NAV_DETAILS:
-                presentFragment(new LagramAppearanceActivity(SUB_INTERFACE_DETAILS));
-                return;
-        }
-
-        boolean checkChanged = false;
-        boolean newVal = false;
-        switch (item.id) {
             case ID_GLASS_MESSAGES:
-                newVal = LagramConfig.toggleGlassMessages();
-                checkChanged = true;
-                if (listView != null && listView.adapter != null) {
-                    listView.adapter.update(true);
-                }
-                refreshLivePreviews();
-                break;
+                LagramConfig.toggleGlassMessages();
+                LagramGlassBubbleEngine.invalidateCapture();
+                updatePreviewAndAdapter();
+                return;
             case ID_GLASS_BORDER:
-                newVal = LagramConfig.toggleGlassMessagesBorder();
-                checkChanged = true;
-                refreshLivePreviews();
-                break;
+                LagramConfig.toggleGlassMessagesBorder();
+                updatePreviewAndAdapter();
+                return;
+            case ID_GLASS_HIGHLIGHTS:
+                LagramConfig.toggleGlassHighlights();
+                updatePreviewAndAdapter();
+                return;
+            case ID_POPUP_GLASS:
+                toggleSwitch(view, LagramConfig.togglePopupGlass());
+                return;
             case ID_BUBBLE_TAILS:
-                newVal = LagramConfig.toggleShowBubbleTails();
-                checkChanged = true;
-                refreshLivePreviews();
-                break;
+                LagramConfig.toggleShowBubbleTails();
+                updatePreviewAndAdapter();
+                return;
             case ID_CHAT_EDGE_BLUR:
-                newVal = LagramConfig.toggleChatEdgeBlur();
-                checkChanged = true;
-                break;
+                toggleSwitch(view, LagramConfig.toggleChatEdgeBlur());
+                return;
             case ID_SCROLL_EDGE_SCALE:
-                newVal = LagramConfig.toggleScrollEdgeScale();
-                checkChanged = true;
-                break;
+                LagramConfig.toggleScrollEdgeScale();
+                updatePreviewAndAdapter();
+                return;
             case ID_IOS27_BOTTOM_BAR:
-                newVal = LagramConfig.toggleIos27BottomBar();
-                checkChanged = true;
-                break;
+                toggleSwitch(view, LagramConfig.toggleIos27BottomBar());
+                return;
             case ID_AMOLED_BACKDROP:
-                newVal = LagramConfig.toggleAmoledSettingsBackdrop();
-                checkChanged = true;
+                toggleSwitch(view, LagramConfig.toggleAmoledSettingsBackdrop());
                 updateBackdropColor();
-                if (listView != null) listView.invalidate();
-                break;
+                return;
             case ID_SYSTEM_FONTS:
-                newVal = LagramConfig.toggleUseSystemFonts();
-                checkChanged = true;
-                break;
+                toggleSwitch(view, LagramConfig.toggleUseSystemFonts());
+                return;
             case ID_FOLDER_COUNTERS:
-                newVal = LagramConfig.toggleShowFolderCounters();
-                checkChanged = true;
-                refreshLivePreviews();
-                getNotificationCenter().postNotificationName(NotificationCenter.dialogFiltersUpdated);
-                break;
+                LagramConfig.toggleShowFolderCounters();
+                NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogFiltersUpdated);
+                updatePreviewAndAdapter();
+                return;
             case ID_HIDE_ALL_CHATS:
-                newVal = LagramConfig.toggleHideAllChatsFolder();
-                checkChanged = true;
-                refreshLivePreviews();
-                getNotificationCenter().postNotificationName(NotificationCenter.dialogFiltersUpdated);
-                break;
+                LagramConfig.toggleHideAllChatsFolder();
+                NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogFiltersUpdated);
+                updatePreviewAndAdapter();
+                return;
             case ID_REMEMBER_LAST_FOLDER:
-                newVal = LagramConfig.toggleRememberLastFolder();
-                checkChanged = true;
-                break;
+                toggleSwitch(view, LagramConfig.toggleRememberLastFolder());
+                return;
+            case ID_CHATS_HEADER_CENTERED:
+                toggleSwitch(view, LagramConfig.toggleChatsHeaderCentered());
+                return;
             case ID_HIDE_STORIES:
-                newVal = LagramConfig.toggleHideStories();
-                checkChanged = true;
-                getNotificationCenter().postNotificationName(NotificationCenter.storiesEnabledUpdate);
-                break;
+                toggleSwitch(view, LagramConfig.toggleHideStories());
+                NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.storiesUpdated);
+                return;
             case ID_HIDE_STORIES_PROFILE:
-                newVal = LagramConfig.toggleHideStoriesInProfile();
-                checkChanged = true;
-                break;
+                toggleSwitch(view, LagramConfig.toggleHideStoriesInProfile());
+                return;
             case ID_HIDE_STORY_POSTING:
-                newVal = LagramConfig.toggleHideStoryPosting();
-                checkChanged = true;
-                getNotificationCenter().postNotificationName(NotificationCenter.storiesEnabledUpdate);
-                break;
-            case ID_HIDE_PHONE_NUMBER:
-                newVal = LagramConfig.toggleHidePhoneNumber();
-                checkChanged = true;
-                getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, 0);
-                break;
+                toggleSwitch(view, LagramConfig.toggleHideStoryPosting());
+                return;
             case ID_HIDE_TELEGRAM_BLOAT:
-                newVal = LagramConfig.toggleHideTelegramBloat();
-                checkChanged = true;
-                break;
-            case ID_SHOW_SECONDS:
-                newVal = LagramConfig.toggleShowSecondsInTime();
-                checkChanged = true;
-                refreshLivePreviews();
-                break;
-            case ID_SHOW_ID_DC:
-                newVal = LagramConfig.toggleShowIdAndDc();
-                checkChanged = true;
-                break;
-            case ID_ID_BOT_API:
-                newVal = LagramConfig.toggleIdFormatBotApi();
-                checkChanged = true;
-                break;
+                toggleSwitch(view, LagramConfig.toggleHideTelegramBloat());
+                return;
         }
-        if (checkChanged && view instanceof LagramSettingsComponents.IconSwitchCell) {
-            ((LagramSettingsComponents.IconSwitchCell) view).setChecked(newVal);
+    }
+
+    private void toggleSwitch(View view, boolean checked) {
+        if (view instanceof LagramSettingsComponents.IconSwitchCell) {
+            ((LagramSettingsComponents.IconSwitchCell) view).setChecked(checked, true);
+        }
+        if (listView != null && listView.adapter != null) {
+            listView.adapter.update(true);
         }
     }
 
     @Override
     protected boolean onLongClick(UItem item, View view, int position, float x, float y) {
         return false;
+    }
+
+    private String getScrollBadge() {
+        if (!LagramConfig.scrollEdgeScale) {
+            return LocaleController.getString(R.string.LagramHapticsOff);
+        }
+        if (LagramConfig.scrollEdgeMode == LagramConfig.SCROLL_EDGE_DRUM && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return LocaleController.getString(R.string.LagramScrollEdgeModeDrum);
+        }
+        return LocaleController.getString(R.string.LagramScrollEdgeModeScale);
+    }
+
+    private String getFolderStyleShort() {
+        switch (LagramConfig.folderTabsStyle) {
+            case LagramConfig.FOLDER_TABS_ICON_ONLY:
+                return LocaleController.getString(R.string.LagramFolderTabsIconOnly);
+            case LagramConfig.FOLDER_TABS_TEXT_ONLY:
+                return LocaleController.getString(R.string.LagramFolderTabsTextOnly);
+            case LagramConfig.FOLDER_TABS_ICON_AND_TEXT:
+            default:
+                return LocaleController.getString(R.string.LagramFolderTabsIconText);
+        }
+    }
+
+    private String getAvatarShapeShort() {
+        switch (LagramConfig.avatarShape) {
+            case LagramConfig.AVATAR_SHAPE_ROUNDED:
+                return LocaleController.getString(R.string.LagramAvatarShapeRounded);
+            case LagramConfig.AVATAR_SHAPE_SQUIRCLE:
+                return LocaleController.getString(R.string.LagramAvatarShapeSquircle);
+            case LagramConfig.AVATAR_SHAPE_CIRCLE:
+            default:
+                return LocaleController.getString(R.string.LagramAvatarShapeCircle);
+        }
     }
 }

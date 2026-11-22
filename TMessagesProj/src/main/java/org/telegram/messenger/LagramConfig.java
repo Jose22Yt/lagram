@@ -60,6 +60,20 @@ public final class LagramConfig {
     public static final int DELETE_EFFECT_SHARDS = 2;
     public static final int DELETE_EFFECT_PORTAL = 3;
 
+    // Scroll edge animation modes
+    public static final int SCROLL_EDGE_SCALE = 0;
+    public static final int SCROLL_EDGE_DRUM = 1;
+
+    // Section card gap sizes
+    public static final int SECTION_GAP_COMPACT = 0;
+    public static final int SECTION_GAP_DEFAULT = 1;
+    public static final int SECTION_GAP_WIDE = 2;
+
+    // Avatar shapes
+    public static final int AVATAR_SHAPE_CIRCLE = 0;
+    public static final int AVATAR_SHAPE_ROUNDED = 1;
+    public static final int AVATAR_SHAPE_SQUIRCLE = 2;
+
     // Haptics levels
     public static final int HAPTICS_OFF = 0;
     public static final int HAPTICS_SOFT = 1;
@@ -82,14 +96,21 @@ public final class LagramConfig {
     public static boolean useSystemFonts = false;
     public static boolean showBubbleTails = true;
     public static boolean glassMessages = false;
-    public static int glassMessagesAlpha = 75;
+    public static int glassMessagesAlpha = 55;
     public static boolean glassMessagesBorder = true;
+    public static boolean glassHighlights = true;
+    public static boolean popupGlass = true;
     public static boolean chatEdgeBlur = true;
     public static int folderTabsStyle = FOLDER_TABS_ICON_AND_TEXT;
     public static boolean showFolderCounters = true;
     public static boolean rememberLastFolder = false;
+    public static int lastFolderTabId = -1;
     public static int roundingPreset = ROUNDING_DEFAULT;
+    public static int sectionGap = SECTION_GAP_DEFAULT;
+    public static int avatarShape = AVATAR_SHAPE_CIRCLE;
+    public static boolean chatsHeaderCentered = false;
     public static boolean scrollEdgeScale = true;
+    public static int scrollEdgeMode = SCROLL_EDGE_SCALE;
 
     // Chats & Messages (including Opexgram Message Focus)
     public static boolean messageFocusEnabled = true;
@@ -118,6 +139,7 @@ public final class LagramConfig {
     public static boolean showStickerPackOwner = true;
     public static boolean showForwardsCounter = true;
     public static boolean textAppearAnimation = true;
+    public static boolean bigReactions = false;
 
     // Media & Network
     public static boolean turboDownloads = true;
@@ -138,6 +160,7 @@ public final class LagramConfig {
     public static boolean hideSimilarChannels = false;
     public static int forcePerformanceClass = -1; // -1 = Auto, 0 = Low, 1 = Average, 2 = High
     public static boolean showJoinDate = true;
+    public static boolean profileNameSwitch = true;
     public static boolean openArchiveOnPull = true;
     public static int hapticsLevel = HAPTICS_NORMAL;
 
@@ -181,14 +204,21 @@ public final class LagramConfig {
         useSystemFonts = prefs.getBoolean("useSystemFonts", false);
         showBubbleTails = prefs.getBoolean("showBubbleTails", true);
         glassMessages = prefs.getBoolean("glassMessages", false);
-        glassMessagesAlpha = prefs.getInt("glassMessagesAlpha", 75);
+        glassMessagesAlpha = prefs.getInt("glassMessagesAlpha", 55);
         glassMessagesBorder = prefs.getBoolean("glassMessagesBorder", true);
+        glassHighlights = prefs.getBoolean("glassHighlights", true);
+        popupGlass = prefs.getBoolean("popupGlass", true);
         chatEdgeBlur = prefs.getBoolean("chatEdgeBlur", true);
         folderTabsStyle = prefs.getInt("folderTabsStyle", FOLDER_TABS_ICON_AND_TEXT);
         showFolderCounters = prefs.getBoolean("showFolderCounters", true);
         rememberLastFolder = prefs.getBoolean("rememberLastFolder", false);
+        lastFolderTabId = prefs.getInt("lastFolderTabId", -1);
         roundingPreset = prefs.getInt("roundingPreset", ROUNDING_DEFAULT);
+        sectionGap = prefs.getInt("sectionGap", SECTION_GAP_DEFAULT);
+        avatarShape = prefs.getInt("avatarShape", AVATAR_SHAPE_CIRCLE);
+        chatsHeaderCentered = prefs.getBoolean("chatsHeaderCentered", false);
         scrollEdgeScale = prefs.getBoolean("scrollEdgeScale", true);
+        scrollEdgeMode = prefs.getInt("scrollEdgeMode", SCROLL_EDGE_SCALE);
 
         // Chats & Message Focus
         messageFocusEnabled = prefs.getBoolean("messageFocusEnabled", true);
@@ -217,6 +247,7 @@ public final class LagramConfig {
         showStickerPackOwner = prefs.getBoolean("showStickerPackOwner", true);
         showForwardsCounter = prefs.getBoolean("showForwardsCounter", true);
         textAppearAnimation = prefs.getBoolean("textAppearAnimation", true);
+        bigReactions = prefs.getBoolean("bigReactions", false);
 
         // Media & Network
         turboDownloads = prefs.getBoolean("turboDownloads", true);
@@ -237,6 +268,7 @@ public final class LagramConfig {
         hideSimilarChannels = prefs.getBoolean("hideSimilarChannels", false);
         forcePerformanceClass = prefs.getInt("forcePerformanceClass", -1);
         showJoinDate = prefs.getBoolean("showJoinDate", true);
+        profileNameSwitch = prefs.getBoolean("profileNameSwitch", true);
         openArchiveOnPull = prefs.getBoolean("openArchiveOnPull", true);
         hapticsLevel = prefs.getInt("hapticsLevel", HAPTICS_NORMAL);
 
@@ -400,6 +432,20 @@ public final class LagramConfig {
         return glassMessagesBorder;
     }
 
+    public static boolean toggleGlassHighlights() {
+        ensureLoaded();
+        glassHighlights = !glassHighlights;
+        saveBoolean("glassHighlights", glassHighlights);
+        return glassHighlights;
+    }
+
+    public static boolean togglePopupGlass() {
+        ensureLoaded();
+        popupGlass = !popupGlass;
+        saveBoolean("popupGlass", popupGlass);
+        return popupGlass;
+    }
+
     public static boolean toggleChatEdgeBlur() {
         ensureLoaded();
         chatEdgeBlur = !chatEdgeBlur;
@@ -427,10 +473,66 @@ public final class LagramConfig {
         return rememberLastFolder;
     }
 
+    public static void setLastFolderTabId(int tabId) {
+        ensureLoaded();
+        if (lastFolderTabId != tabId) {
+            lastFolderTabId = tabId;
+            saveInt("lastFolderTabId", lastFolderTabId);
+        }
+    }
+
     public static void setRoundingPreset(int preset) {
         ensureLoaded();
         roundingPreset = preset;
         saveInt("roundingPreset", roundingPreset);
+    }
+
+    public static void setSectionGap(int gap) {
+        ensureLoaded();
+        sectionGap = gap;
+        saveInt("sectionGap", sectionGap);
+    }
+
+    public static int getEffectiveSectionPaddingDp() {
+        ensureLoaded();
+        switch (sectionGap) {
+            case SECTION_GAP_COMPACT:
+                return 8;
+            case SECTION_GAP_WIDE:
+                return 18;
+            case SECTION_GAP_DEFAULT:
+            default:
+                return 12;
+        }
+    }
+
+    public static void setAvatarShape(int shape) {
+        ensureLoaded();
+        avatarShape = shape;
+        saveInt("avatarShape", avatarShape);
+    }
+
+    public static int getAvatarRoundRadius(int diameterPx) {
+        ensureLoaded();
+        if (diameterPx <= 0) {
+            return 0;
+        }
+        switch (avatarShape) {
+            case AVATAR_SHAPE_ROUNDED:
+                return Math.max(AndroidUtilities.dp(6), Math.round(diameterPx * 0.22f));
+            case AVATAR_SHAPE_SQUIRCLE:
+                return Math.max(AndroidUtilities.dp(10), Math.round(diameterPx * 0.34f));
+            case AVATAR_SHAPE_CIRCLE:
+            default:
+                return diameterPx / 2;
+        }
+    }
+
+    public static boolean toggleChatsHeaderCentered() {
+        ensureLoaded();
+        chatsHeaderCentered = !chatsHeaderCentered;
+        saveBoolean("chatsHeaderCentered", chatsHeaderCentered);
+        return chatsHeaderCentered;
     }
 
     public static int getEffectiveBubbleRadiusDp() {
@@ -453,6 +555,12 @@ public final class LagramConfig {
         scrollEdgeScale = !scrollEdgeScale;
         saveBoolean("scrollEdgeScale", scrollEdgeScale);
         return scrollEdgeScale;
+    }
+
+    public static void setScrollEdgeMode(int mode) {
+        ensureLoaded();
+        scrollEdgeMode = mode;
+        saveInt("scrollEdgeMode", scrollEdgeMode);
     }
 
     // --- Chats & Message Focus setters/toggles ---
@@ -635,6 +743,13 @@ public final class LagramConfig {
         return textAppearAnimation;
     }
 
+    public static boolean toggleBigReactions() {
+        ensureLoaded();
+        bigReactions = !bigReactions;
+        saveBoolean("bigReactions", bigReactions);
+        return bigReactions;
+    }
+
     // --- Media & Network setters/toggles ---
     public static boolean toggleTurboDownloads() {
         ensureLoaded();
@@ -749,6 +864,35 @@ public final class LagramConfig {
         showJoinDate = !showJoinDate;
         saveBoolean("showJoinDate", showJoinDate);
         return showJoinDate;
+    }
+
+    public static boolean toggleProfileNameSwitch() {
+        ensureLoaded();
+        profileNameSwitch = !profileNameSwitch;
+        saveBoolean("profileNameSwitch", profileNameSwitch);
+        return profileNameSwitch;
+    }
+
+    public static String estimateAccountCreationDate(long userId) {
+        if (userId <= 0) {
+            return "";
+        }
+        final long[] ids = {
+            100000000L, 200000000L, 350000000L, 500000000L, 700000000L,
+            950000000L, 1200000000L, 1500000000L, 1900000000L, 5000000000L,
+            5500000000L, 6000000000L, 6700000000L, 7400000000L, 8200000000L
+        };
+        final String[] dates = {
+            "~2014", "~2015", "~2016", "~2017", "~2018",
+            "~2019", "~2020", "~2020", "~2021", "~2021",
+            "~2022", "~2023", "~2024", "~2025", "~2026"
+        };
+        for (int i = 0; i < ids.length; i++) {
+            if (userId < ids[i]) {
+                return dates[i];
+            }
+        }
+        return "~2026+";
     }
 
     public static boolean toggleOpenArchiveOnPull() {
@@ -885,12 +1029,18 @@ public final class LagramConfig {
             obj.put("glassMessages", glassMessages);
             obj.put("glassMessagesAlpha", glassMessagesAlpha);
             obj.put("glassMessagesBorder", glassMessagesBorder);
+            obj.put("glassHighlights", glassHighlights);
+            obj.put("popupGlass", popupGlass);
             obj.put("chatEdgeBlur", chatEdgeBlur);
             obj.put("folderTabsStyle", folderTabsStyle);
             obj.put("showFolderCounters", showFolderCounters);
             obj.put("rememberLastFolder", rememberLastFolder);
             obj.put("roundingPreset", roundingPreset);
+            obj.put("sectionGap", sectionGap);
+            obj.put("avatarShape", avatarShape);
+            obj.put("chatsHeaderCentered", chatsHeaderCentered);
             obj.put("scrollEdgeScale", scrollEdgeScale);
+            obj.put("scrollEdgeMode", scrollEdgeMode);
             obj.put("messageFocusEnabled", messageFocusEnabled);
             obj.put("messageFocusBlur", messageFocusBlur);
             obj.put("messageFocusStyle", messageFocusStyle);
@@ -917,6 +1067,7 @@ public final class LagramConfig {
             obj.put("showStickerPackOwner", showStickerPackOwner);
             obj.put("showForwardsCounter", showForwardsCounter);
             obj.put("textAppearAnimation", textAppearAnimation);
+            obj.put("bigReactions", bigReactions);
             obj.put("downloadSpeedBoost", downloadSpeedBoost);
             obj.put("turboUploads", turboUploads);
             obj.put("sendPhotosInHd", sendPhotosInHd);
@@ -932,6 +1083,7 @@ public final class LagramConfig {
             obj.put("hideSimilarChannels", hideSimilarChannels);
             obj.put("forcePerformanceClass", forcePerformanceClass);
             obj.put("showJoinDate", showJoinDate);
+            obj.put("profileNameSwitch", profileNameSwitch);
             obj.put("openArchiveOnPull", openArchiveOnPull);
             obj.put("hapticsLevel", hapticsLevel);
             obj.put("ghostModeEnabled", ghostModeEnabled);
@@ -978,12 +1130,18 @@ public final class LagramConfig {
             if (obj.has("glassMessages")) editor.putBoolean("glassMessages", obj.getBoolean("glassMessages"));
             if (obj.has("glassMessagesAlpha")) editor.putInt("glassMessagesAlpha", obj.getInt("glassMessagesAlpha"));
             if (obj.has("glassMessagesBorder")) editor.putBoolean("glassMessagesBorder", obj.getBoolean("glassMessagesBorder"));
+            if (obj.has("glassHighlights")) editor.putBoolean("glassHighlights", obj.getBoolean("glassHighlights"));
+            if (obj.has("popupGlass")) editor.putBoolean("popupGlass", obj.getBoolean("popupGlass"));
             if (obj.has("chatEdgeBlur")) editor.putBoolean("chatEdgeBlur", obj.getBoolean("chatEdgeBlur"));
             if (obj.has("folderTabsStyle")) editor.putInt("folderTabsStyle", obj.getInt("folderTabsStyle"));
             if (obj.has("showFolderCounters")) editor.putBoolean("showFolderCounters", obj.getBoolean("showFolderCounters"));
             if (obj.has("rememberLastFolder")) editor.putBoolean("rememberLastFolder", obj.getBoolean("rememberLastFolder"));
             if (obj.has("roundingPreset")) editor.putInt("roundingPreset", obj.getInt("roundingPreset"));
+            if (obj.has("sectionGap")) editor.putInt("sectionGap", obj.getInt("sectionGap"));
+            if (obj.has("avatarShape")) editor.putInt("avatarShape", obj.getInt("avatarShape"));
+            if (obj.has("chatsHeaderCentered")) editor.putBoolean("chatsHeaderCentered", obj.getBoolean("chatsHeaderCentered"));
             if (obj.has("scrollEdgeScale")) editor.putBoolean("scrollEdgeScale", obj.getBoolean("scrollEdgeScale"));
+            if (obj.has("scrollEdgeMode")) editor.putInt("scrollEdgeMode", obj.getInt("scrollEdgeMode"));
             if (obj.has("messageFocusEnabled")) editor.putBoolean("messageFocusEnabled", obj.getBoolean("messageFocusEnabled"));
             if (obj.has("messageFocusBlur")) editor.putBoolean("messageFocusBlur", obj.getBoolean("messageFocusBlur"));
             if (obj.has("messageFocusStyle")) editor.putInt("messageFocusStyle", obj.getInt("messageFocusStyle"));
@@ -1010,6 +1168,7 @@ public final class LagramConfig {
             if (obj.has("showStickerPackOwner")) editor.putBoolean("showStickerPackOwner", obj.getBoolean("showStickerPackOwner"));
             if (obj.has("showForwardsCounter")) editor.putBoolean("showForwardsCounter", obj.getBoolean("showForwardsCounter"));
             if (obj.has("textAppearAnimation")) editor.putBoolean("textAppearAnimation", obj.getBoolean("textAppearAnimation"));
+            if (obj.has("bigReactions")) editor.putBoolean("bigReactions", obj.getBoolean("bigReactions"));
             if (obj.has("downloadSpeedBoost")) {
                 int boost = obj.getInt("downloadSpeedBoost");
                 editor.putInt("downloadSpeedBoost", boost);
@@ -1029,6 +1188,7 @@ public final class LagramConfig {
             if (obj.has("hideSimilarChannels")) editor.putBoolean("hideSimilarChannels", obj.getBoolean("hideSimilarChannels"));
             if (obj.has("forcePerformanceClass")) editor.putInt("forcePerformanceClass", obj.getInt("forcePerformanceClass"));
             if (obj.has("showJoinDate")) editor.putBoolean("showJoinDate", obj.getBoolean("showJoinDate"));
+            if (obj.has("profileNameSwitch")) editor.putBoolean("profileNameSwitch", obj.getBoolean("profileNameSwitch"));
             if (obj.has("openArchiveOnPull")) editor.putBoolean("openArchiveOnPull", obj.getBoolean("openArchiveOnPull"));
             if (obj.has("hapticsLevel")) editor.putInt("hapticsLevel", obj.getInt("hapticsLevel"));
             if (obj.has("ghostModeEnabled")) editor.putBoolean("ghostModeEnabled", obj.getBoolean("ghostModeEnabled"));

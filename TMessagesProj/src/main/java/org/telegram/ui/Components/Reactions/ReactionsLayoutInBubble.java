@@ -1166,15 +1166,16 @@ public class ReactionsLayoutInBubble {
 
             if (imageReceiver != null) {
                 int size, X;
+                int extraSize = org.telegram.messenger.LagramConfig.bigReactions ? dp(4) : 0;
                 if (paid) {
-                    size = dp(22);
+                    size = dp(22) + extraSize;
                     X = dp(4);
                 } else if (animatedEmojiDrawable != null) {
-                    size = dp(24);
+                    size = dp(24) + extraSize;
                     X = dp(6);
                     imageReceiver.setRoundRadius(dp(6));
                 } else {
-                    size = dp(20);
+                    size = dp(20) + extraSize;
                     X = dp(8);
                     imageReceiver.setRoundRadius(0);
                 }

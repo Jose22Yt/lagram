@@ -62,6 +62,7 @@ public class LagramPrivacyActivity extends UniversalFragment {
         LagramConfig.ensureLoaded();
         View view = super.createView(context);
         listView.setSections();
+        listView.setSectionsDrawBackground(true);
         if (LagramConfig.amoledSettingsBackdrop && Theme.isCurrentThemeDark()) {
             fragmentView.setBackgroundColor(0xFF000000);
             listView.setBackgroundColor(0xFF000000);
@@ -132,7 +133,7 @@ public class LagramPrivacyActivity extends UniversalFragment {
                     "Marcar los mensajes como leídos automáticamente cuando tú respondas",
                     LagramConfig.ghostMarkReadOnSend
             ));
-            items.add(UItem.asShadow(LocaleController.getString(R.string.LagramPrivacyInfo)));
+            items.add(UItem.asShadow(-10, LocaleController.getString(R.string.LagramPrivacyInfo)));
             return;
         }
 
@@ -153,7 +154,7 @@ public class LagramPrivacyActivity extends UniversalFragment {
                 "Lectura de mensajes, historias, escribiendo y estado en línea",
                 LagramConfig.ghostModeEnabled ? "Activo" : "Configurar"
         ));
-        items.add(UItem.asShadow(null));
+        items.add(UItem.asShadow(-1, null));
 
         // Section 2: Anti-Delete & Edit History
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramHistoryHeader)));
@@ -172,7 +173,7 @@ public class LagramPrivacyActivity extends UniversalFragment {
                 LagramConfig.saveEditedMessages
         ));
         items.add(UItem.asButton(ID_CLEAR_HISTORY_DB, R.drawable.msg_clear, LocaleController.getString(R.string.LagramClearHistoryDb)).red());
-        items.add(UItem.asShadow(null));
+        items.add(UItem.asShadow(-2, null));
 
         // Section 3: Anti-Restrictions
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAntiRestrictHeader)));
@@ -190,7 +191,7 @@ public class LagramPrivacyActivity extends UniversalFragment {
                 "Permitir copiar texto y guardar multimedia en canales protegidos",
                 LagramConfig.bypassNoForwards
         ));
-        items.add(UItem.asShadow(LocaleController.getString(R.string.LagramPrivacyInfo)));
+        items.add(UItem.asShadow(-3, LocaleController.getString(R.string.LagramPrivacyInfo)));
     }
 
     @Override

@@ -3755,7 +3755,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
             } else if (chat != null && chat.forum && currentDialogFolderId == 0 && !useFromUserAsAvatar || !isSavedDialog && user != null && user.self && MessagesController.getInstance(currentAccount).savedViewAsChats) {
                 avatarRadius = dp(16);
             } else {
-                avatarRadius = dp(28);
+                avatarRadius = org.telegram.messenger.LagramConfig.getAvatarRoundRadius(dp(56));
             }
 
             avatarImage.setRoundRadius(avatarRadius);

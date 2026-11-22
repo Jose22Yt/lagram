@@ -525,6 +525,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private int undoViewIndex;
     private UndoView[] undoView = new UndoView[2];
     private FilterTabsView filterTabsView;
+    private boolean lagramRestoredLastFolder;
     private boolean askingForPermissions;
     private int searchViewPagerIndex;
     @Nullable
@@ -3456,6 +3457,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (folderId == 0) {
                 actionBar.setSupportsHolidayImage(true);
             }
+            LagramConfig.ensureLoaded();
+            if (LagramConfig.chatsHeaderCentered) {
+                actionBar.centerTitle();
+            }
         }
         //if (!onlySelect || initialDialogsType == DIALOGS_TYPE_FORWARD) {
             actionBar.setAddToContainer(false);
@@ -3560,6 +3565,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         return;
                     }
                     viewPages[1].selectedType = tab.id;
+                    if (LagramConfig.rememberLastFolder) {
+                        LagramConfig.setLastFolderTabId(tab.id);
+                    }
                     viewPages[1].setVisibility(View.VISIBLE);
                     viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth());
                     showScrollbars(false);
@@ -6860,6 +6868,15 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         viewPages[a].selectedType = filters.size() - 1;
                     }
                     viewPages[a].listView.setScrollingTouchSlop(RecyclerView.TOUCH_SLOP_PAGING);
+                }
+                if (LagramConfig.rememberLastFolder && !lagramRestoredLastFolder && LagramConfig.lastFolderTabId >= 0 && LagramConfig.lastFolderTabId < filters.size()) {
+                    lagramRestoredLastFolder = true;
+                    int savedId = LagramConfig.lastFolderTabId;
+                    if (viewPages[0].selectedType != savedId && !filterTabsView.isLocked(savedId)) {
+                        viewPages[0].selectedType = savedId;
+                        filterTabsView.selectTabWithId(savedId, 1f);
+                        updateCurrentTab = true;
+                    }
                 }
                 filterTabsView.finishAddingTabs(animatedUpdateItems);
                 if (updateCurrentTab) {

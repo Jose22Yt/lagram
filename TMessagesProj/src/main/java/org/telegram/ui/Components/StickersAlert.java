@@ -1464,6 +1464,19 @@ public class StickersAlert extends BottomSheet implements NotificationCenter.Not
             } catch (Exception e) {
                 FileLog.e(e);
             }
+            if (org.telegram.messenger.LagramConfig.showStickerPackOwner && stickerSet != null && stickerSet.set != null) {
+                long ownerId = stickerSet.set.id >> 32;
+                if (ownerId > 0) {
+                    SpannableStringBuilder ownerTitle = new SpannableStringBuilder(title);
+                    ownerTitle.append("  •  ID ").append(String.valueOf(ownerId));
+                    title = ownerTitle;
+                    final long copyOwnerId = ownerId;
+                    titleTextView.setOnClickListener(v -> {
+                        AndroidUtilities.addToClipboard(String.valueOf(copyOwnerId));
+                        BulletinFactory.of((FrameLayout) containerView, resourcesProvider).createCopyBulletin(LocaleController.getString(R.string.LagramIdCopied)).show();
+                    });
+                }
+            }
             titleTextView.setText(title);
 
             if (isEmoji()) {

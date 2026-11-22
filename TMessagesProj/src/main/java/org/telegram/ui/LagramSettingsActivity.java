@@ -90,6 +90,8 @@ public class LagramSettingsActivity extends UniversalFragment {
         list.add(new SearchEntry(105, R.string.LagramShowJoinDate, 0, catGeneral, R.drawable.msg_speed, ID_CAT_GENERAL));
         list.add(new SearchEntry(106, R.string.LagramOpenArchiveOnPull, 0, catGeneral, R.drawable.msg_speed, ID_CAT_GENERAL));
         list.add(new SearchEntry(107, R.string.LagramHapticsLevel, 0, catGeneral, R.drawable.msg_speed, ID_CAT_GENERAL));
+        list.add(new SearchEntry(108, R.string.LagramProfileNameSwitch, 0, catGeneral, R.drawable.msg_copy, ID_CAT_GENERAL));
+        list.add(new SearchEntry(109, R.string.LagramShowIdAndDc, 0, catGeneral, R.drawable.msg_info, ID_CAT_GENERAL));
 
         // Appearance
         list.add(new SearchEntry(201, R.string.LagramIos27BottomBar, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
@@ -105,15 +107,20 @@ public class LagramSettingsActivity extends UniversalFragment {
         list.add(new SearchEntry(211, R.string.LagramRoundingPreset, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
         list.add(new SearchEntry(212, R.string.LagramHideStories, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
         list.add(new SearchEntry(213, R.string.LagramHideAllChats, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(214, R.string.LagramHidePhoneNumber, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(215, R.string.LagramShowSeconds, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(216, R.string.LagramShowIdAndDc, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
+        list.add(new SearchEntry(214, R.string.LagramHidePhoneNumber, 0, catGeneral, R.drawable.msg_theme, ID_CAT_GENERAL));
+        list.add(new SearchEntry(215, R.string.LagramScrollEdgeScale, 0, catAppearance, R.drawable.msg_speed, ID_CAT_APPEARANCE));
+        list.add(new SearchEntry(216, R.string.LagramScrollEdgeMode, 0, catAppearance, R.drawable.msg_speed, ID_CAT_APPEARANCE));
+        list.add(new SearchEntry(217, R.string.LagramGlassHighlights, 0, catAppearance, R.drawable.msg_palette, ID_CAT_APPEARANCE));
+        list.add(new SearchEntry(218, R.string.LagramPopupGlass, 0, catAppearance, R.drawable.msg_palette, ID_CAT_APPEARANCE));
+        list.add(new SearchEntry(219, R.string.LagramSectionGap, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
+        list.add(new SearchEntry(220, R.string.LagramAvatarShape, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
+        list.add(new SearchEntry(221, R.string.LagramChatsHeaderCentered, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
 
         // Chats & Message Focus
         list.add(new SearchEntry(301, R.string.LagramMessageFocus, R.string.LagramMessageFocusInfo, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
         list.add(new SearchEntry(302, R.string.LagramMessageFocusBlur, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
         list.add(new SearchEntry(303, R.string.LagramMessageFocusStyle, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
-        list.add(new SearchEntry(304, R.string.LagramDoubleTapAction, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
+        list.add(new SearchEntry(304, R.string.LagramBigReactions, 0, catChats, R.drawable.msg_reactions2, ID_CAT_CHATS));
         list.add(new SearchEntry(305, R.string.LagramDoubleTapOutgoing, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
         list.add(new SearchEntry(306, R.string.LagramDoubleTapIncoming, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
         list.add(new SearchEntry(307, R.string.LagramStickerSize, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
@@ -125,7 +132,8 @@ public class LagramSettingsActivity extends UniversalFragment {
         list.add(new SearchEntry(313, R.string.LagramConfirmBeforeSendSticker, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
         list.add(new SearchEntry(314, R.string.LagramShowPageUpButton, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
         list.add(new SearchEntry(315, R.string.LagramUnlimitedSelection, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
-        list.add(new SearchEntry(316, R.string.LagramTextAppearAnimation, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
+        list.add(new SearchEntry(316, R.string.LagramShowStickerPackOwner, 0, catChats, R.drawable.msg_sticker, ID_CAT_CHATS));
+        list.add(new SearchEntry(317, R.string.LagramShowSeconds, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
 
         // Media
         list.add(new SearchEntry(401, R.string.LagramDownloadBoost, 0, catMedia, R.drawable.msg_photos, ID_CAT_MEDIA));
@@ -136,6 +144,7 @@ public class LagramSettingsActivity extends UniversalFragment {
         list.add(new SearchEntry(406, R.string.LagramAutoplayRound, 0, catMedia, R.drawable.msg_photos, ID_CAT_MEDIA));
         list.add(new SearchEntry(407, R.string.LagramAutoplayMusic, 0, catMedia, R.drawable.msg_photos, ID_CAT_MEDIA));
         list.add(new SearchEntry(408, R.string.LagramMediaGlow, 0, catMedia, R.drawable.msg_photos, ID_CAT_MEDIA));
+        list.add(new SearchEntry(409, R.string.LagramCompactRoundCamera, 0, catMedia, R.drawable.msg_camera, ID_CAT_MEDIA));
 
         // Privacy & Ghost Mode
         list.add(new SearchEntry(501, R.string.LagramGhostModeMaster, 0, catPrivacy, R.drawable.msg_secret, ID_CAT_PRIVACY));
@@ -157,6 +166,7 @@ public class LagramSettingsActivity extends UniversalFragment {
         headerView = new LagramSettingsHeaderView(context, getResourceProvider());
         View view = super.createView(context);
         listView.setSections();
+        listView.setSectionsDrawBackground(true);
 
         searchItem = actionBar.createMenu()
                 .addItem(1, R.drawable.outline_header_search)
@@ -226,7 +236,7 @@ public class LagramSettingsActivity extends UniversalFragment {
 
             items.add(UItem.asHeader(LocaleController.getString(R.string.LagramQuickGhostHeader)));
             items.add(UItem.asCheck(ID_GHOST_MASTER, LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramGhostModeMaster))).setChecked(LagramConfig.ghostModeEnabled));
-            items.add(UItem.asShadow(null));
+            items.add(UItem.asShadow(-1, null));
 
             items.add(UItem.asHeader(LocaleController.getString(R.string.LagramCategoriesHeader)));
             items.add(createCategoryItem(ID_CAT_GENERAL, IconBackgroundColors.BLUE, R.drawable.filled_profile_settings, R.string.LagramCategoryGeneral));
@@ -234,7 +244,7 @@ public class LagramSettingsActivity extends UniversalFragment {
             items.add(createCategoryItem(ID_CAT_CHATS, IconBackgroundColors.GREEN, R.drawable.settings_chat, R.string.LagramCategoryChats));
             items.add(createCategoryItem(ID_CAT_MEDIA, IconBackgroundColors.ORANGE, R.drawable.filled_widget_music, R.string.LagramCategoryMedia));
             items.add(createCategoryItem(ID_CAT_PRIVACY, IconBackgroundColors.BLUE_DEEP, R.drawable.msg_secret, R.string.LagramCategoryPrivacy));
-            items.add(UItem.asShadow(null));
+            items.add(UItem.asShadow(-2, null));
 
             items.add(UItem.asHeader(LocaleController.getString(R.string.LagramBackupHeader)));
             items.add(UItem.asButton(ID_BACKUP_EXPORT, R.drawable.msg_copy, LocaleController.getString(R.string.LagramExportSettings)));

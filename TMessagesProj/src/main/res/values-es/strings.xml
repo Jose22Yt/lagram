@@ -1505,4 +1505,23 @@
     <string name="LagramHapticsSoft">Suave</string>
     <string name="LagramHapticsNormal">Normal</string>
     <string name="LagramHapticsStrong">Fuerte</string>
+
+    <string name="LagramScrollAndMotionHeader">SCROLL Y ANIMACIONES</string>
+    <string name="LagramScrollEdgeMode">Estilo de animación de scroll</string>
+    <string name="LagramScrollEdgeModeScale">Escala elástica</string>
+    <string name="LagramScrollEdgeModeDrum">Tambor 3D (AGSL)</string>
+    <string name="LagramGlassHighlights">Brillo especular superior en burbujas Glass</string>
+    <string name="LagramPopupGlass">Efecto Glass en menús emergentes</string>
+    <string name="LagramSectionGap">Espaciado entre tarjetas de ajustes</string>
+    <string name="LagramSectionGapCompact">Compacto</string>
+    <string name="LagramSectionGapDefault">Normal</string>
+    <string name="LagramSectionGapWide">Amplio</string>
+    <string name="LagramAvatarShape">Forma de avatares en la lista de chats</string>
+    <string name="LagramAvatarShapeCircle">Círculo</string>
+    <string name="LagramAvatarShapeRounded">Redondeado</string>
+    <string name="LagramAvatarShapeSquircle">Squircle</string>
+    <string name="LagramChatsHeaderCentered">Centrar título en la lista de chats</string>
+    <string name="LagramBigReactions">Reacciones más grandes en los chats</string>
+    <string name="LagramProfileNameSwitch">Tocar nombre en perfil para copiar @usuario</string>
+    <string name="LagramProfileNameSwitchInfo">Copia rápidamente el @usuario o nombre tocando el título del perfil.</string>
 </resources>

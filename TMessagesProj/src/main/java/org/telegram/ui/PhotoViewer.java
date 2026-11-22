@@ -19508,6 +19508,45 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         return !inBubbleMode;
     }
 
+    private Bitmap lastGlowBitmap;
+    private int lastGlowWidth;
+    private int lastGlowHeight;
+    private Paint mediaGlowPaint;
+
+    private void drawMediaAmbientGlow(Canvas canvas, Bitmap bmp) {
+        int w = canvas.getWidth();
+        int h = canvas.getHeight();
+        if (w <= 0 || h <= 0) {
+            return;
+        }
+        if (mediaGlowPaint == null) {
+            mediaGlowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        }
+        if (bmp != lastGlowBitmap || w != lastGlowWidth || h != lastGlowHeight) {
+            lastGlowBitmap = bmp;
+            lastGlowWidth = w;
+            lastGlowHeight = h;
+            int bw = bmp.getWidth();
+            int bh = bmp.getHeight();
+            int c1 = bmp.getPixel(bw / 2, bh / 2);
+            int c2 = bmp.getPixel(Math.max(0, bw / 4), Math.max(0, bh / 4));
+            int c3 = bmp.getPixel(Math.min(bw - 1, (bw * 3) / 4), Math.min(bh - 1, (bh * 3) / 4));
+            int r = (Color.red(c1) + Color.red(c2) + Color.red(c3)) / 3;
+            int g = (Color.green(c1) + Color.green(c2) + Color.green(c3)) / 3;
+            int b = (Color.blue(c1) + Color.blue(c2) + Color.blue(c3)) / 3;
+            int glowCenter = Color.argb(95, r, g, b);
+            int glowMid = Color.argb(42, r, g, b);
+            float radius = Math.max(w, h) * 0.65f;
+            mediaGlowPaint.setShader(new android.graphics.RadialGradient(
+                    w * 0.5f, h * 0.5f, radius,
+                    new int[]{glowCenter, glowMid, Color.TRANSPARENT},
+                    new float[]{0f, 0.55f, 1f},
+                    Shader.TileMode.CLAMP
+            ));
+        }
+        canvas.drawRect(0, 0, w, h, mediaGlowPaint);
+    }
+
     @SuppressLint({"NewApi", "DrawAllocation"})
     private void onDraw(Canvas canvas) {
         Canvas realCanvas = canvas;
@@ -19615,6 +19654,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             return;
         }
 
+        if (org.telegram.messenger.LagramConfig.mediaGlow && !isVideo && centerImage != null) {
+            Bitmap glowBmp = centerImage.getBitmap();
+            if (glowBmp != null && !glowBmp.isRecycled()) {
+                drawMediaAmbientGlow(canvas, glowBmp);
+            }
+        }
         if (padImageForHorizontalInsets) {
             canvas.save();
             canvas.translate(getLeftInset() / 2 - getRightInset() / 2, 0);

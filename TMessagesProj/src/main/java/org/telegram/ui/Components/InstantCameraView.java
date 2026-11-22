@@ -520,6 +520,9 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
             } else {
                 newSize = AndroidUtilities.roundMessageSize;
             }
+            if (org.telegram.messenger.LagramConfig.compactRoundCamera) {
+                newSize = Math.round(newSize * 0.78f);
+            }
             if (newSize != textureViewSize) {
                 textureViewSize = newSize;
                 textureOverlayView.getLayoutParams().width = textureOverlayView.getLayoutParams().height = textureViewSize;

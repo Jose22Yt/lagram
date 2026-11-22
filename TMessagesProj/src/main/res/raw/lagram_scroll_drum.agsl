@@ -1,0 +1,39 @@
+uniform shader content;
+uniform float2 size;
+uniform float2 edges;
+uniform float zone;
+uniform float2 reach;
+uniform float narrow;
+uniform float trace;
+
+half4 main(float2 p) {
+    float2 ease = 1.0 - reach;
+    float2 shift = zone * (1.0 - ease * ease);
+    float upper = edges.x + shift.x;
+    float lower = edges.y - shift.y;
+    float depth = 0.0;
+    float direction = 0.0;
+    float origin = 0.0;
+    if (reach.x > 0.0 && p.y < upper) {
+        depth = upper - p.y;
+        direction = -1.0;
+        origin = upper;
+    } else if (reach.y > 0.0 && p.y > lower) {
+        depth = p.y - lower;
+        direction = 1.0;
+        origin = lower;
+    }
+    if (direction == 0.0) {
+        return content.eval(p);
+    }
+    float k = min(depth / zone, 1.0);
+    float light = sqrt(1.0 - k * k);
+    float bend = zone * asin(k) + max(depth - zone, 0.0);
+    float y = origin + direction * bend;
+    float squeeze = 1.0 - narrow * (1.0 - light);
+    float x = size.x * 0.5 + (p.x - size.x * 0.5) / squeeze;
+    if (x < 0.0 || x > size.x || y < 0.0 || y > size.y) {
+        return half4(0.0);
+    }
+    return content.eval(float2(x, y)) * half(mix(trace, 1.0, sqrt(light)));
+}

@@ -3372,6 +3372,7 @@ public class ChatActivity extends BaseFragment implements
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
+        org.telegram.ui.lagram.LagramGlassBubbleEngine.clearSource(this, navbarContentSourceWallpaper, contentView != null ? contentView.getBackgroundImage() : null);
         if (messageMetricsView != null) {
             messageMetricsView.finish();
         }
@@ -18024,6 +18025,7 @@ public class ChatActivity extends BaseFragment implements
             shouldHaveLightNavigationBarIcons = navigationBarBrightness <= 0.9f;
 
             navbarContentSourceWallpaper.setSource(source);
+            org.telegram.ui.lagram.LagramGlassBubbleEngine.setSource(ChatActivity.this, source, drawable);
             invalidateGlassSources();
             if (chatActivityFadeView != null) {
                 chatActivityFadeView.setOverlayColor(isCompactMode() ? getThemedColor(Theme.key_chat_compact_backgroundGradient) : 0);
@@ -19079,6 +19081,7 @@ public class ChatActivity extends BaseFragment implements
                 ((GlassSourceBitmap) navbarContentSourceWallpaper.getSource())
                     .setParentSize(widthSize, heightSize, 0);
             }
+            org.telegram.ui.lagram.LagramGlassBubbleEngine.setViewportSize(widthSize, heightSize);
             if (lastWidth != widthSize) {
                 globalIgnoreLayout = false;
                 lastWidth = widthMeasureSpec;
@@ -30742,6 +30745,7 @@ public class ChatActivity extends BaseFragment implements
         }
         if (contentView != null) {
             contentView.onResume();
+            org.telegram.ui.lagram.LagramGlassBubbleEngine.setSource(this, navbarContentSourceWallpaper, contentView.getBackgroundImage());
         }
         checkChecksHint();
 
@@ -45183,11 +45187,14 @@ public class ChatActivity extends BaseFragment implements
     }
 
     public boolean supportsThanosEffect() {
-        return ThanosEffect.supports() && LiteMode.isEnabled(LiteMode.FLAG_CHAT_THANOS);
+        org.telegram.messenger.LagramConfig.ensureLoaded();
+        return org.telegram.messenger.LagramConfig.deleteEffect != org.telegram.messenger.LagramConfig.DELETE_EFFECT_DEFAULT
+                && ThanosEffect.supports()
+                && LiteMode.isEnabled(LiteMode.FLAG_CHAT_THANOS);
     }
 
     public ThanosEffect getChatThanosEffect() {
-        if (!LiteMode.isEnabled(LiteMode.FLAG_CHAT_THANOS) || !ThanosEffect.supports()) {
+        if (!supportsThanosEffect()) {
             return null;
         }
         if (chatListThanosEffect == null || chatListThanosEffect.destroyed) {
@@ -47829,6 +47836,13 @@ public class ChatActivity extends BaseFragment implements
                     scrimPopupWindow.dismiss();
                 }
             };
+        } else if (buttonId == ChatActivitySideControlsButtonsLayout.BUTTON_PAGE_DOWN && org.telegram.messenger.LagramConfig.showPageUpButton) {
+            if (chatListView != null && chatAdapter != null && chatAdapter.getItemCount() > 0) {
+                view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+                chatListView.smoothScrollToPosition(chatAdapter.getItemCount() - 1);
+                return true;
+            }
+            return false;
         } else {
             return false;
         }

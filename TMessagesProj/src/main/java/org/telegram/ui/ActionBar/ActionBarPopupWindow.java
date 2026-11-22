@@ -541,7 +541,14 @@ public class ActionBarPopupWindow extends PopupWindow {
                         AndroidUtilities.lerp(rect, AndroidUtilities.rectTmp2, reactionsEnterProgress, AndroidUtilities.rectTmp2);
                     }
                     backgroundDrawable.setBounds(AndroidUtilities.rectTmp2);
-                    backgroundDrawable.draw(canvas);
+                    if (org.telegram.messenger.LagramConfig.popupGlass) {
+                        int prevAlpha = backgroundDrawable.getAlpha();
+                        backgroundDrawable.setAlpha(Math.round(prevAlpha * 0.86f));
+                        backgroundDrawable.draw(canvas);
+                        backgroundDrawable.setAlpha(prevAlpha);
+                    } else {
+                        backgroundDrawable.draw(canvas);
+                    }
                     if (clipChildren) {
                         AndroidUtilities.rectTmp2.left += bgPaddings.left;
                         AndroidUtilities.rectTmp2.top += bgPaddings.top;

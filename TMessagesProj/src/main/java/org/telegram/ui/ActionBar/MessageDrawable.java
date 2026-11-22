@@ -26,6 +26,7 @@ import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.Components.MotionBackgroundDrawable;
 import org.telegram.ui.Components.blur3.utils.NinePatchBuilder;
+import org.telegram.ui.lagram.LagramGlassBubbleEngine;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -36,13 +37,10 @@ public class MessageDrawable extends Drawable {
     private int currentBackgroundHeight;
     public Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint selectedPaint;
-    private Paint glassSheenPaint;
-    private Paint glassBorderPaint;
-    private int lastGlassBoundsTop = Integer.MIN_VALUE;
-    private int lastGlassBoundsBottom = Integer.MIN_VALUE;
-    private int lastGlassBoundsLeft = Integer.MIN_VALUE;
-    private int lastGlassBoundsRight = Integer.MIN_VALUE;
-    private boolean lastGlassDark;
+    private float glassX;
+    private float glassY;
+    private int glassWidth;
+    private int glassHeight;
     private int lastDirectPathLeft = Integer.MIN_VALUE;
     private int lastDirectPathTop = Integer.MIN_VALUE;
     private int lastDirectPathRight = Integer.MIN_VALUE;
@@ -604,12 +602,41 @@ public class MessageDrawable extends Drawable {
         }
     }
 
+    public void setGlassPosition(float x, float y, int width, int height) {
+        this.glassX = x;
+        this.glassY = y;
+        this.glassWidth = width;
+        this.glassHeight = height;
+    }
+
+    private int glassColor() {
+        if (overrideColor != null) {
+            return overrideColor;
+        }
+        if (isOut) {
+            return getColor(isSelected ? Theme.key_chat_outBubbleSelected : Theme.key_chat_outBubble);
+        }
+        return getColor(isSelected ? Theme.key_chat_inBubbleSelected : Theme.key_chat_inBubble);
+    }
+
+    private boolean isDarkTheme() {
+        return AndroidUtilities.computePerceivedBrightness(getColor(Theme.key_chat_inBubble)) < 0.721f;
+    }
+
+    private boolean useGlass(Paint paintToUse) {
+        return paintToUse == null
+                && !renderingBackgroundCache
+                && !isCrossfadeBackground
+                && currentType != TYPE_PREVIEW
+                && LagramConfig.glassMessages;
+    }
+
     public void draw(Canvas canvas, Paint paintToUse) {
         if (!isOut && isCompact() && !renderingBackgroundCache) {
             return;
         }
         Rect bounds = getBounds();
-        boolean useGlass = LagramConfig.glassMessages && !renderingBackgroundCache;
+        boolean useGlass = useGlass(paintToUse);
         if (!useGlass && paintToUse == null && paint.getStyle() == Paint.Style.FILL && gradientShader == null && overrideRoundRadius == 0 && overrideRounding <= 0) {
             Drawable background = getBackgroundDrawable();
             if (background != null) {
@@ -653,8 +680,8 @@ public class MessageDrawable extends Drawable {
             drawFullBottom = true;
             drawFullTop = true;
         } else {
-            drawFullBottom = true; //currentType == TYPE_MEDIA ? topY + bounds.bottom - smallRad * 2 < currentBackgroundHeight : topY + bounds.bottom - rad < currentBackgroundHeight;
-            drawFullTop = true; // topY + rad * 2 >= 0;
+            drawFullBottom = true;
+            drawFullTop = true;
         }
         Path path;
         boolean invalidatePath;
@@ -685,70 +712,27 @@ public class MessageDrawable extends Drawable {
             generatePath(path, bounds, padding, rad, smallRad, nearRad, top, drawFullBottom, drawFullTop, paintToUse != null);
         }
 
+        if (useGlass && LagramGlassBubbleEngine.drawGlassBubble(
+                canvas, path, bounds,
+                glassX, glassY, glassWidth, glassHeight,
+                glassColor(), alpha, isDarkTheme())) {
+            return;
+        }
+
         int savedPaintAlpha = p.getAlpha();
-        if (useGlass && paintToUse == null) {
-            // Note: when gradientShader != null, paint.setColor(0xffffffff) resets paint alpha to 255,
-            // so we multiply this.alpha (the drawable alpha) by glassMessagesAlpha%
+        if (useGlass) {
             int baseAlpha = gradientShader != null ? this.alpha : savedPaintAlpha;
-            int glassAlpha = Math.round(baseAlpha * (Math.max(20, Math.min(100, LagramConfig.glassMessagesAlpha)) / 100f));
+            int glassAlpha = Math.round(baseAlpha * (Math.max(20, Math.min(95, LagramConfig.glassMessagesAlpha)) / 100f));
             p.setAlpha(glassAlpha);
         }
         canvas.drawPath(path, p);
-        if (useGlass && paintToUse == null) {
+        if (useGlass) {
             p.setAlpha(savedPaintAlpha);
-            drawLiquidGlassOverlay(canvas, path, bounds);
         }
         if (gradientShader != null && isSelected && paintToUse == null) {
             int color = getColor(Theme.key_chat_outBubbleGradientSelectedOverlay);
             selectedPaint.setColor(ColorUtils.setAlphaComponent(color, (int) (Color.alpha(color) * alpha / 255f)));
             canvas.drawPath(path, selectedPaint);
-        }
-    }
-
-    private void drawLiquidGlassOverlay(Canvas canvas, Path bubblePath, Rect bounds) {
-        if (bounds.width() <= 0 || bounds.height() <= 0) {
-            return;
-        }
-        boolean isDark = Theme.isCurrentThemeDark();
-        if (glassSheenPaint == null) {
-            glassSheenPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            glassSheenPaint.setStyle(Paint.Style.FILL);
-        }
-        if (glassBorderPaint == null) {
-            glassBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            glassBorderPaint.setStyle(Paint.Style.STROKE);
-            glassBorderPaint.setStrokeWidth(AndroidUtilities.dpf2(1.25f));
-        }
-        if (bounds.top != lastGlassBoundsTop || bounds.bottom != lastGlassBoundsBottom
-                || bounds.left != lastGlassBoundsLeft || bounds.right != lastGlassBoundsRight
-                || isDark != lastGlassDark) {
-            lastGlassBoundsTop = bounds.top;
-            lastGlassBoundsBottom = bounds.bottom;
-            lastGlassBoundsLeft = bounds.left;
-            lastGlassBoundsRight = bounds.right;
-            lastGlassDark = isDark;
-
-            int sheenTopColor = isDark ? 0x2AFFFFFF : 0x48FFFFFF;
-            int sheenMidColor = isDark ? 0x08FFFFFF : 0x12FFFFFF;
-            glassSheenPaint.setShader(new LinearGradient(
-                    bounds.left, bounds.top, bounds.left, bounds.bottom,
-                    new int[]{sheenTopColor, sheenMidColor, 0x00FFFFFF},
-                    new float[]{0f, 0.45f, 1f},
-                    Shader.TileMode.CLAMP
-            ));
-            int borderTopLeft = isDark ? 0x7AFFFFFF : 0xAAFFFFFF;
-            int borderBottomRight = isDark ? 0x22FFFFFF : 0x38FFFFFF;
-            glassBorderPaint.setShader(new LinearGradient(
-                    bounds.left, bounds.top, bounds.right, bounds.bottom,
-                    new int[]{borderTopLeft, borderBottomRight}, null, Shader.TileMode.CLAMP
-            ));
-        }
-        int alphaScale = Math.round(alpha);
-        glassSheenPaint.setAlpha(alphaScale);
-        canvas.drawPath(bubblePath, glassSheenPaint);
-        if (LagramConfig.glassMessagesBorder) {
-            glassBorderPaint.setAlpha(alphaScale);
-            canvas.drawPath(bubblePath, glassBorderPaint);
         }
     }
 

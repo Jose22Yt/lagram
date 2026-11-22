@@ -5304,6 +5304,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             invalidate();
         }
         viewTop = visibleTop;
+        glassOffsetY = visibleTop - getY();
 
         if (parent != parentHeight || parentOffset != this.parentViewTopOffset) {
             this.parentViewTopOffset = parentOffset;
@@ -17157,6 +17158,16 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
     }
 
+    private float glassOffsetY;
+
+    public void setGlassOrigin(MessageDrawable drawable, float dx, float dy) {
+        if (drawable != null) {
+            int w = getMeasuredWidth();
+            int h = backgroundHeight > 0 ? backgroundHeight : parentHeight;
+            drawable.setGlassPosition(getX() - dx, getY() + glassOffsetY + getPaddingTop() - dy, w, h);
+        }
+    }
+
     public void setBackgroundTopY(boolean fromParent) {
         for (int a = 0; a < 2; a++) {
             if (a == 1 && !fromParent) {
@@ -17179,6 +17190,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             }
             drawable.setTop((int) ((fromParent ? getY() : getTop()) + parentViewTopOffset), w, h, (int) parentViewTopOffset, blurredViewTopOffset, blurredViewBottomOffset, pinnedTop, pinnedBottom || transitionParams.changePinnedBottomProgress != 1);
             drawable.setBotButtonsBottom(hasInlineBotButtons());
+            setGlassOrigin(drawable, 0, 0);
         }
     }
 
@@ -17197,6 +17209,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
         drawable.setTop((int) (parentViewTopOffset + offset), w, h, (int) parentViewTopOffset, blurredViewTopOffset, blurredViewBottomOffset, pinnedTop, pinnedBottom || transitionParams.changePinnedBottomProgress != 1);
         drawable.setBotButtonsBottom(hasInlineBotButtons());
+        setGlassOrigin(drawable, 0, 0);
     }
 
     public float transitionYOffsetForDrawables;
@@ -17963,6 +17976,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
 
         if ((drawBackground || transitionParams.animateDrawBackground) && currentBackgroundDrawable != null && (currentPosition == null || isDrawSelectionBackground() && (currentMessageObject.isMusic() || currentMessageObject.isDocument())) && !(enterTransitionInProgress && !currentMessageObject.isVoice())) {
+            setGlassOrigin(currentBackgroundDrawable, 0, 0);
+            setGlassOrigin(currentBackgroundSelectedDrawable, 0, 0);
             float alphaInternal = this.alphaInternal;
             if (fromParent) {
                 alphaInternal *= getAlpha();
@@ -18044,6 +18059,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                         }
                         drawable.setTop((int) (getY() + parentViewTopOffset), w, h, (int) parentViewTopOffset, blurredViewTopOffset, blurredViewBottomOffset, pinnedTop, pinnedBottom);
                         drawable.setBotButtonsBottom(hasInlineBotButtons());
+                        setGlassOrigin(drawable, pinnedBottomOffset, 0);
                         float alpha = !mediaBackground && !pinnedBottom ? transitionParams.changePinnedBottomProgress : (1f - transitionParams.changePinnedBottomProgress);
                         drawable.setAlpha((int) (255 * alpha));
                         drawable.draw(canvas);
@@ -19225,6 +19241,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         if (currentBackgroundDrawable != null) {
             currentBackgroundDrawable.setTop(keyboardHeight, w, h, (int) parentViewTopOffset, blurredViewTopOffset, blurredViewBottomOffset, pinnedTop, pinnedBottom);
             currentBackgroundDrawable.setBotButtonsBottom(hasInlineBotButtons());
+            setGlassOrigin(currentBackgroundDrawable, 0, 0);
             Drawable currentBackgroundShadowDrawable = currentBackgroundDrawable.getShadowDrawable();
             if (currentBackgroundShadowDrawable != null) {
                 currentBackgroundShadowDrawable.setAlpha((int) (getAlpha() * 255));

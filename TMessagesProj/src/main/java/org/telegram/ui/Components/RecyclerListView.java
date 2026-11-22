@@ -3511,10 +3511,10 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     }
 
     public void setSections() {
-        setSections(dp(12), dp(20), false);
+        setSections(dp(LagramConfig.getEffectiveSectionPaddingDp()), dp(20), false);
     }
     public void setSections(boolean topPadding) {
-        setSections(dp(12), dp(20), topPadding);
+        setSections(dp(LagramConfig.getEffectiveSectionPaddingDp()), dp(20), topPadding);
     }
     public void setSections(int padding, float roundRadius, boolean topPadding) {
         final Utilities.CallbackReturn<View, Boolean> isSectionView =

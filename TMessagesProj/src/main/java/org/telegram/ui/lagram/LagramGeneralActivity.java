@@ -15,15 +15,19 @@ import java.util.ArrayList;
 
 public class LagramGeneralActivity extends UniversalFragment {
 
-    private static final int ID_HIGH_REFRESH = 1;
-    private static final int ID_PERF_CLASS = 2;
-    private static final int ID_HAPTICS_LEVEL = 3;
+    private static final int ID_SHOW_ID_DC = 1;
+    private static final int ID_ID_BOT_API = 2;
+    private static final int ID_SHOW_JOIN_DATE = 3;
+    private static final int ID_PROFILE_NAME_SWITCH = 4;
+    private static final int ID_HIDE_PHONE_NUMBER = 5;
 
-    private static final int ID_SHOW_JOIN_DATE = 10;
-    private static final int ID_OPEN_ARCHIVE_PULL = 11;
+    private static final int ID_HIGH_REFRESH = 10;
+    private static final int ID_PERF_CLASS = 11;
+    private static final int ID_HAPTICS_LEVEL = 12;
 
-    private static final int ID_DISABLE_SPONSORED = 20;
-    private static final int ID_HIDE_SIMILAR_CHANNELS = 21;
+    private static final int ID_OPEN_ARCHIVE_PULL = 20;
+    private static final int ID_DISABLE_SPONSORED = 21;
+    private static final int ID_HIDE_SIMILAR = 22;
 
     @Override
     protected CharSequence getTitle() {
@@ -35,26 +39,73 @@ public class LagramGeneralActivity extends UniversalFragment {
         LagramConfig.ensureLoaded();
         View view = super.createView(context);
         listView.setSections();
+        listView.setSectionsDrawBackground(true);
+        updateBackdropColor();
+        return view;
+    }
+
+    private void updateBackdropColor() {
+        if (fragmentView == null || listView == null) {
+            return;
+        }
         if (LagramConfig.amoledSettingsBackdrop && Theme.isCurrentThemeDark()) {
             fragmentView.setBackgroundColor(0xFF000000);
             listView.setBackgroundColor(0xFF000000);
+        } else {
+            int bg = Theme.getColor(Theme.key_windowBackgroundGray);
+            fragmentView.setBackgroundColor(bg);
+            listView.setBackgroundColor(bg);
         }
-        return view;
     }
 
     @Override
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         LagramConfig.ensureLoaded();
 
-        // Section 1: Performance & Haptics with Segmented Pill Selectors & Icon Switches
+        // Card 1: Profile & Peer Identifiers
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramDetailsHeader)));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_SHOW_ID_DC,
+                R.drawable.msg_info,
+                LocaleController.getString(R.string.LagramShowIdAndDc),
+                null,
+                LagramConfig.showIdAndDc));
+        if (LagramConfig.showIdAndDc) {
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_ID_BOT_API,
+                    R.drawable.msg_bot,
+                    LocaleController.getString(R.string.LagramIdFormatBotApi),
+                    null,
+                    LagramConfig.idFormatBotApi));
+        }
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_SHOW_JOIN_DATE,
+                R.drawable.msg_calendar2,
+                LocaleController.getString(R.string.LagramShowJoinDate),
+                null,
+                LagramConfig.showJoinDate));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_PROFILE_NAME_SWITCH,
+                R.drawable.msg_copy,
+                LocaleController.getString(R.string.LagramProfileNameSwitch),
+                LocaleController.getString(R.string.LagramProfileNameSwitchInfo),
+                LagramConfig.profileNameSwitch));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_HIDE_PHONE_NUMBER,
+                R.drawable.msg_calls,
+                LocaleController.getString(R.string.LagramHidePhoneNumber),
+                null,
+                LagramConfig.hidePhoneNumber));
+        items.add(UItem.asShadow(-1, null));
+
+        // Card 2: Performance & Haptics
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramPerformanceHeader)));
         items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
                 ID_HIGH_REFRESH,
                 R.drawable.msg_speed,
                 LocaleController.getString(R.string.LagramHighRefreshRate),
-                "Sincronización fluida a 120 Hz durante el desplazamiento de listas",
-                LagramConfig.highRefreshRateScroll
-        ));
+                null,
+                LagramConfig.highRefreshRateScroll));
         items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
                 ID_PERF_CLASS,
                 LocaleController.getString(R.string.LagramForcePerfClass),
@@ -65,8 +116,10 @@ public class LagramGeneralActivity extends UniversalFragment {
                         LocaleController.getString(R.string.LagramPerfHigh)
                 },
                 LagramConfig.forcePerformanceClass + 1,
-                which -> LagramConfig.setForcePerformanceClass(which - 1)
-        ));
+                idx -> {
+                    LagramConfig.setForcePerformanceClass(idx - 1);
+                    refreshList();
+                }));
         items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
                 ID_HAPTICS_LEVEL,
                 LocaleController.getString(R.string.LagramHapticsLevel),
@@ -77,75 +130,79 @@ public class LagramGeneralActivity extends UniversalFragment {
                         LocaleController.getString(R.string.LagramHapticsStrong)
                 },
                 LagramConfig.hapticsLevel,
-                LagramConfig::setHapticsLevel
-        ));
-        items.add(UItem.asShadow(null));
+                idx -> {
+                    LagramConfig.setHapticsLevel(idx);
+                    refreshList();
+                }));
+        items.add(UItem.asShadow(-2, null));
 
-        // Section 2: Profile & Chat List Behavior
+        // Card 3: Behavior & Clean Feed
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramBehaviorHeader)));
-        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_SHOW_JOIN_DATE,
-                R.drawable.msg_calendar2,
-                LocaleController.getString(R.string.LagramShowJoinDate),
-                "Mostrar fecha de ingreso en perfiles de grupos y canales",
-                LagramConfig.showJoinDate
-        ));
         items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
                 ID_OPEN_ARCHIVE_PULL,
                 R.drawable.msg_archive,
                 LocaleController.getString(R.string.LagramOpenArchiveOnPull),
-                "Entrar directamente a Chats Archivados al deslizar hacia abajo",
-                LagramConfig.openArchiveOnPull
-        ));
-        items.add(UItem.asShadow(null));
-
-        // Section 3: Anti-Bloat & Sponsored Cleanup
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAntiBloatHeader)));
+                null,
+                LagramConfig.openArchiveOnPull));
         items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
                 ID_DISABLE_SPONSORED,
-                R.drawable.msg_clear,
+                R.drawable.msg_block,
                 LocaleController.getString(R.string.LagramDisableSponsored),
-                "Bloquear anuncios y mensajes patrocinados en canales y bots",
-                LagramConfig.disableSponsoredMessages
-        ));
+                null,
+                LagramConfig.disableSponsoredMessages));
         items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
-                ID_HIDE_SIMILAR_CHANNELS,
+                ID_HIDE_SIMILAR,
                 R.drawable.msg_channel,
                 LocaleController.getString(R.string.LagramHideSimilarChannels),
-                "Ocultar sugerencias de canales similares al unirte",
-                LagramConfig.hideSimilarChannels
-        ));
-        items.add(UItem.asShadow(LocaleController.getString(R.string.LagramGeneralInfo)));
+                null,
+                LagramConfig.hideSimilarChannels));
+        items.add(UItem.asShadow(-3, null));
     }
 
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
-        boolean checkChanged = false;
-        boolean newVal = false;
         switch (item.id) {
-            case ID_HIGH_REFRESH:
-                newVal = LagramConfig.toggleHighRefreshRateScroll();
-                checkChanged = true;
-                break;
+            case ID_SHOW_ID_DC:
+                LagramConfig.toggleShowIdAndDc();
+                refreshList();
+                return;
+            case ID_ID_BOT_API:
+                toggleSwitch(view, LagramConfig.toggleIdFormatBotApi());
+                return;
             case ID_SHOW_JOIN_DATE:
-                newVal = LagramConfig.toggleShowJoinDate();
-                checkChanged = true;
-                break;
+                toggleSwitch(view, LagramConfig.toggleShowJoinDate());
+                return;
+            case ID_PROFILE_NAME_SWITCH:
+                toggleSwitch(view, LagramConfig.toggleProfileNameSwitch());
+                return;
+            case ID_HIDE_PHONE_NUMBER:
+                toggleSwitch(view, LagramConfig.toggleHidePhoneNumber());
+                return;
+            case ID_HIGH_REFRESH:
+                toggleSwitch(view, LagramConfig.toggleHighRefreshRateScroll());
+                return;
             case ID_OPEN_ARCHIVE_PULL:
-                newVal = LagramConfig.toggleOpenArchiveOnPull();
-                checkChanged = true;
-                break;
+                toggleSwitch(view, LagramConfig.toggleOpenArchiveOnPull());
+                return;
             case ID_DISABLE_SPONSORED:
-                newVal = LagramConfig.toggleDisableSponsoredMessages();
-                checkChanged = true;
-                break;
-            case ID_HIDE_SIMILAR_CHANNELS:
-                newVal = LagramConfig.toggleHideSimilarChannels();
-                checkChanged = true;
-                break;
+                toggleSwitch(view, LagramConfig.toggleDisableSponsoredMessages());
+                return;
+            case ID_HIDE_SIMILAR:
+                toggleSwitch(view, LagramConfig.toggleHideSimilarChannels());
+                return;
         }
-        if (checkChanged && view instanceof LagramSettingsComponents.IconSwitchCell) {
-            ((LagramSettingsComponents.IconSwitchCell) view).setChecked(newVal);
+    }
+
+    private void toggleSwitch(View view, boolean checked) {
+        if (view instanceof LagramSettingsComponents.IconSwitchCell) {
+            ((LagramSettingsComponents.IconSwitchCell) view).setChecked(checked, true);
+        }
+        refreshList();
+    }
+
+    private void refreshList() {
+        if (listView != null && listView.adapter != null) {
+            listView.adapter.update(true);
         }
     }
 

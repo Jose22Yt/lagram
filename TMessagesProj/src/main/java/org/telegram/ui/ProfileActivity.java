@@ -5530,6 +5530,30 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         nameTextView.setScrollNonFitText(true);
         nameTextView.setFocusable(true);
         nameTextView.setEllipsizeByGradient(true);
+        nameTextView.setOnClickListener(v -> {
+            LagramConfig.ensureLoaded();
+            if (!LagramConfig.profileNameSwitch) {
+                return;
+            }
+            String toCopy = null;
+            if (userId != 0) {
+                TLRPC.User u = getMessagesController().getUser(userId);
+                if (u != null) {
+                    String uname = UserObject.getPublicUsername(u);
+                    toCopy = !TextUtils.isEmpty(uname) ? "@" + uname : UserObject.getUserName(u);
+                }
+            } else if (chatId != 0) {
+                TLRPC.Chat c = getMessagesController().getChat(chatId);
+                if (c != null) {
+                    String uname = ChatObject.getPublicUsername(c);
+                    toCopy = !TextUtils.isEmpty(uname) ? "@" + uname : c.title;
+                }
+            }
+            if (!TextUtils.isEmpty(toCopy)) {
+                AndroidUtilities.addToClipboard(toCopy);
+                BulletinFactory.of(ProfileActivity.this).createCopyBulletin(LocaleController.getString(R.string.TextCopied)).show();
+            }
+        });
         avatarContainer2.addView(nameTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 109, -6, 0, 0));
 
         onlineTextView = new AnimatedClickableSmallTextView(context) {
@@ -11087,7 +11111,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     phoneRow = rowCount++;
                 }
                 LagramConfig.ensureLoaded();
-                if (LagramConfig.showIdAndDc && userId != 0) {
+                if ((LagramConfig.showIdAndDc || LagramConfig.showJoinDate) && userId != 0) {
                     idDcRow = rowCount++;
                 }
                 if (userInfo != null && !TextUtils.isEmpty(userInfo.about)) {
@@ -13676,10 +13700,19 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             containsGift = !myProfile && today && !getMessagesController().premiumPurchaseBlocked();
                         }
                     } else if (position == idDcRow) {
+                        LagramConfig.ensureLoaded();
                         String idText = getFormattedPeerId();
                         int dcId = getPeerDcId();
-                        String label = dcId > 0 ? ("ID • DC" + dcId) : "ID";
-                        detailCell.setTextAndValue(idText != null ? idText : "", label, false);
+                        String joinDate = (LagramConfig.showJoinDate && userId != 0) ? LagramConfig.estimateAccountCreationDate(userId) : "";
+                        if (LagramConfig.showIdAndDc) {
+                            String label = dcId > 0 ? ("ID • DC" + dcId) : "ID";
+                            if (!TextUtils.isEmpty(joinDate)) {
+                                label = label + " • " + joinDate;
+                            }
+                            detailCell.setTextAndValue(idText != null ? idText : "", label, false);
+                        } else {
+                            detailCell.setTextAndValue(!TextUtils.isEmpty(joinDate) ? joinDate : (idText != null ? idText : ""), LocaleController.getString(R.string.LagramShowJoinDate), false);
+                        }
                     } else if (position == phoneRow) {
                         String text;
                         TLRPC.User user = getMessagesController().getUser(userId);
