@@ -19,6 +19,8 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Paint;
+import androidx.core.graphics.ColorUtils;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.BitmapDrawable;
@@ -769,15 +771,87 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         glassMode = true;
     }
 
+    private Paint lagramAdaptivePillPaint;
+    private Paint lagramAdaptiveStrokePaint;
+    private final android.graphics.RectF lagramPillRect = new android.graphics.RectF();
+
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        org.telegram.messenger.LagramConfig.ensureLoaded();
+        int hdrStyle = org.telegram.messenger.LagramConfig.chatHeaderStyle;
+        if (hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_ADAPTIVE
+                && getMeasuredWidth() > 0 && getMeasuredHeight() > 0) {
+            if (lagramAdaptivePillPaint == null) {
+                lagramAdaptivePillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                lagramAdaptiveStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                lagramAdaptiveStrokePaint.setStyle(Paint.Style.STROKE);
+                lagramAdaptiveStrokePaint.setStrokeWidth(AndroidUtilities.dpf2(0.8f));
+            }
+            final int actionBarHeight = ActionBar.getCurrentActionBarHeight();
+            final int topY = (occupyStatusBar ? AndroidUtilities.statusBarHeight : 0) + (actionBarHeight - dp(40)) / 2;
+            int contentW = Math.min(getMeasuredWidth() - dp(4), Math.max(dp(116), getVisualWidth()));
+            int startX = Math.max(0, leftPadding - dp(6));
+            int endX = Math.min(getMeasuredWidth() - dp(2), startX + contentW);
+            boolean isDark = Theme.isCurrentThemeDark();
+            lagramAdaptivePillPaint.setColor(ColorUtils.setAlphaComponent(isDark ? 0xFF1F2229 : 0xFFFFFFFF, isDark ? 195 : 215));
+            lagramAdaptiveStrokePaint.setColor(ColorUtils.setAlphaComponent(isDark ? 0xFFFFFFFF : 0xFF000000, isDark ? 28 : 18));
+            lagramPillRect.set(startX, topY, endX, topY + dp(40));
+            canvas.drawRoundRect(lagramPillRect, dp(20), dp(20), lagramAdaptivePillPaint);
+            canvas.drawRoundRect(lagramPillRect, dp(20), dp(20), lagramAdaptiveStrokePaint);
+        }
+        super.dispatchDraw(canvas);
+    }
+
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        org.telegram.messenger.LagramConfig.ensureLoaded();
+        final int hdrStyle = org.telegram.messenger.LagramConfig.chatHeaderStyle;
         final int actionBarHeight = ActionBar.getCurrentActionBarHeight();
-        final int viewTop = (actionBarHeight - avatarImageView.getMeasuredHeight() - 2) / 2 + (occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
-        final int subtitleTop = viewTop + dp(glassMode ? 23.66f : 24);
+        final int avW = avatarImageView.getMeasuredWidth();
+        final int avH = avatarImageView.getMeasuredHeight();
+        if (avW > 0) {
+            avatarImageView.setRoundRadius(org.telegram.messenger.LagramConfig.getAvatarRoundRadius(avW));
+        }
+        final int viewTop = (actionBarHeight - avH - 2) / 2 + (occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
+        final int subtitleTop = viewTop + dp(hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_COMPACT ? 20.5f : (glassMode ? 23.66f : 24));
 
-        avatarImageView.layout(1 + leftPadding, 1 + viewTop, 1 + leftPadding + avatarImageView.getMeasuredWidth(), 1 + viewTop + avatarImageView.getMeasuredHeight());
-        int l = leftPadding + (avatarImageView.getVisibility() == VISIBLE ? dp(glassMode ? 49.66f : 55) : dp(glassMode ? 13 : 1)) + rightAvatarPadding;
         SimpleTextView titleTextLargerCopyView = this.titleTextLargerCopyView.get();
+        final int totalW = right - left;
+
+        if (hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_IOS) {
+            // iOS Centered: title & subtitle centered, avatar cleanly placed on the right edge
+            int avLeft = Math.max(dp(4), totalW - avW - dp(8));
+            avatarImageView.layout(avLeft, 1 + viewTop, avLeft + avW, 1 + viewTop + avH);
+            int textAreaW = Math.max(dp(40), avLeft - dp(8));
+            int titleW = Math.min(textAreaW, titleTextView.getMeasuredWidth());
+            int titleL = Math.max(dp(4), (textAreaW - titleW) / 2);
+            if (getSubtitleTextView().getVisibility() != GONE) {
+                titleTextView.layout(titleL, viewTop + dp(1.66f) - titleTextView.getPaddingTop(), titleL + titleW, viewTop + titleTextView.getTextHeight() + dp(1.66f) - titleTextView.getPaddingTop() + titleTextView.getPaddingBottom());
+                if (titleTextLargerCopyView != null) {
+                    titleTextLargerCopyView.layout(titleL, viewTop + dp(1.66f), titleL + titleW, viewTop + titleTextLargerCopyView.getTextHeight() + dp(1.66f));
+                }
+            } else {
+                titleTextView.layout(titleL, viewTop + dp(11) - titleTextView.getPaddingTop(), titleL + titleW, viewTop + titleTextView.getTextHeight() + dp(11) - titleTextView.getPaddingTop() + titleTextView.getPaddingBottom());
+            }
+            if (subtitleTextView != null) {
+                int subW = Math.min(textAreaW, subtitleTextView.getMeasuredWidth());
+                int subL = Math.max(dp(4), (textAreaW - subW) / 2);
+                subtitleTextView.layout(subL, subtitleTop, subL + subW, subtitleTop + subtitleTextView.getTextHeight());
+            } else if (animatedSubtitleTextView != null) {
+                int subW = Math.min(textAreaW, animatedSubtitleTextView.getMeasuredWidth());
+                int subL = Math.max(dp(4), (textAreaW - subW) / 2);
+                animatedSubtitleTextView.layout(subL, subtitleTop, subL + subW, subtitleTop + animatedSubtitleTextView.getTextHeight());
+            }
+            return;
+        }
+
+        final int avShift = hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_ADAPTIVE ? dp(4) : 0;
+        final float avScale = hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_COMPACT ? 0.84f : 1f;
+        avatarImageView.setScaleX(avScale);
+        avatarImageView.setScaleY(avScale);
+
+        avatarImageView.layout(1 + leftPadding + avShift, 1 + viewTop, 1 + leftPadding + avShift + avW, 1 + viewTop + avH);
+        int l = leftPadding + avShift + (avatarImageView.getVisibility() == VISIBLE ? dp(hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_COMPACT ? 45f : (glassMode ? 49.66f : 55)) : dp(glassMode ? 13 : 1)) + rightAvatarPadding;
         if (getSubtitleTextView().getVisibility() != GONE) {
             titleTextView.layout(l, viewTop + dp(1.66f) - titleTextView.getPaddingTop(), l + titleTextView.getMeasuredWidth(), viewTop + titleTextView.getTextHeight() + dp(1.66f) - titleTextView.getPaddingTop() + titleTextView.getPaddingBottom());
             if (titleTextLargerCopyView != null) {

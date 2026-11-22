@@ -1,274 +1,249 @@
 package org.telegram.ui.lagram;
 
-import android.content.Context;
 import android.view.View;
 
 import org.telegram.messenger.LagramConfig;
-import org.telegram.messenger.LagramMessageHistoryDb;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Components.BulletinFactory;
-import org.telegram.ui.Components.IconBackgroundColors;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
-import org.telegram.ui.Components.UniversalFragment;
 
 import java.util.ArrayList;
 
-public class LagramPrivacyActivity extends UniversalFragment {
+public class LagramPrivacyActivity extends BaseLagramSettingsActivity {
 
-    public static final int SUB_HOME = 0;
-    public static final int SUB_GHOST_DETAILS = 1;
+    private static final int ID_PREVIEW_DELETED = 300;
 
-    private final int subPage;
+    private static final int ID_GHOST_MASTER = 301;
+    private static final int ID_GHOST_READ_MSG = 302;
+    private static final int ID_GHOST_READ_STORY = 303;
+    private static final int ID_GHOST_TYPING = 304;
+    private static final int ID_GHOST_ONLINE = 305;
+    private static final int ID_GHOST_OFFLINE_AFTER = 306;
+    private static final int ID_GHOST_MARK_ON_SEND = 307;
 
-    private static final int ID_NAV_GHOST_DETAILS = 100;
+    private static final int ID_SAVE_DELETED = 310;
+    private static final int ID_SAVE_EDITED = 311;
+    private static final int ID_DELETED_BUBBLE_COLOR = 312;
+    private static final int ID_DELETED_TEXT_COLOR = 313;
+    private static final int ID_DELETED_ICON = 314;
+    private static final int ID_DELETED_DIM = 315;
+    private static final int ID_DELETED_STRIKE = 316;
+    private static final int ID_DELETED_TIME = 317;
 
-    private static final int ID_GHOST_MASTER = 1;
-    private static final int ID_GHOST_DONT_READ_MSG = 2;
-    private static final int ID_GHOST_DONT_READ_STORIES = 3;
-    private static final int ID_GHOST_DONT_SEND_TYPING = 4;
-    private static final int ID_GHOST_DONT_SEND_ONLINE = 5;
-    private static final int ID_GHOST_OFFLINE_AFTER_SEND = 6;
-    private static final int ID_GHOST_MARK_READ_ON_SEND = 7;
+    private static final int ID_ALLOW_SCREENSHOTS = 320;
+    private static final int ID_BYPASS_NO_FORWARDS = 321;
 
-    private static final int ID_SAVE_DELETED = 10;
-    private static final int ID_SAVE_EDITED = 11;
-    private static final int ID_CLEAR_HISTORY_DB = 12;
+    private static final int[] BUBBLE_TINT_PALETTE = {
+            0,          // Default / none
+            0xFFE53935, // Crimson
+            0xFFFB8C00, // Amber
+            0xFF8E24AA, // Violet
+            0xFF00ACC1, // Cyan
+            0xFF43A047, // Emerald
+            0xFFD81B60, // Rose
+            0xFF546E7A  // Slate
+    };
 
-    private static final int ID_ALLOW_SCREENSHOTS = 20;
-    private static final int ID_BYPASS_NO_FORWARDS = 21;
-
-    public LagramPrivacyActivity() {
-        this(SUB_HOME);
-    }
-
-    public LagramPrivacyActivity(int subPage) {
-        super();
-        this.subPage = subPage;
-    }
+    private static final int[] TEXT_COLOR_PALETTE = {
+            0,          // Default theme time color
+            0xFFFF5252, // Coral Red
+            0xFFFFAB40, // Warm Orange
+            0xFFCE93D8, // Soft Violet
+            0xFF4DD0E1, // Bright Cyan
+            0xFF69F0AE, // Mint Green
+            0xFFFF80AB, // Pink
+            0xFFFFFFFF  // Pure White
+    };
 
     @Override
     protected CharSequence getTitle() {
-        if (subPage == SUB_GHOST_DETAILS) {
-            return LocaleController.getString(R.string.LagramGhostModeHeader);
-        }
         return LocaleController.getString(R.string.LagramCategoryPrivacy);
-    }
-
-    @Override
-    public View createView(Context context) {
-        LagramConfig.ensureLoaded();
-        View view = super.createView(context);
-        listView.setSections();
-        listView.setSectionsDrawBackground(true);
-        if (LagramConfig.amoledSettingsBackdrop && Theme.isCurrentThemeDark()) {
-            fragmentView.setBackgroundColor(0xFF000000);
-            listView.setBackgroundColor(0xFF000000);
-        }
-        return view;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (listView != null && listView.adapter != null) {
-            listView.adapter.update(true);
-        }
     }
 
     @Override
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         LagramConfig.ensureLoaded();
 
-        if (subPage == SUB_GHOST_DETAILS) {
-            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramGhostModeHeader)));
-            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                    ID_GHOST_MASTER,
-                    R.drawable.msg_secret,
-                    LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramGhostModeMaster)),
-                    "Interruptor maestro que activa las reglas invisibles seleccionadas abajo",
-                    LagramConfig.ghostModeEnabled
-            ));
-            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                    ID_GHOST_DONT_READ_MSG,
-                    R.drawable.msg_seen,
-                    LocaleController.getString(R.string.LagramGhostDontReadMessages),
-                    "Leer chats sin marcar el doble check azul al remitente",
-                    LagramConfig.ghostDontReadMessages
-            ));
-            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                    ID_GHOST_DONT_READ_STORIES,
-                    R.drawable.msg_menu_stories,
-                    LocaleController.getString(R.string.LagramGhostDontReadStories),
-                    "Ver historias de forma anónima sin aparecer en la lista de vistos",
-                    LagramConfig.ghostDontReadStories
-            ));
-            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                    ID_GHOST_DONT_SEND_TYPING,
-                    R.drawable.msg_edit,
-                    LocaleController.getString(R.string.LagramGhostDontSendTyping),
-                    "Ocultar indicadores de 'escribiendo...' o 'grabando audio...'",
-                    LagramConfig.ghostDontSendTyping
-            ));
-            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                    ID_GHOST_DONT_SEND_ONLINE,
-                    R.drawable.msg_contacts,
-                    LocaleController.getString(R.string.LagramGhostDontSendOnline),
-                    "Mantener estado desconectado incluso con Lagram abierto",
-                    LagramConfig.ghostDontSendOnline
-            ));
-            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                    ID_GHOST_OFFLINE_AFTER_SEND,
-                    R.drawable.msg_send,
-                    LocaleController.getString(R.string.LagramGhostOfflineAfterSend),
-                    "Enviar paquete de desconexión inmediatamente tras enviar un mensaje",
-                    LagramConfig.ghostSendOfflineAfterSend
-            ));
-            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                    ID_GHOST_MARK_READ_ON_SEND,
-                    R.drawable.msg_check_s,
-                    LocaleController.getString(R.string.LagramGhostMarkReadOnSend),
-                    "Marcar los mensajes como leídos automáticamente cuando tú respondas",
-                    LagramConfig.ghostMarkReadOnSend
-            ));
-            items.add(UItem.asShadow(-10, LocaleController.getString(R.string.LagramPrivacyInfo)));
-            return;
-        }
-
-        // SUB_HOME: Compact Hub with Ghost Master + Sub-fragment card + Anti-Delete + Anti-Restrictions
+        // 1. REAL Deleted Message & Ghost Preview over REAL Lagram wallpaper!
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramGhostModeHeader)));
+        items.add(LagramRealPreviews.RealDeletedMessagePreviewCell.Factory.of(ID_PREVIEW_DELETED));
         items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_GHOST_MASTER,
-                R.drawable.msg_secret,
-                LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramGhostModeMaster)),
-                "Navega, lee mensajes y mira historias sin dejar rastro",
-                LagramConfig.ghostModeEnabled
-        ));
-        items.add(LagramSettingsComponents.SubCategoryCardCell.Factory.of(
-                ID_NAV_GHOST_DETAILS,
-                IconBackgroundColors.BLUE_DEEP,
-                R.drawable.msg_seen,
-                "Reglas del Modo Fantasma",
-                "Lectura de mensajes, historias, escribiendo y estado en línea",
-                LagramConfig.ghostModeEnabled ? "Activo" : "Configurar"
-        ));
-        items.add(UItem.asShadow(-1, null));
+                ID_GHOST_MASTER, R.drawable.msg_secret,
+                LocaleController.getString(R.string.LagramGhostModeMaster),
+                null,
+                LagramConfig.ghostModeEnabled));
+        if (LagramConfig.ghostModeEnabled) {
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                    ID_GHOST_READ_MSG, 0,
+                    LocaleController.getString(R.string.LagramGhostDontReadMessages),
+                    null,
+                    LagramConfig.ghostDontReadMessages));
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                    ID_GHOST_READ_STORY, 0,
+                    LocaleController.getString(R.string.LagramGhostDontReadStories),
+                    null,
+                    LagramConfig.ghostDontReadStories));
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                    ID_GHOST_TYPING, 0,
+                    LocaleController.getString(R.string.LagramGhostDontSendTyping),
+                    null,
+                    LagramConfig.ghostDontSendTyping));
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                    ID_GHOST_ONLINE, 0,
+                    LocaleController.getString(R.string.LagramGhostDontSendOnline),
+                    null,
+                    LagramConfig.ghostDontSendOnline));
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                    ID_GHOST_OFFLINE_AFTER, 0,
+                    LocaleController.getString(R.string.LagramGhostOfflineAfterSend),
+                    null,
+                    LagramConfig.ghostSendOfflineAfterSend));
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                    ID_GHOST_MARK_ON_SEND, 0,
+                    LocaleController.getString(R.string.LagramGhostMarkReadOnSend),
+                    null,
+                    LagramConfig.ghostMarkReadOnSend));
+        }
+        items.add(UItem.asShadow(null));
 
-        // Section 2: Anti-Delete & Edit History
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramHistoryHeader)));
+        // 2. Deleted & Edited Message History + Full Visual Customization!
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramDeletedStyleHeader)));
         items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_SAVE_DELETED,
-                R.drawable.msg_delete,
+                ID_SAVE_DELETED, R.drawable.msg_delete,
                 LocaleController.getString(R.string.LagramSaveDeletedMessages),
-                "Conservar localmente los mensajes que otros usuarios eliminen",
-                LagramConfig.saveDeletedMessages
-        ));
+                null,
+                LagramConfig.saveDeletedMessages));
         items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_SAVE_EDITED,
-                R.drawable.msg_edit,
+                ID_SAVE_EDITED, R.drawable.msg_edit,
                 LocaleController.getString(R.string.LagramSaveEditedMessages),
-                "Guardar todas las versiones anteriores cuando alguien edite un mensaje",
-                LagramConfig.saveEditedMessages
-        ));
-        items.add(UItem.asButton(ID_CLEAR_HISTORY_DB, R.drawable.msg_clear, LocaleController.getString(R.string.LagramClearHistoryDb)).red());
-        items.add(UItem.asShadow(-2, null));
+                null,
+                LagramConfig.saveEditedMessages));
+        items.add(OpexgramStyleWidgets.OpexColorSwatchesCell.Factory.of(
+                ID_DELETED_BUBBLE_COLOR,
+                LocaleController.getString(R.string.LagramDeletedBubbleColor),
+                BUBBLE_TINT_PALETTE,
+                LagramConfig.deletedBubbleTintColor,
+                color -> {
+                    LagramConfig.setDeletedBubbleTintColor(color);
+                    refreshList();
+                }));
+        items.add(OpexgramStyleWidgets.OpexColorSwatchesCell.Factory.of(
+                ID_DELETED_TEXT_COLOR,
+                LocaleController.getString(R.string.LagramDeletedTextColor),
+                TEXT_COLOR_PALETTE,
+                LagramConfig.deletedTextColor,
+                color -> {
+                    LagramConfig.setDeletedTextColor(color);
+                    refreshList();
+                }));
+        items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
+                ID_DELETED_ICON,
+                LocaleController.getString(R.string.LagramDeletedIconStyle),
+                new String[]{
+                        "\uD83D\uDDD1 " + LocaleController.getString(R.string.LagramDeletedIconTrash),
+                        "\uD83D\uDC7B " + LocaleController.getString(R.string.LagramDeletedIconGhost),
+                        "\uD83D\uDC41 " + LocaleController.getString(R.string.LagramDeletedIconEye),
+                        "\u2715 " + LocaleController.getString(R.string.LagramDeletedIconCross),
+                        "\uD83D\uDD25 " + LocaleController.getString(R.string.LagramDeletedIconFlame),
+                        LocaleController.getString(R.string.LagramDeletedIconNone)
+                },
+                LagramConfig.deletedIconStyle,
+                idx -> {
+                    LagramConfig.setDeletedIconStyle(idx);
+                    refreshList();
+                }));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_DELETED_DIM, 0,
+                LocaleController.getString(R.string.LagramDeletedMessageDim),
+                LocaleController.getString(R.string.LagramDeletedMessageDimDesc),
+                LagramConfig.deletedMessageDim));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_DELETED_STRIKE, 0,
+                LocaleController.getString(R.string.LagramDeletedMessageStrike),
+                LocaleController.getString(R.string.LagramDeletedMessageStrikeDesc),
+                LagramConfig.deletedMessageStrike));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_DELETED_TIME, 0,
+                LocaleController.getString(R.string.LagramShowDeletedTime),
+                LocaleController.getString(R.string.LagramShowDeletedTimeDesc),
+                LagramConfig.showDeletedTime));
+        items.add(UItem.asShadow(null));
 
-        // Section 3: Anti-Restrictions
+        // 3. Anti-Restrictions
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAntiRestrictHeader)));
         items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_ALLOW_SCREENSHOTS,
-                R.drawable.msg_camera,
+                ID_ALLOW_SCREENSHOTS, 0,
                 LocaleController.getString(R.string.LagramAllowScreenshots),
-                "Permitir capturas de pantalla en chats secretos y contenido restringido",
-                LagramConfig.allowScreenshots
-        ));
+                null,
+                LagramConfig.allowScreenshots));
         items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_BYPASS_NO_FORWARDS,
-                R.drawable.msg_copy,
+                ID_BYPASS_NO_FORWARDS, 0,
                 LocaleController.getString(R.string.LagramBypassNoForwards),
-                "Permitir copiar texto y guardar multimedia en canales protegidos",
-                LagramConfig.bypassNoForwards
-        ));
-        items.add(UItem.asShadow(-3, LocaleController.getString(R.string.LagramPrivacyInfo)));
+                null,
+                LagramConfig.bypassNoForwards));
+        items.add(UItem.asShadow(LocaleController.getString(R.string.LagramPrivacyInfo)));
     }
 
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
-        if (item.id == ID_NAV_GHOST_DETAILS) {
-            presentFragment(new LagramPrivacyActivity(SUB_GHOST_DETAILS));
-            return;
-        }
-        if (item.id == ID_CLEAR_HISTORY_DB) {
-            LagramMessageHistoryDb.clearAll();
-            BulletinFactory.of(this).createSimpleBulletin(R.raw.ic_delete, LocaleController.getString(R.string.LagramHistoryClearedToast)).show();
-            return;
-        }
-        boolean checkChanged = false;
-        boolean newVal = false;
         switch (item.id) {
             case ID_GHOST_MASTER:
-                newVal = LagramConfig.toggleGhostMode();
-                checkChanged = true;
-                if (subPage == SUB_HOME && listView != null && listView.adapter != null) {
-                    listView.adapter.update(true);
-                }
+                LagramConfig.toggleGhostMode();
+                refreshList();
                 break;
-            case ID_GHOST_DONT_READ_MSG:
-                newVal = LagramConfig.toggleGhostDontReadMessages();
-                checkChanged = true;
+            case ID_GHOST_READ_MSG:
+                LagramConfig.toggleGhostDontReadMessages();
+                refreshList();
                 break;
-            case ID_GHOST_DONT_READ_STORIES:
-                newVal = LagramConfig.toggleGhostDontReadStories();
-                checkChanged = true;
+            case ID_GHOST_READ_STORY:
+                LagramConfig.toggleGhostDontReadStories();
+                refreshList();
                 break;
-            case ID_GHOST_DONT_SEND_TYPING:
-                newVal = LagramConfig.toggleGhostDontSendTyping();
-                checkChanged = true;
+            case ID_GHOST_TYPING:
+                LagramConfig.toggleGhostDontSendTyping();
+                refreshList();
                 break;
-            case ID_GHOST_DONT_SEND_ONLINE:
-                newVal = LagramConfig.toggleGhostDontSendOnline();
-                checkChanged = true;
+            case ID_GHOST_ONLINE:
+                LagramConfig.toggleGhostDontSendOnline();
+                refreshList();
                 break;
-            case ID_GHOST_OFFLINE_AFTER_SEND:
-                newVal = LagramConfig.toggleGhostSendOfflineAfterSend();
-                checkChanged = true;
+            case ID_GHOST_OFFLINE_AFTER:
+                LagramConfig.toggleGhostSendOfflineAfterSend();
+                refreshList();
                 break;
-            case ID_GHOST_MARK_READ_ON_SEND:
-                newVal = LagramConfig.toggleGhostMarkReadOnSend();
-                checkChanged = true;
+            case ID_GHOST_MARK_ON_SEND:
+                LagramConfig.toggleGhostMarkReadOnSend();
+                refreshList();
                 break;
             case ID_SAVE_DELETED:
-                newVal = LagramConfig.toggleSaveDeletedMessages();
-                if (LagramConfig.saveDeletedMessages) {
-                    LagramMessageHistoryDb.ensureCacheLoaded();
-                }
-                checkChanged = true;
+                LagramConfig.toggleSaveDeletedMessages();
+                refreshList();
                 break;
             case ID_SAVE_EDITED:
-                newVal = LagramConfig.toggleSaveEditedMessages();
-                if (LagramConfig.saveEditedMessages) {
-                    LagramMessageHistoryDb.ensureCacheLoaded();
-                }
-                checkChanged = true;
+                LagramConfig.toggleSaveEditedMessages();
+                refreshList();
+                break;
+            case ID_DELETED_DIM:
+                LagramConfig.toggleDeletedMessageDim();
+                refreshList();
+                break;
+            case ID_DELETED_STRIKE:
+                LagramConfig.toggleDeletedMessageStrike();
+                refreshList();
+                break;
+            case ID_DELETED_TIME:
+                LagramConfig.toggleShowDeletedTime();
+                refreshList();
                 break;
             case ID_ALLOW_SCREENSHOTS:
-                newVal = LagramConfig.toggleAllowScreenshots();
-                checkChanged = true;
+                LagramConfig.toggleAllowScreenshots();
+                refreshList();
                 break;
             case ID_BYPASS_NO_FORWARDS:
-                newVal = LagramConfig.toggleBypassNoForwards();
-                checkChanged = true;
+                LagramConfig.toggleBypassNoForwards();
+                refreshList();
                 break;
         }
-        if (checkChanged && view instanceof OpexgramStyleWidgets.OpexSwitchCell) {
-            ((OpexgramStyleWidgets.OpexSwitchCell) view).setChecked(newVal);
-        }
-    }
-
-    @Override
-    protected boolean onLongClick(UItem item, View view, int position, float x, float y) {
-        return false;
     }
 }

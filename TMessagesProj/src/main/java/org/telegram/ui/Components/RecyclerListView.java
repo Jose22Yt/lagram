@@ -3112,11 +3112,15 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
         public void run() {
             int dy;
             multiSelectionListener.getPaddings(listPaddings);
+            org.telegram.messenger.LagramConfig.ensureLoaded();
+            float speedDp = org.telegram.messenger.LagramConfig.fastSelection
+                    ? (6f + Math.max(1, Math.min(10, org.telegram.messenger.LagramConfig.selectionScrollSpeed)) * 2.4f)
+                    : 12f;
             if (multiselectScrollToTop) {
-                dy = -AndroidUtilities.dp(12f);
+                dy = -AndroidUtilities.dp(speedDp);
                 chekMultiselect(0, listPaddings[0]);
             } else {
-                dy = AndroidUtilities.dp(12f);
+                dy = AndroidUtilities.dp(speedDp);
                 chekMultiselect(0, getMeasuredHeight() - listPaddings[1]);
             }
             multiSelectionListener.scrollBy(dy);

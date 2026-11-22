@@ -3886,7 +3886,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                 canvas.drawRect(0, 0, cw, ch, lagramCardPaint);
                 lagramCardPaint.setColor(cardColor);
                 AndroidUtilities.rectTmp.set(dp(8), dp(2.5f), cw - dp(8), ch - dp(2.5f));
-                float cardRad = dp(18);
+                float cardRad = dp(org.telegram.messenger.LagramConfig.getEffectiveCardRadiusDp());
                 canvas.drawRoundRect(AndroidUtilities.rectTmp, cardRad, cardRad, lagramCardPaint);
             }
         }

@@ -119,7 +119,12 @@ public final class LagramMessageHistoryDb extends SQLiteOpenHelper {
         });
     }
 
+    public static final int PREVIEW_DELETED_MSG_ID = -777001;
+
     public static boolean isMessageDeleted(int account, long dialogId, int messageId) {
+        if (messageId == PREVIEW_DELETED_MSG_ID) {
+            return true;
+        }
         if (deletedKeys.isEmpty()) {
             if (LagramConfig.saveDeletedMessages && !cacheLoaded) {
                 ensureCacheLoaded();

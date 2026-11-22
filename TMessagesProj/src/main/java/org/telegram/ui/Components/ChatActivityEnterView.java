@@ -6032,6 +6032,7 @@ lagramGlassFactory = factory;
                 return false;
             }
         });
+        org.telegram.ui.lagram.LagramTypingAnimEngine.attach(messageEditText);
         messageEditText.addTextChangedListener(new TextWatcher() {
 
             private boolean processChange;
@@ -6054,31 +6055,6 @@ lagramGlassFactory = factory;
             public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
                 if (ignorePrevTextChange) {
                     return;
-                }
-                if (count > 0 && org.telegram.messenger.LagramConfig.textAppearAnimation && messageEditText != null) {
-                    messageEditText.animate().cancel();
-                    if (org.telegram.messenger.LagramConfig.textAnimSlide) {
-                        messageEditText.setTranslationY(-AndroidUtilities.dp(2.5f));
-                    }
-                    if (org.telegram.messenger.LagramConfig.textAnimScale) {
-                        messageEditText.setScaleX(0.985f);
-                        messageEditText.setScaleY(0.985f);
-                    }
-                    if (org.telegram.messenger.LagramConfig.textAnimBlur) {
-                        messageEditText.setAlpha(0.76f);
-                    }
-                    if (org.telegram.messenger.LagramConfig.textAnimRotate) {
-                        messageEditText.setRotation(-0.6f);
-                    }
-                    messageEditText.animate()
-                            .translationY(0f)
-                            .scaleX(1f)
-                            .scaleY(1f)
-                            .alpha(1f)
-                            .rotation(0f)
-                            .setDuration(150)
-                            .setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT)
-                            .start();
                 }
 
                 boolean allowChangeToSmile = true;

@@ -450,9 +450,17 @@ public class Switch extends View implements Theme.Colorable {
             paint.setColor(color);
             paint2.setColor(color);
 
-            rectF.set(x, y, x + width, y + AndroidUtilities.dpf2(14));
-            canvasToDraw.drawRoundRect(rectF, AndroidUtilities.dpf2(7), AndroidUtilities.dpf2(7), paint);
-            canvasToDraw.drawCircle(tx, ty, AndroidUtilities.dpf2(10), paint);
+            org.telegram.messenger.LagramConfig.ensureLoaded();
+            if (org.telegram.messenger.LagramConfig.materialControls) {
+                float trackH = AndroidUtilities.dpf2(20);
+                float trackY = (getMeasuredHeight() - trackH) * 0.5f;
+                rectF.set(x - AndroidUtilities.dpf2(2), trackY, x + width + AndroidUtilities.dpf2(2), trackY + trackH);
+                canvasToDraw.drawRoundRect(rectF, trackH * 0.5f, trackH * 0.5f, paint);
+            } else {
+                rectF.set(x, y, x + width, y + AndroidUtilities.dpf2(14));
+                canvasToDraw.drawRoundRect(rectF, AndroidUtilities.dpf2(7), AndroidUtilities.dpf2(7), paint);
+                canvasToDraw.drawCircle(tx, ty, AndroidUtilities.dpf2(10), paint);
+            }
 
             if (a == 0 && rippleDrawable != null) {
                 rippleDrawable.setBounds(tx - AndroidUtilities.dp(18), ty - AndroidUtilities.dp(18), tx + AndroidUtilities.dp(18), ty + AndroidUtilities.dp(18));

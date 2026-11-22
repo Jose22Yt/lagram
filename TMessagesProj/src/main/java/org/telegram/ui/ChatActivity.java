@@ -4616,12 +4616,22 @@ public class ChatActivity extends BaseFragment implements
             inputIslandDrawable.setAlpha(Math.round(255 * (Math.max(5, org.telegram.messenger.LagramConfig.chatBoxContrast) / 160f)));
         } else if (org.telegram.messenger.LagramConfig.chatBoxStyle == org.telegram.messenger.LagramConfig.CHAT_BOX_EXPRESSIVE) {
             inputIslandDrawable.setAlpha(Math.round(255 * (Math.max(30, org.telegram.messenger.LagramConfig.chatBoxContrast) / 100f)));
+        } else if (org.telegram.messenger.LagramConfig.chatBoxStyle == org.telegram.messenger.LagramConfig.CHAT_BOX_IOS_GLASS) {
+            inputIslandDrawable.setAlpha(Math.round(255 * (Math.max(20, org.telegram.messenger.LagramConfig.chatBoxContrast) / 115f)));
         }
         chatInputViewsContainer.setInputIslandBubbleDrawable(inputIslandDrawable);
         chatInputViewsContainer.setUnderKeyboardBackgroundDrawable(
             glassBackgroundDrawableFactoryFrosted.create(chatInputViewsContainer, blurredBackgroundColorProvider));
-        if (actionBar != null && !org.telegram.messenger.LagramConfig.chatHeaderExpressive) {
-            actionBar.doNotDrawGlassMenu = true;
+        if (actionBar != null) {
+            int hdrStyle = org.telegram.messenger.LagramConfig.chatHeaderStyle;
+            if (hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_DEFAULT) {
+                actionBar.doNotDrawGlassMenu = true;
+            } else if (hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_IOS
+                    || hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_ADAPTIVE
+                    || hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_EXPRESSIVE) {
+                actionBar.doNotDrawGlassMenu = false;
+                actionBar.setCastShadows(false);
+            }
         }
 
 
@@ -45216,7 +45226,7 @@ public class ChatActivity extends BaseFragment implements
 
     public boolean supportsThanosEffect() {
         org.telegram.messenger.LagramConfig.ensureLoaded();
-        return org.telegram.messenger.LagramConfig.deleteEffect != org.telegram.messenger.LagramConfig.DELETE_EFFECT_DEFAULT
+        return org.telegram.messenger.LagramConfig.deleteEffect == org.telegram.messenger.LagramConfig.DELETE_EFFECT_THANOS
                 && ThanosEffect.supports()
                 && LiteMode.isEnabled(LiteMode.FLAG_CHAT_THANOS);
     }

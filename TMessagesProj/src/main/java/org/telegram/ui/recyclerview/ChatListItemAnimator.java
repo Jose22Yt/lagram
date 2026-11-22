@@ -1561,10 +1561,43 @@ public class ChatListItemAnimator extends DefaultItemAnimator {
             });
             thanosViews.add(view);
         } else {
-            ObjectAnimator animator = ObjectAnimator.ofFloat(view, View.ALPHA, view.getAlpha(), 0f);
+            org.telegram.messenger.LagramConfig.ensureLoaded();
+            final int effect = org.telegram.messenger.LagramConfig.deleteEffect;
+            AnimatorSet set = new AnimatorSet();
+            if (effect == org.telegram.messenger.LagramConfig.DELETE_EFFECT_SHARDS) {
+                view.setPivotX(view.getMeasuredWidth() * 0.5f);
+                view.setPivotY(view.getMeasuredHeight() * 0.5f);
+                set.playTogether(
+                        ObjectAnimator.ofFloat(view, View.SCALE_X, 1f, 1.12f, 0.25f),
+                        ObjectAnimator.ofFloat(view, View.SCALE_Y, 1f, 1.12f, 0.25f),
+                        ObjectAnimator.ofFloat(view, View.ROTATION, 0f, -6f, 8f),
+                        ObjectAnimator.ofFloat(view, View.ALPHA, view.getAlpha(), 0f)
+                );
+                set.setDuration(Math.max(260, getRemoveDuration()));
+            } else if (effect == org.telegram.messenger.LagramConfig.DELETE_EFFECT_PORTAL) {
+                view.setPivotX(view.getMeasuredWidth() * 0.5f);
+                view.setPivotY(view.getMeasuredHeight() * 0.5f);
+                set.playTogether(
+                        ObjectAnimator.ofFloat(view, View.SCALE_X, 1f, 0f),
+                        ObjectAnimator.ofFloat(view, View.SCALE_Y, 1f, 0f),
+                        ObjectAnimator.ofFloat(view, View.ROTATION, 0f, 26f),
+                        ObjectAnimator.ofFloat(view, View.ALPHA, view.getAlpha(), 0f)
+                );
+                set.setDuration(Math.max(300, getRemoveDuration()));
+            } else if (effect == org.telegram.messenger.LagramConfig.DELETE_EFFECT_SLIDE) {
+                float shift = Math.max(AndroidUtilities.dp(120), view.getMeasuredWidth() * 0.48f);
+                set.playTogether(
+                        ObjectAnimator.ofFloat(view, View.TRANSLATION_X, 0f, shift),
+                        ObjectAnimator.ofFloat(view, View.SCALE_Y, 1f, 0.88f),
+                        ObjectAnimator.ofFloat(view, View.ALPHA, view.getAlpha(), 0f)
+                );
+                set.setDuration(Math.max(240, getRemoveDuration()));
+            } else {
+                set.playTogether(ObjectAnimator.ofFloat(view, View.ALPHA, view.getAlpha(), 0f));
+                set.setDuration(getRemoveDuration());
+            }
             dispatchRemoveStarting(holder);
-            animator.setDuration(getRemoveDuration());
-            animator.addListener(
+            set.addListener(
                     new AnimatorListenerAdapter() {
                         @Override
                         public void onAnimationEnd(Animator animator) {
@@ -1572,6 +1605,7 @@ public class ChatListItemAnimator extends DefaultItemAnimator {
                             view.setAlpha(1);
                             view.setScaleX(1f);
                             view.setScaleY(1f);
+                            view.setRotation(0f);
                             view.setTranslationX(0);
                             view.setTranslationY(0);
                             if (mRemoveAnimations.remove(holder)) {
@@ -1580,8 +1614,8 @@ public class ChatListItemAnimator extends DefaultItemAnimator {
                             }
                         }
                     });
-            animators.put(holder, animator);
-            animator.start();
+            animators.put(holder, set);
+            set.start();
         }
         recyclerListView.stopScroll();
     }

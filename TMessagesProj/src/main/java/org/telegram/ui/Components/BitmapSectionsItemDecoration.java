@@ -42,7 +42,7 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
     private final Utilities.CallbackReturn<Integer, Boolean> isViewTypeSection;
     private final Utilities.Callback5<Canvas, RectF, Float, Float, Float> drawSectionBackground;
     private final int padding;
-    private final float radius;
+    private float radius;
     private final boolean enableTopPadding;
     private final Paint bitmapPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
     private final Paint cornerVerticesPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
@@ -164,6 +164,14 @@ public class BitmapSectionsItemDecoration extends RecyclerView.ItemDecoration im
     @Override
     public void onDraw(@NonNull Canvas canvas, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.State state) {
         if (recyclerView != parent) return;
+        if (this.radius > 0f) {
+            float targetRadius = AndroidUtilities.dpf2(org.telegram.messenger.LagramConfig.getEffectiveCardRadiusDp());
+            if (Math.abs(this.radius - targetRadius) > 0.5f) {
+                this.radius = targetRadius;
+                cornerBitmap = null;
+                bitmapRadius = -1.0f;
+            }
+        }
         updateBackgroundColor();
         if (!drawBackground) {
             drawSectionsBackgrounds(canvas);

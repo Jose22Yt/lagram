@@ -59,6 +59,7 @@ public final class LagramConfig {
     public static final int DELETE_EFFECT_THANOS = 1;
     public static final int DELETE_EFFECT_SHARDS = 2;
     public static final int DELETE_EFFECT_PORTAL = 3;
+    public static final int DELETE_EFFECT_SLIDE = 4;
 
     // Scroll edge animation modes
     public static final int SCROLL_EDGE_SCALE = 0;
@@ -79,10 +80,31 @@ public final class LagramConfig {
     public static final int FOLDER_BAR_TABS = 1;
     public static final int FOLDER_BAR_BUTTONS = 2;
 
-    // Chat box styles (Opexgram: Telegram / Expressive / Buttons)
+    // Chat header (top bar) styles
+    public static final int CHAT_HEADER_DEFAULT = 0;
+    public static final int CHAT_HEADER_IOS = 1;
+    public static final int CHAT_HEADER_COMPACT = 2;
+    public static final int CHAT_HEADER_ADAPTIVE = 3;
+    public static final int CHAT_HEADER_EXPRESSIVE = 4;
+
+    // Chat box styles (Telegram / Expressive / Buttons / iOS Glass)
     public static final int CHAT_BOX_TELEGRAM = 0;
     public static final int CHAT_BOX_EXPRESSIVE = 1;
     public static final int CHAT_BOX_BUTTONS = 2;
+    public static final int CHAT_BOX_IOS_GLASS = 3;
+
+    // Typing animation speed presets
+    public static final int TEXT_ANIM_SPEED_FAST = 0;
+    public static final int TEXT_ANIM_SPEED_NORMAL = 1;
+    public static final int TEXT_ANIM_SPEED_SMOOTH = 2;
+
+    // Deleted message badge icon styles
+    public static final int DELETED_ICON_TRASH = 0;
+    public static final int DELETED_ICON_GHOST = 1;
+    public static final int DELETED_ICON_EYE = 2;
+    public static final int DELETED_ICON_CROSS = 3;
+    public static final int DELETED_ICON_FLAME = 4;
+    public static final int DELETED_ICON_NONE = 5;
 
     // App bar background modes (Opexgram: Tone / Blur)
     public static final int APP_BAR_BG_TONE = 0;
@@ -139,7 +161,8 @@ public final class LagramConfig {
     public static boolean scrollEdgeScale = true;
     public static int scrollEdgeMode = SCROLL_EDGE_DRUM;
 
-    // Chats & Messages (including Opexgram Message Focus, Expressive Header/Box, Text Anim)
+    // Chats & Messages (including Opexgram Message Focus, Chat Header/Box, Per-Char Text Anim)
+    public static int chatHeaderStyle = CHAT_HEADER_EXPRESSIVE;
     public static boolean chatHeaderExpressive = true;
     public static int chatBoxStyle = CHAT_BOX_EXPRESSIVE;
     public static int chatBoxContrast = 55;
@@ -174,6 +197,7 @@ public final class LagramConfig {
     public static boolean textAnimSlide = true;
     public static boolean textAnimScale = true;
     public static boolean textAnimRotate = false;
+    public static int textAnimSpeed = TEXT_ANIM_SPEED_NORMAL;
     public static boolean bigReactions = false;
 
     // Media & Network
@@ -205,7 +229,7 @@ public final class LagramConfig {
     public static boolean lockDelete = false;
     public static int hapticsLevel = HAPTICS_NORMAL;
 
-    // Privacy & Ghost Mode (AyuGram-style)
+    // Privacy & Ghost Mode (AyuGram-style + Deleted Message Customization)
     public static boolean ghostModeEnabled = false;
     public static boolean ghostDontReadMessages = true;
     public static boolean ghostDontReadStories = true;
@@ -214,19 +238,34 @@ public final class LagramConfig {
     public static boolean ghostSendOfflineAfterSend = true;
     public static boolean ghostMarkReadOnSend = false;
 
-    // Local History & Anti-Restrictions
+    // Local History, Deleted Message Appearance & Anti-Restrictions
     public static boolean saveDeletedMessages = false;
     public static boolean saveEditedMessages = false;
+    public static int deletedBubbleTintColor = 0; // 0 = Default theme bubble
+    public static int deletedTextColor = 0xFFFF5252; // Custom badge/time color (0 = default)
+    public static int deletedIconStyle = DELETED_ICON_TRASH;
+    public static boolean deletedMessageDim = false;
+    public static boolean deletedMessageStrike = false;
+    public static boolean showDeletedTime = true;
     public static boolean allowScreenshots = false;
     public static boolean bypassNoForwards = false;
 
     private LagramConfig() {}
 
     public static void ensureLoaded() {
+        if (loaded) {
+            return;
+        }
+        if (ApplicationLoader.applicationContext == null) {
+            return;
+        }
+        loadInternal();
+    }
+
+    private static synchronized void loadInternal() {
         if (loaded || ApplicationLoader.applicationContext == null) {
             return;
         }
-        loaded = true;
         final SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
         // Appearance & Material Design 3
@@ -271,6 +310,7 @@ public final class LagramConfig {
 
         // Chats & Message Focus
         chatHeaderExpressive = prefs.getBoolean("chatHeaderExpressive", true);
+        chatHeaderStyle = prefs.getInt("chatHeaderStyle", chatHeaderExpressive ? CHAT_HEADER_EXPRESSIVE : CHAT_HEADER_DEFAULT);
         chatBoxStyle = prefs.getInt("chatBoxStyle", CHAT_BOX_EXPRESSIVE);
         chatBoxContrast = prefs.getInt("chatBoxContrast", 55);
         messageFocusEnabled = prefs.getBoolean("messageFocusEnabled", true);
@@ -304,6 +344,7 @@ public final class LagramConfig {
         textAnimSlide = prefs.getBoolean("textAnimSlide", true);
         textAnimScale = prefs.getBoolean("textAnimScale", true);
         textAnimRotate = prefs.getBoolean("textAnimRotate", false);
+        textAnimSpeed = prefs.getInt("textAnimSpeed", TEXT_ANIM_SPEED_NORMAL);
         bigReactions = prefs.getBoolean("bigReactions", false);
 
         // Media & Network
@@ -347,9 +388,16 @@ public final class LagramConfig {
         // History & Anti-Restrictions
         saveDeletedMessages = prefs.getBoolean("saveDeletedMessages", false);
         saveEditedMessages = prefs.getBoolean("saveEditedMessages", false);
+        deletedBubbleTintColor = prefs.getInt("deletedBubbleTintColor", 0);
+        deletedTextColor = prefs.getInt("deletedTextColor", 0xFFFF5252);
+        deletedIconStyle = prefs.getInt("deletedIconStyle", DELETED_ICON_TRASH);
+        deletedMessageDim = prefs.getBoolean("deletedMessageDim", false);
+        deletedMessageStrike = prefs.getBoolean("deletedMessageStrike", false);
+        showDeletedTime = prefs.getBoolean("showDeletedTime", true);
         allowScreenshots = prefs.getBoolean("allowScreenshots", false);
         bypassNoForwards = prefs.getBoolean("bypassNoForwards", false);
 
+        loaded = true;
         if (saveDeletedMessages || saveEditedMessages) {
             LagramMessageHistoryDb.ensureCacheLoaded();
         }
@@ -1218,6 +1266,107 @@ public final class LagramConfig {
         return bypassNoForwards;
     }
 
+    // --- Chat Header Style, Typing Speed, Card Radius & Deleted Message Customization ---
+    public static void setChatHeaderStyle(int style) {
+        ensureLoaded();
+        chatHeaderStyle = Math.max(CHAT_HEADER_DEFAULT, Math.min(CHAT_HEADER_EXPRESSIVE, style));
+        chatHeaderExpressive = chatHeaderStyle != CHAT_HEADER_DEFAULT;
+        saveInt("chatHeaderStyle", chatHeaderStyle);
+        saveBoolean("chatHeaderExpressive", chatHeaderExpressive);
+    }
+
+    public static void setTextAnimSpeed(int speed) {
+        ensureLoaded();
+        textAnimSpeed = Math.max(TEXT_ANIM_SPEED_FAST, Math.min(TEXT_ANIM_SPEED_SMOOTH, speed));
+        saveInt("textAnimSpeed", textAnimSpeed);
+    }
+
+    public static int getTextAnimDurationMs() {
+        ensureLoaded();
+        switch (textAnimSpeed) {
+            case TEXT_ANIM_SPEED_FAST:
+                return 160;
+            case TEXT_ANIM_SPEED_SMOOTH:
+                return 360;
+            case TEXT_ANIM_SPEED_NORMAL:
+            default:
+                return 240;
+        }
+    }
+
+    public static float getEffectiveCardRadiusDp() {
+        ensureLoaded();
+        switch (roundingPreset) {
+            case ROUNDING_SQUARE:
+                return 8f;
+            case ROUNDING_SQUIRCLE:
+                return 16f;
+            case ROUNDING_ROUND:
+                return 22f;
+            case ROUNDING_DEFAULT:
+            default:
+                return 18f;
+        }
+    }
+
+    public static void setDeletedBubbleTintColor(int color) {
+        ensureLoaded();
+        deletedBubbleTintColor = color;
+        saveInt("deletedBubbleTintColor", deletedBubbleTintColor);
+    }
+
+    public static void setDeletedTextColor(int color) {
+        ensureLoaded();
+        deletedTextColor = color;
+        saveInt("deletedTextColor", deletedTextColor);
+    }
+
+    public static void setDeletedIconStyle(int style) {
+        ensureLoaded();
+        deletedIconStyle = Math.max(DELETED_ICON_TRASH, Math.min(DELETED_ICON_NONE, style));
+        saveInt("deletedIconStyle", deletedIconStyle);
+    }
+
+    public static String getDeletedIconPrefix() {
+        ensureLoaded();
+        switch (deletedIconStyle) {
+            case DELETED_ICON_GHOST:
+                return "\uD83D\uDC7B ";
+            case DELETED_ICON_EYE:
+                return "\uD83D\uDC41 ";
+            case DELETED_ICON_CROSS:
+                return "\u2715 ";
+            case DELETED_ICON_FLAME:
+                return "\uD83D\uDD25 ";
+            case DELETED_ICON_NONE:
+                return "";
+            case DELETED_ICON_TRASH:
+            default:
+                return "\uD83D\uDDD1 ";
+        }
+    }
+
+    public static boolean toggleDeletedMessageDim() {
+        ensureLoaded();
+        deletedMessageDim = !deletedMessageDim;
+        saveBoolean("deletedMessageDim", deletedMessageDim);
+        return deletedMessageDim;
+    }
+
+    public static boolean toggleDeletedMessageStrike() {
+        ensureLoaded();
+        deletedMessageStrike = !deletedMessageStrike;
+        saveBoolean("deletedMessageStrike", deletedMessageStrike);
+        return deletedMessageStrike;
+    }
+
+    public static boolean toggleShowDeletedTime() {
+        ensureLoaded();
+        showDeletedTime = !showDeletedTime;
+        saveBoolean("showDeletedTime", showDeletedTime);
+        return showDeletedTime;
+    }
+
     // --- Export / Import / Reset ---
     public static String exportToJson() {
         ensureLoaded();
@@ -1232,6 +1381,7 @@ public final class LagramConfig {
             obj.put("appBarBackground", appBarBackground);
             obj.put("materialProfileTabs", materialProfileTabs);
             obj.put("folderBarStyle", folderBarStyle);
+            obj.put("chatHeaderStyle", chatHeaderStyle);
             obj.put("chatHeaderExpressive", chatHeaderExpressive);
             obj.put("chatBoxStyle", chatBoxStyle);
             obj.put("chatBoxContrast", chatBoxContrast);
@@ -1240,6 +1390,13 @@ public final class LagramConfig {
             obj.put("textAnimSlide", textAnimSlide);
             obj.put("textAnimScale", textAnimScale);
             obj.put("textAnimRotate", textAnimRotate);
+            obj.put("textAnimSpeed", textAnimSpeed);
+            obj.put("deletedBubbleTintColor", deletedBubbleTintColor);
+            obj.put("deletedTextColor", deletedTextColor);
+            obj.put("deletedIconStyle", deletedIconStyle);
+            obj.put("deletedMessageDim", deletedMessageDim);
+            obj.put("deletedMessageStrike", deletedMessageStrike);
+            obj.put("showDeletedTime", showDeletedTime);
             obj.put("mediaGlowVideos", mediaGlowVideos);
             obj.put("mediaGlowLevel", mediaGlowLevel);
             obj.put("lockArchive", lockArchive);
@@ -1457,6 +1614,14 @@ public final class LagramConfig {
             if (obj.has("lockSecret")) editor.putBoolean("lockSecret", obj.getBoolean("lockSecret"));
             if (obj.has("lockSaved")) editor.putBoolean("lockSaved", obj.getBoolean("lockSaved"));
             if (obj.has("lockDelete")) editor.putBoolean("lockDelete", obj.getBoolean("lockDelete"));
+            if (obj.has("chatHeaderStyle")) editor.putInt("chatHeaderStyle", obj.getInt("chatHeaderStyle"));
+            if (obj.has("textAnimSpeed")) editor.putInt("textAnimSpeed", obj.getInt("textAnimSpeed"));
+            if (obj.has("deletedBubbleTintColor")) editor.putInt("deletedBubbleTintColor", obj.getInt("deletedBubbleTintColor"));
+            if (obj.has("deletedTextColor")) editor.putInt("deletedTextColor", obj.getInt("deletedTextColor"));
+            if (obj.has("deletedIconStyle")) editor.putInt("deletedIconStyle", obj.getInt("deletedIconStyle"));
+            if (obj.has("deletedMessageDim")) editor.putBoolean("deletedMessageDim", obj.getBoolean("deletedMessageDim"));
+            if (obj.has("deletedMessageStrike")) editor.putBoolean("deletedMessageStrike", obj.getBoolean("deletedMessageStrike"));
+            if (obj.has("showDeletedTime")) editor.putBoolean("showDeletedTime", obj.getBoolean("showDeletedTime"));
             editor.apply();
             loaded = false;
             ensureLoaded();
