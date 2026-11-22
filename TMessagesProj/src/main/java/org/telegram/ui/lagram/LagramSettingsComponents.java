@@ -1145,7 +1145,7 @@ public final class LagramSettingsComponents {
                 filterTabsView.addTab(sortId++, i, label, null, false, i == 0, false);
             }
             filterTabsView.finishAddingTabs(false);
-            filterTabsView.updateTabsWidths();
+            filterTabsView.requestLayout();
             filterTabsView.invalidate();
             if (filterTabsView.getListView() != null) {
                 filterTabsView.getListView().invalidateViews();
