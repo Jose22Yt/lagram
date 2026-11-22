@@ -30767,10 +30767,12 @@ public class ChatActivity extends BaseFragment implements
                 AlertDialog.Builder lb = new AlertDialog.Builder(getParentActivity(), themeDelegate);
                 lb.setTitle(LocaleController.getString(R.string.LagramLockConfirmTitle));
                 lb.setMessage(LocaleController.getString(R.string.LagramLockConfirmMessage));
-                lb.setCancelable(false);
                 lb.setPositiveButton(LocaleController.getString(R.string.OK), null);
                 lb.setNegativeButton(LocaleController.getString(R.string.Cancel), (d, w) -> finishFragment());
-                showDialog(lb.create());
+                AlertDialog lockDialog = lb.create();
+                lockDialog.setCancelable(false);
+                lockDialog.setCanceledOnTouchOutside(false);
+                showDialog(lockDialog);
             }
         }
         checkChecksHint();
