@@ -1765,6 +1765,10 @@ public class SharedConfig {
     }
 
     public static boolean chatBlurEnabled() {
+        LagramConfig.ensureLoaded();
+        if (!LagramConfig.chatEdgeBlur) {
+            return false;
+        }
         return canBlurChat() && LiteMode.isEnabled(LiteMode.FLAG_CHAT_BLUR);
     }
 

@@ -6,10 +6,9 @@ import android.view.View;
 import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Cells.TextCheckCell;
+import org.telegram.ui.Components.IconBackgroundColors;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalFragment;
@@ -17,6 +16,17 @@ import org.telegram.ui.Components.UniversalFragment;
 import java.util.ArrayList;
 
 public class LagramChatsActivity extends UniversalFragment {
+
+    public static final int SUB_HOME = 0;
+    public static final int SUB_FOCUS_AND_SIZE = 1;
+    public static final int SUB_GESTURES_AND_EFFECTS = 2;
+    public static final int SUB_CONFIRM_AND_DETAILS = 3;
+
+    private final int subPage;
+
+    private static final int ID_NAV_FOCUS_AND_SIZE = 100;
+    private static final int ID_NAV_GESTURES = 101;
+    private static final int ID_NAV_CONFIRM_DETAILS = 102;
 
     private static final int ID_PREVIEW_CHAT_FOCUS = 1;
     private static final int ID_FOCUS_ENABLED = 2;
@@ -49,9 +59,28 @@ public class LagramChatsActivity extends UniversalFragment {
     private static final int ID_SHOW_STICKER_OWNER = 43;
     private static final int ID_SHOW_FORWARDS_COUNTER = 44;
 
+    public LagramChatsActivity() {
+        this(SUB_HOME);
+    }
+
+    public LagramChatsActivity(int subPage) {
+        super();
+        this.subPage = subPage;
+    }
+
     @Override
     protected CharSequence getTitle() {
-        return LocaleController.getString(R.string.LagramCategoryChats);
+        switch (subPage) {
+            case SUB_FOCUS_AND_SIZE:
+                return LocaleController.getString(R.string.LagramMessageFocusHeader);
+            case SUB_GESTURES_AND_EFFECTS:
+                return LocaleController.getString(R.string.LagramChatGesturesHeader);
+            case SUB_CONFIRM_AND_DETAILS:
+                return LocaleController.getString(R.string.LagramChatDetailsHeader);
+            case SUB_HOME:
+            default:
+                return LocaleController.getString(R.string.LagramCategoryChats);
+        }
     }
 
     @Override
@@ -66,14 +95,23 @@ public class LagramChatsActivity extends UniversalFragment {
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (listView != null && listView.adapter != null) {
+            listView.adapter.update(true);
+        }
+        refreshLivePreviews();
+    }
+
     private void refreshLivePreviews() {
         if (listView == null) {
             return;
         }
         for (int i = 0, count = listView.getChildCount(); i < count; i++) {
             View child = listView.getChildAt(i);
-            if (child instanceof LagramSettingsComponents.ChatAppearancePreviewCell) {
-                child.invalidate();
+            if (child instanceof LagramSettingsComponents.RealChatMessagesPreviewCell) {
+                ((LagramSettingsComponents.RealChatMessagesPreviewCell) child).refreshPreview();
             }
         }
     }
@@ -98,117 +136,285 @@ public class LagramChatsActivity extends UniversalFragment {
         }
     }
 
+    private String getFocusStyleShort() {
+        switch (LagramConfig.messageFocusStyle) {
+            case LagramConfig.FOCUS_STYLE_LIST:
+                return "Lista";
+            case LagramConfig.FOCUS_STYLE_TILES:
+                return "Cuadrícula";
+            case LagramConfig.FOCUS_STYLE_CAPSULE:
+            default:
+                return "Cápsula";
+        }
+    }
+
     @Override
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         LagramConfig.ensureLoaded();
 
-        // Section 1: Opexgram Message Focus & Media Size Live Preview
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramMessageFocusHeader)));
-        items.add(LagramSettingsComponents.ChatAppearancePreviewCell.Factory.of(
-                ID_PREVIEW_CHAT_FOCUS, LagramSettingsComponents.ChatAppearancePreviewCell.MODE_STICKER_AND_FOCUS));
-        items.add(UItem.asCheck(ID_FOCUS_ENABLED, LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramMessageFocus)))
-                .setChecked(LagramConfig.messageFocusEnabled));
-        items.add(UItem.asCheck(ID_FOCUS_BLUR, LocaleController.getString(R.string.LagramMessageFocusBlur))
-                .setChecked(LagramConfig.messageFocusBlur));
-        items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
-                ID_FOCUS_STYLE,
-                LocaleController.getString(R.string.LagramMessageFocusStyle),
-                new String[]{
-                        LocaleController.getString(R.string.LagramFocusStyleList),
-                        LocaleController.getString(R.string.LagramFocusStyleTiles),
-                        LocaleController.getString(R.string.LagramFocusStyleCapsule)
-                },
-                LagramConfig.messageFocusStyle,
-                which -> {
-                    LagramConfig.setMessageFocusStyle(which);
-                    refreshLivePreviews();
-                }
-        ));
-        items.add(UItem.asShadow(LocaleController.getString(R.string.LagramMessageFocusInfo)));
+        if (subPage == SUB_HOME) {
+            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramMessageFocusHeader)));
+            items.add(LagramSettingsComponents.RealChatMessagesPreviewCell.Factory.of(
+                    ID_PREVIEW_CHAT_FOCUS, LagramSettingsComponents.RealChatMessagesPreviewCell.MODE_STICKER_AND_FOCUS));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_FOCUS_ENABLED,
+                    R.drawable.msg_discussion,
+                    LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramMessageFocus)),
+                    "Eleva la burbuja al tocarla con desenfoque y menú estilo Opexgram",
+                    LagramConfig.messageFocusEnabled
+            ));
+            items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+                    ID_FOCUS_STYLE,
+                    LocaleController.getString(R.string.LagramMessageFocusStyle),
+                    new String[]{
+                            LocaleController.getString(R.string.LagramFocusStyleList),
+                            LocaleController.getString(R.string.LagramFocusStyleTiles),
+                            LocaleController.getString(R.string.LagramFocusStyleCapsule)
+                    },
+                    LagramConfig.messageFocusStyle,
+                    which -> {
+                        LagramConfig.setMessageFocusStyle(which);
+                        refreshLivePreviews();
+                    }
+            ));
+            items.add(UItem.asShadow(null));
 
-        // Section 2: Inline Sticker & GIF Size Sliders + Layout
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatLayoutHeader)));
-        items.add(LagramSettingsComponents.InlineSliderCell.Factory.of(
-                ID_STICKER_SIZE,
-                LocaleController.getString(R.string.LagramStickerSize),
-                6, 20, LagramConfig.stickerSize, 14, "",
-                val -> {
-                    LagramConfig.setStickerSize(val);
-                    refreshLivePreviews();
-                }
-        ));
-        items.add(LagramSettingsComponents.InlineSliderCell.Factory.of(
-                ID_GIF_SIZE,
-                LocaleController.getString(R.string.LagramGifSize),
-                6, 20, LagramConfig.gifSize, 14, "",
-                val -> {
-                    LagramConfig.setGifSize(val);
-                    refreshLivePreviews();
-                }
-        ));
-        items.add(UItem.asCheck(ID_HIDE_SHARE_CHANNELS, LocaleController.getString(R.string.LagramHideShareInChannels))
-                .setChecked(LagramConfig.hideShareButtonInChannels));
-        items.add(UItem.asCheck(ID_UNLIMITED_SELECTION, LocaleController.getString(R.string.LagramUnlimitedSelection))
-                .setChecked(LagramConfig.unlimitedSelection));
-        items.add(UItem.asCheck(ID_FAST_SELECTION, LocaleController.getString(R.string.LagramFastSelection))
-                .setChecked(LagramConfig.fastSelection));
-        items.add(UItem.asShadow(null));
+            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramCategoriesHeader)));
+            items.add(LagramSettingsComponents.SubCategoryCardCell.Factory.of(
+                    ID_NAV_FOCUS_AND_SIZE,
+                    IconBackgroundColors.GREEN,
+                    R.drawable.msg_sticker,
+                    "Enfoque, Stickers, GIFs y Selección",
+                    "Tamaño en vivo de Stickers/GIFs, desenfoque Focus y selección ilimitada",
+                    getFocusStyleShort() + " • " + LagramConfig.stickerSize
+            ));
+            items.add(LagramSettingsComponents.SubCategoryCardCell.Factory.of(
+                    ID_NAV_GESTURES,
+                    IconBackgroundColors.BLUE,
+                    R.drawable.msg_reactions,
+                    "Gestos, Doble Toque y Efectos",
+                    "Acciones de doble toque, efecto al eliminar, reenvío sin cita y teclado",
+                    getDoubleTapLabel(LagramConfig.doubleTapActionOutgoing)
+            ));
+            items.add(LagramSettingsComponents.SubCategoryCardCell.Factory.of(
+                    ID_NAV_CONFIRM_DETAILS,
+                    IconBackgroundColors.ORANGE,
+                    R.drawable.msg_calls,
+                    "Confirmaciones, Fechas y Reenvíos",
+                    "Confirmar llamadas/stickers, hora original de reenvío y día de semana",
+                    null
+            ));
+            items.add(UItem.asShadow(LocaleController.getString(R.string.LagramMessageFocusInfo)));
+            return;
+        }
 
-        // Section 3: Gestures & Animations
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatGesturesHeader)));
-        items.add(UItem.asButton(ID_DOUBLE_TAP_OUT, LocaleController.getString(R.string.LagramDoubleTapOutgoing),
-                getDoubleTapLabel(LagramConfig.doubleTapActionOutgoing)));
-        items.add(UItem.asButton(ID_DOUBLE_TAP_IN, LocaleController.getString(R.string.LagramDoubleTapIncoming),
-                getDoubleTapLabel(LagramConfig.doubleTapActionIncoming)));
-        items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
-                ID_DELETE_EFFECT,
-                LocaleController.getString(R.string.LagramDeleteEffect),
-                new String[]{
-                        LocaleController.getString(R.string.LagramDeleteEffectDefault),
-                        LocaleController.getString(R.string.LagramDeleteEffectThanos),
-                        LocaleController.getString(R.string.LagramDeleteEffectShards),
-                        LocaleController.getString(R.string.LagramDeleteEffectPortal)
-                },
-                LagramConfig.deleteEffect,
-                LagramConfig::setDeleteEffect
-        ));
-        items.add(UItem.asCheck(ID_TEXT_APPEAR_ANIM, LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramTextAppearAnimation)))
-                .setChecked(LagramConfig.textAppearAnimation));
-        items.add(UItem.asCheck(ID_HIDE_KEYBOARD_SCROLL, LocaleController.getString(R.string.LagramHideKeyboardOnScroll))
-                .setChecked(LagramConfig.hideKeyboardOnScroll));
-        items.add(UItem.asCheck(ID_DISABLE_NEXT_CHANNEL, LocaleController.getString(R.string.LagramDisableNextChannelJump))
-                .setChecked(LagramConfig.disableNextChannelJump));
-        items.add(UItem.asCheck(ID_FORWARD_NO_QUOTE, LocaleController.getString(R.string.LagramForwardWithoutQuote))
-                .setChecked(LagramConfig.forwardWithoutQuote));
-        items.add(UItem.asCheck(ID_SHOW_PAGE_UP, LocaleController.getString(R.string.LagramShowPageUpButton))
-                .setChecked(LagramConfig.showPageUpButton));
-        items.add(UItem.asShadow(null));
+        if (subPage == SUB_FOCUS_AND_SIZE) {
+            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramMessageFocusHeader)));
+            items.add(LagramSettingsComponents.RealChatMessagesPreviewCell.Factory.of(
+                    ID_PREVIEW_CHAT_FOCUS, LagramSettingsComponents.RealChatMessagesPreviewCell.MODE_STICKER_AND_FOCUS));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_FOCUS_ENABLED,
+                    R.drawable.msg_discussion,
+                    LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramMessageFocus)),
+                    "Eleva la burbuja con animación spring al tocar un mensaje",
+                    LagramConfig.messageFocusEnabled
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_FOCUS_BLUR,
+                    R.drawable.msg_photo_blur,
+                    LocaleController.getString(R.string.LagramMessageFocusBlur),
+                    "Desenfoque acelerado por hardware detrás del mensaje enfocado",
+                    LagramConfig.messageFocusBlur
+            ));
+            items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+                    ID_FOCUS_STYLE,
+                    LocaleController.getString(R.string.LagramMessageFocusStyle),
+                    new String[]{
+                            LocaleController.getString(R.string.LagramFocusStyleList),
+                            LocaleController.getString(R.string.LagramFocusStyleTiles),
+                            LocaleController.getString(R.string.LagramFocusStyleCapsule)
+                    },
+                    LagramConfig.messageFocusStyle,
+                    which -> {
+                        LagramConfig.setMessageFocusStyle(which);
+                        refreshLivePreviews();
+                    }
+            ));
+            items.add(UItem.asShadow(null));
 
-        // Section 4: Confirmations & Voice/Video
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatConfirmHeader)));
-        items.add(UItem.asCheck(ID_CONFIRM_CALL, LocaleController.getString(R.string.LagramConfirmBeforeCall))
-                .setChecked(LagramConfig.confirmBeforeCall));
-        items.add(UItem.asCheck(ID_CONFIRM_STICKER, LocaleController.getString(R.string.LagramConfirmBeforeSendSticker))
-                .setChecked(LagramConfig.confirmBeforeSendSticker));
-        items.add(UItem.asCheck(ID_DISABLE_VOICE_VIDEO_TOGGLE, LocaleController.getString(R.string.LagramDisableVoiceVideoToggle))
-                .setChecked(LagramConfig.disableVoiceVideoToggle));
-        items.add(UItem.asCheck(ID_DISABLE_PROXIMITY, LocaleController.getString(R.string.LagramDisableProximitySensor))
-                .setChecked(LagramConfig.disableProximitySensor));
-        items.add(UItem.asShadow(null));
+            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatLayoutHeader)));
+            items.add(LagramSettingsComponents.InlineSliderCell.Factory.of(
+                    ID_STICKER_SIZE,
+                    LocaleController.getString(R.string.LagramStickerSize),
+                    6, 20, LagramConfig.stickerSize, 14, "",
+                    val -> {
+                        LagramConfig.setStickerSize(val);
+                        refreshLivePreviews();
+                    }
+            ));
+            items.add(LagramSettingsComponents.InlineSliderCell.Factory.of(
+                    ID_GIF_SIZE,
+                    LocaleController.getString(R.string.LagramGifSize),
+                    6, 20, LagramConfig.gifSize, 14, "",
+                    val -> {
+                        LagramConfig.setGifSize(val);
+                        refreshLivePreviews();
+                    }
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_HIDE_SHARE_CHANNELS,
+                    R.drawable.msg_share,
+                    LocaleController.getString(R.string.LagramHideShareInChannels),
+                    "Ocultar el botón lateral de compartir en publicaciones de canales",
+                    LagramConfig.hideShareButtonInChannels
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_UNLIMITED_SELECTION,
+                    R.drawable.msg_check_s,
+                    LocaleController.getString(R.string.LagramUnlimitedSelection),
+                    "Permite seleccionar más de 100 mensajes simultáneamente",
+                    LagramConfig.unlimitedSelection
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_FAST_SELECTION,
+                    R.drawable.msg_list,
+                    LocaleController.getString(R.string.LagramFastSelection),
+                    "Deslizar para seleccionar múltiples mensajes rápidamente",
+                    LagramConfig.fastSelection
+            ));
+            items.add(UItem.asShadow(null));
+            return;
+        }
 
-        // Section 5: Message Details
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatDetailsHeader)));
-        items.add(UItem.asCheck(ID_SHOW_WEEKDAY, LocaleController.getString(R.string.LagramShowWeekdayInDate))
-                .setChecked(LagramConfig.showWeekdayInDate));
-        items.add(UItem.asCheck(ID_SHOW_FORWARD_TIME, LocaleController.getString(R.string.LagramShowForwardTime))
-                .setChecked(LagramConfig.showForwardTime));
-        items.add(UItem.asCheck(ID_SHOW_POLL_PREVIEW, LocaleController.getString(R.string.LagramShowPollPreview))
-                .setChecked(LagramConfig.showPollPreview));
-        items.add(UItem.asCheck(ID_SHOW_STICKER_OWNER, LocaleController.getString(R.string.LagramShowStickerPackOwner))
-                .setChecked(LagramConfig.showStickerPackOwner));
-        items.add(UItem.asCheck(ID_SHOW_FORWARDS_COUNTER, LocaleController.getString(R.string.LagramShowForwardsCounter))
-                .setChecked(LagramConfig.showForwardsCounter));
-        items.add(UItem.asShadow(null));
+        if (subPage == SUB_GESTURES_AND_EFFECTS) {
+            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatGesturesHeader)));
+            items.add(UItem.asButton(ID_DOUBLE_TAP_OUT, R.drawable.msg_reactions,
+                    LocaleController.getString(R.string.LagramDoubleTapOutgoing),
+                    getDoubleTapLabel(LagramConfig.doubleTapActionOutgoing)));
+            items.add(UItem.asButton(ID_DOUBLE_TAP_IN, R.drawable.msg_reactions,
+                    LocaleController.getString(R.string.LagramDoubleTapIncoming),
+                    getDoubleTapLabel(LagramConfig.doubleTapActionIncoming)));
+            items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
+                    ID_DELETE_EFFECT,
+                    LocaleController.getString(R.string.LagramDeleteEffect),
+                    new String[]{
+                            LocaleController.getString(R.string.LagramDeleteEffectDefault),
+                            LocaleController.getString(R.string.LagramDeleteEffectThanos),
+                            LocaleController.getString(R.string.LagramDeleteEffectShards),
+                            LocaleController.getString(R.string.LagramDeleteEffectPortal)
+                    },
+                    LagramConfig.deleteEffect,
+                    LagramConfig::setDeleteEffect
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_TEXT_APPEAR_ANIM,
+                    R.drawable.msg_photo_text2,
+                    LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramTextAppearAnimation)),
+                    "Animación fluida al escribir y enviar mensajes",
+                    LagramConfig.textAppearAnimation
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_HIDE_KEYBOARD_SCROLL,
+                    R.drawable.msg_edit,
+                    LocaleController.getString(R.string.LagramHideKeyboardOnScroll),
+                    "Ocultar automáticamente el teclado al deslizar la conversación",
+                    LagramConfig.hideKeyboardOnScroll
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_DISABLE_NEXT_CHANNEL,
+                    R.drawable.msg_channel,
+                    LocaleController.getString(R.string.LagramDisableNextChannelJump),
+                    "Evitar saltar al siguiente canal no leído al llegar al final",
+                    LagramConfig.disableNextChannelJump
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_FORWARD_NO_QUOTE,
+                    R.drawable.msg_forward,
+                    LocaleController.getString(R.string.LagramForwardWithoutQuote),
+                    "Ocultar el remitente original por defecto al reenviar mensajes",
+                    LagramConfig.forwardWithoutQuote
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_SHOW_PAGE_UP,
+                    R.drawable.msg_inputarrow,
+                    LocaleController.getString(R.string.LagramShowPageUpButton),
+                    "Mostrar botón rápido para subir al inicio del chat",
+                    LagramConfig.showPageUpButton
+            ));
+            items.add(UItem.asShadow(null));
+            return;
+        }
+
+        if (subPage == SUB_CONFIRM_AND_DETAILS) {
+            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatConfirmHeader)));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_CONFIRM_CALL,
+                    R.drawable.msg_calls,
+                    LocaleController.getString(R.string.LagramConfirmBeforeCall),
+                    "Preguntar antes de iniciar una llamada de voz o video",
+                    LagramConfig.confirmBeforeCall
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_CONFIRM_STICKER,
+                    R.drawable.msg_sticker,
+                    LocaleController.getString(R.string.LagramConfirmBeforeSendSticker),
+                    "Mostrar confirmación antes de enviar un Sticker o GIF",
+                    LagramConfig.confirmBeforeSendSticker
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_DISABLE_VOICE_VIDEO_TOGGLE,
+                    R.drawable.msg_filled_data_voice,
+                    LocaleController.getString(R.string.LagramDisableVoiceVideoToggle),
+                    "Evitar cambiar accidentalmente entre nota de voz y videomensaje",
+                    LagramConfig.disableVoiceVideoToggle
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_DISABLE_PROXIMITY,
+                    R.drawable.msg_calls,
+                    LocaleController.getString(R.string.LagramDisableProximitySensor),
+                    "Ignorar el sensor de proximidad al escuchar notas de voz",
+                    LagramConfig.disableProximitySensor
+            ));
+            items.add(UItem.asShadow(null));
+
+            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatDetailsHeader)));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_SHOW_WEEKDAY,
+                    R.drawable.msg_calendar2,
+                    LocaleController.getString(R.string.LagramShowWeekdayInDate),
+                    "Incluir el día de la semana en las cabeceras de fecha del chat",
+                    LagramConfig.showWeekdayInDate
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_SHOW_FORWARD_TIME,
+                    R.drawable.msg_recent,
+                    LocaleController.getString(R.string.LagramShowForwardTime),
+                    "Mostrar la fecha y hora original en el encabezado de reenviados",
+                    LagramConfig.showForwardTime
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_SHOW_FORWARDS_COUNTER,
+                    R.drawable.msg_forward,
+                    LocaleController.getString(R.string.LagramShowForwardsCounter),
+                    "Mostrar cuántas veces fue reenviado un mensaje (↪ N)",
+                    LagramConfig.showForwardsCounter
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_SHOW_POLL_PREVIEW,
+                    R.drawable.filled_chatlist_poll,
+                    LocaleController.getString(R.string.LagramShowPollPreview),
+                    "Ver resultados de encuestas públicas sin necesidad de votar",
+                    LagramConfig.showPollPreview
+            ));
+            items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                    ID_SHOW_STICKER_OWNER,
+                    R.drawable.msg_openprofile,
+                    LocaleController.getString(R.string.LagramShowStickerPackOwner),
+                    "Mostrar información del creador del pack de stickers",
+                    LagramConfig.showStickerPackOwner
+            ));
+            items.add(UItem.asShadow(null));
+        }
     }
 
     private void showDoubleTapDialog(boolean isOutgoing) {
@@ -224,7 +430,6 @@ public class LagramChatsActivity extends UniversalFragment {
                 LocaleController.getString(R.string.LagramDoubleTapSave),
                 LocaleController.getString(R.string.LagramDoubleTapNone)
         };
-        int cur = isOutgoing ? LagramConfig.doubleTapActionOutgoing : LagramConfig.doubleTapActionIncoming;
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
         builder.setTitle(LocaleController.getString(isOutgoing ? R.string.LagramDoubleTapOutgoing : R.string.LagramDoubleTapIncoming));
         builder.setItems(options, (dialog, which) -> {
@@ -243,14 +448,24 @@ public class LagramChatsActivity extends UniversalFragment {
 
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
-        if (item.id == ID_DOUBLE_TAP_OUT) {
-            showDoubleTapDialog(true);
-            return;
+        switch (item.id) {
+            case ID_NAV_FOCUS_AND_SIZE:
+                presentFragment(new LagramChatsActivity(SUB_FOCUS_AND_SIZE));
+                return;
+            case ID_NAV_GESTURES:
+                presentFragment(new LagramChatsActivity(SUB_GESTURES_AND_EFFECTS));
+                return;
+            case ID_NAV_CONFIRM_DETAILS:
+                presentFragment(new LagramChatsActivity(SUB_CONFIRM_AND_DETAILS));
+                return;
+            case ID_DOUBLE_TAP_OUT:
+                showDoubleTapDialog(true);
+                return;
+            case ID_DOUBLE_TAP_IN:
+                showDoubleTapDialog(false);
+                return;
         }
-        if (item.id == ID_DOUBLE_TAP_IN) {
-            showDoubleTapDialog(false);
-            return;
-        }
+
         boolean checkChanged = false;
         boolean newVal = false;
         switch (item.id) {
@@ -319,6 +534,7 @@ public class LagramChatsActivity extends UniversalFragment {
             case ID_SHOW_FORWARD_TIME:
                 newVal = LagramConfig.toggleShowForwardTime();
                 checkChanged = true;
+                refreshLivePreviews();
                 break;
             case ID_SHOW_POLL_PREVIEW:
                 newVal = LagramConfig.toggleShowPollPreview();
@@ -331,10 +547,11 @@ public class LagramChatsActivity extends UniversalFragment {
             case ID_SHOW_FORWARDS_COUNTER:
                 newVal = LagramConfig.toggleShowForwardsCounter();
                 checkChanged = true;
+                refreshLivePreviews();
                 break;
         }
-        if (checkChanged && view instanceof TextCheckCell) {
-            ((TextCheckCell) view).setChecked(newVal);
+        if (checkChanged && view instanceof LagramSettingsComponents.IconSwitchCell) {
+            ((LagramSettingsComponents.IconSwitchCell) view).setChecked(newVal);
         }
     }
 

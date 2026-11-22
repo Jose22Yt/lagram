@@ -17055,7 +17055,25 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             }
             return forwardedString;
         } else {
-            return getString(R.string.ForwardedFrom);
+            String base = getString(R.string.ForwardedFrom);
+            org.telegram.messenger.LagramConfig.ensureLoaded();
+            if (messageObject != null && messageObject.messageOwner != null && messageObject.messageOwner.fwd_from != null) {
+                StringBuilder sb = null;
+                if (org.telegram.messenger.LagramConfig.showForwardTime && messageObject.messageOwner.fwd_from.date > 0) {
+                    sb = new StringBuilder(base);
+                    sb.append(" • ").append(LocaleController.getInstance().getFormatterDay().format((long) messageObject.messageOwner.fwd_from.date * 1000L));
+                }
+                if (org.telegram.messenger.LagramConfig.showForwardsCounter && messageObject.messageOwner.forwards > 0) {
+                    if (sb == null) {
+                        sb = new StringBuilder(base);
+                    }
+                    sb.append(" (↪ ").append(LocaleController.formatShortNumber(messageObject.messageOwner.forwards, null)).append(")");
+                }
+                if (sb != null) {
+                    return sb.toString();
+                }
+            }
+            return base;
         }
     }
 
@@ -18096,6 +18114,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     }
 
     public boolean drawBackgroundInParent() {
+        if (org.telegram.messenger.LagramConfig.glassMessages) {
+            return false;
+        }
         if (canDrawBackgroundInParent && currentMessageObject != null && currentMessageObject.isOutOwner()) {
             return getThemedColor(Theme.key_chat_outBubbleGradient1) != 0;
         }

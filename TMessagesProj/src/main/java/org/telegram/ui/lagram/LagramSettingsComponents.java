@@ -4,24 +4,29 @@ import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.dpf2;
 
 import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.RectF;
 import android.graphics.Shader;
-import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
+import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -32,30 +37,347 @@ import androidx.core.graphics.ColorUtils;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
+import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Cells.ChatMessageCell;
+import org.telegram.ui.Components.BackgroundGradientDrawable;
 import org.telegram.ui.Components.CubicBezierInterpolator;
+import org.telegram.ui.Components.FilterTabsView;
+import org.telegram.ui.Components.IconBackgroundColors;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.MotionBackgroundDrawable;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.SeekBarView;
+import org.telegram.ui.Components.Switch;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalRecyclerView;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import org.telegram.ui.Stories.recorder.StoryEntry;
 
 /**
- * Opexgram-inspired Material 3 Expressive Settings UI Components & Interactive Live Previews.
+ * Opexgram-inspired Material 3 Expressive Settings UI Components & Real Lagram Interface Previews.
  */
 public final class LagramSettingsComponents {
 
     private LagramSettingsComponents() {}
 
     // =============================================================================================
-    // 1. SegmentedPillCell (Opexgram lc/j3.java & lc/i3.java)
+    // 1. SubCategoryCardCell
+    // Elegant 2-line navigation card with gradient icon badge, title, subtitle, value pill & arrow.
+    // =============================================================================================
+    public static class SubCategoryCardCell extends FrameLayout {
+
+        private final Theme.ResourcesProvider resourcesProvider;
+        private final ImageView iconView;
+        private final TextView titleView;
+        private final TextView subtitleView;
+        private final TextView badgeView;
+        private final ImageView arrowView;
+        private final Paint iconBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint dividerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final RectF iconRect = new RectF();
+        private int topColor;
+        private int bottomColor;
+        private int lastShaderHeight = -1;
+        private boolean needDivider;
+
+        public SubCategoryCardCell(Context context, Theme.ResourcesProvider resourcesProvider) {
+            super(context);
+            this.resourcesProvider = resourcesProvider;
+            setWillNotDraw(false);
+
+            iconView = new ImageView(context);
+            iconView.setScaleType(ImageView.ScaleType.CENTER);
+            iconView.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
+            addView(iconView, LayoutHelper.createFrame(38, 38,
+                    (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL,
+                    16, 0, 16, 0));
+
+            LinearLayout textCol = new LinearLayout(context);
+            textCol.setOrientation(LinearLayout.VERTICAL);
+            textCol.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
+            addView(textCol, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT,
+                    Gravity.CENTER_VERTICAL,
+                    LocaleController.isRTL ? 92 : 68, 8, LocaleController.isRTL ? 68 : 92, 8));
+
+            titleView = new TextView(context);
+            titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15.5f);
+            titleView.setTypeface(AndroidUtilities.bold());
+            titleView.setSingleLine(true);
+            titleView.setEllipsize(TextUtils.TruncateAt.END);
+            textCol.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+            subtitleView = new TextView(context);
+            subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12.5f);
+            subtitleView.setSingleLine(true);
+            subtitleView.setEllipsize(TextUtils.TruncateAt.END);
+            textCol.addView(subtitleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+
+            badgeView = new TextView(context);
+            badgeView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11.5f);
+            badgeView.setTypeface(AndroidUtilities.bold());
+            badgeView.setGravity(Gravity.CENTER);
+            badgeView.setPadding(dp(8), dp(2), dp(8), dp(2));
+            addView(badgeView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 22,
+                    (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL,
+                    40, 0, 40, 0));
+
+            arrowView = new ImageView(context);
+            arrowView.setImageResource(R.drawable.msg_arrowright);
+            arrowView.setScaleType(ImageView.ScaleType.CENTER);
+            if (LocaleController.isRTL) {
+                arrowView.setScaleX(-1f);
+            }
+            addView(arrowView, LayoutHelper.createFrame(24, 24,
+                    (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL,
+                    12, 0, 12, 0));
+        }
+
+        public void bind(int topGrad, int bottomGrad, int iconResId, CharSequence title, CharSequence subtitle, CharSequence badgeText, boolean divider) {
+            this.needDivider = divider;
+            if (this.topColor != topGrad || this.bottomColor != bottomGrad) {
+                this.topColor = topGrad;
+                this.bottomColor = bottomGrad;
+                this.lastShaderHeight = -1;
+            }
+            iconView.setImageResource(iconResId);
+            titleView.setText(title);
+            titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
+
+            if (!TextUtils.isEmpty(subtitle)) {
+                subtitleView.setVisibility(VISIBLE);
+                subtitleView.setText(subtitle);
+                subtitleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText, resourcesProvider));
+            } else {
+                subtitleView.setVisibility(GONE);
+            }
+
+            if (!TextUtils.isEmpty(badgeText)) {
+                badgeView.setVisibility(VISIBLE);
+                badgeView.setText(badgeText);
+                int accent = Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4, resourcesProvider);
+                badgeView.setTextColor(accent);
+                badgeView.setBackground(Theme.createRoundRectDrawable(dp(11),
+                        ColorUtils.setAlphaComponent(accent, Theme.isCurrentThemeDark() ? 45 : 28)));
+            } else {
+                badgeView.setVisibility(GONE);
+            }
+
+            arrowView.setColorFilter(new PorterDuffColorFilter(
+                    Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon, resourcesProvider),
+                    PorterDuff.Mode.SRC_IN
+            ));
+            invalidate();
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            super.onMeasure(
+                    MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(dp(64) + (needDivider ? 1 : 0), MeasureSpec.EXACTLY)
+            );
+        }
+
+        @Override
+        protected void onDraw(@NonNull Canvas canvas) {
+            int h = getMeasuredHeight();
+            int w = getMeasuredWidth();
+            float cy = h / 2f;
+            float size = dp(38);
+            float left = LocaleController.isRTL ? (w - dp(16) - size) : dp(16);
+            float top = cy - size / 2f;
+            iconRect.set(left, top, left + size, top + size);
+            if (lastShaderHeight != h) {
+                lastShaderHeight = h;
+                iconBgPaint.setShader(new LinearGradient(left, top, left, top + size, topColor, bottomColor, Shader.TileMode.CLAMP));
+            }
+            canvas.drawRoundRect(iconRect, dp(12), dp(12), iconBgPaint);
+
+            if (needDivider) {
+                dividerPaint.setColor(Theme.getColor(Theme.key_divider, resourcesProvider));
+                float divLeft = LocaleController.isRTL ? dp(16) : dp(68);
+                float divRight = LocaleController.isRTL ? (w - dp(68)) : (w - dp(16));
+                canvas.drawLine(divLeft, h - 1, divRight, h - 1, dividerPaint);
+            }
+        }
+
+        public static class Factory extends UItem.UItemFactory<SubCategoryCardCell> {
+            static { setup(new Factory()); }
+
+            @Override
+            public SubCategoryCardCell createView(Context context, RecyclerListView listView, int currentAccount, int classGuid, Theme.ResourcesProvider resourcesProvider) {
+                return new SubCategoryCardCell(context, resourcesProvider);
+            }
+
+            @Override
+            public void bindView(View view, UItem item, boolean divider, UniversalAdapter adapter, UniversalRecyclerView listView) {
+                int[] colors = (int[]) item.object;
+                ((SubCategoryCardCell) view).bind(colors[0], colors[1], item.iconResId, item.text, item.subtext, item.textValue, divider);
+            }
+
+            public static UItem of(int id, IconBackgroundColors colors, int iconResId, CharSequence title, CharSequence subtitle, CharSequence badge) {
+                UItem item = UItem.ofFactory(Factory.class);
+                item.id = id;
+                item.iconResId = iconResId;
+                item.text = title;
+                item.subtext = subtitle;
+                item.textValue = badge;
+                item.object = new int[]{colors.top, colors.bottom};
+                return item;
+            }
+        }
+    }
+
+    // =============================================================================================
+    // 2. IconSwitchCell
+    // Polished toggle cell with soft tinted icon badge, title, optional subtitle, and Switch.
+    // =============================================================================================
+    public static class IconSwitchCell extends FrameLayout {
+
+        private final Theme.ResourcesProvider resourcesProvider;
+        private final ImageView iconView;
+        private final TextView titleView;
+        private final TextView subtitleView;
+        private final Switch checkBox;
+        private final Paint iconBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint dividerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final RectF iconRect = new RectF();
+        private boolean needDivider;
+
+        public IconSwitchCell(Context context, Theme.ResourcesProvider resourcesProvider) {
+            super(context);
+            this.resourcesProvider = resourcesProvider;
+            setWillNotDraw(false);
+
+            iconView = new ImageView(context);
+            iconView.setScaleType(ImageView.ScaleType.CENTER);
+            addView(iconView, LayoutHelper.createFrame(34, 34,
+                    (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL,
+                    16, 0, 16, 0));
+
+            LinearLayout textCol = new LinearLayout(context);
+            textCol.setOrientation(LinearLayout.VERTICAL);
+            textCol.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
+            addView(textCol, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT,
+                    Gravity.CENTER_VERTICAL,
+                    LocaleController.isRTL ? 68 : 64, 8, LocaleController.isRTL ? 64 : 68, 8));
+
+            titleView = new TextView(context);
+            titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15f);
+            titleView.setTypeface(AndroidUtilities.bold());
+            titleView.setSingleLine(true);
+            titleView.setEllipsize(TextUtils.TruncateAt.END);
+            textCol.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+            subtitleView = new TextView(context);
+            subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12f);
+            subtitleView.setMaxLines(2);
+            subtitleView.setEllipsize(TextUtils.TruncateAt.END);
+            textCol.addView(subtitleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+
+            checkBox = new Switch(context, resourcesProvider);
+            checkBox.setColors(Theme.key_switchTrack, Theme.key_switchTrackChecked, Theme.key_windowBackgroundWhite, Theme.key_windowBackgroundWhite);
+            addView(checkBox, LayoutHelper.createFrame(37, 20,
+                    (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL,
+                    18, 0, 18, 0));
+        }
+
+        public void bind(int iconResId, CharSequence title, CharSequence subtitle, boolean checked, boolean divider) {
+            this.needDivider = divider;
+            int accent = Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4, resourcesProvider);
+            int grayIcon = Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon, resourcesProvider);
+            int iconTint = checked ? accent : grayIcon;
+
+            iconView.setImageResource(iconResId);
+            iconView.setColorFilter(new PorterDuffColorFilter(iconTint, PorterDuff.Mode.SRC_IN));
+            iconBgPaint.setColor(ColorUtils.setAlphaComponent(iconTint, Theme.isCurrentThemeDark() ? (checked ? 42 : 24) : (checked ? 28 : 18)));
+
+            titleView.setText(title);
+            titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
+
+            if (!TextUtils.isEmpty(subtitle)) {
+                subtitleView.setVisibility(VISIBLE);
+                subtitleView.setText(subtitle);
+                subtitleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText, resourcesProvider));
+            } else {
+                subtitleView.setVisibility(GONE);
+            }
+
+            checkBox.setChecked(checked, false);
+            invalidate();
+        }
+
+        public void setChecked(boolean checked) {
+            checkBox.setChecked(checked, true);
+            int accent = Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4, resourcesProvider);
+            int grayIcon = Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon, resourcesProvider);
+            int iconTint = checked ? accent : grayIcon;
+            iconView.setColorFilter(new PorterDuffColorFilter(iconTint, PorterDuff.Mode.SRC_IN));
+            iconBgPaint.setColor(ColorUtils.setAlphaComponent(iconTint, Theme.isCurrentThemeDark() ? (checked ? 42 : 24) : (checked ? 28 : 18)));
+            invalidate();
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            boolean hasSub = subtitleView.getVisibility() == VISIBLE;
+            int h = dp(hasSub ? 64 : 52) + (needDivider ? 1 : 0);
+            super.onMeasure(
+                    MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY)
+            );
+        }
+
+        @Override
+        protected void onDraw(@NonNull Canvas canvas) {
+            int h = getMeasuredHeight();
+            int w = getMeasuredWidth();
+            float cy = h / 2f;
+            float size = dp(34);
+            float left = LocaleController.isRTL ? (w - dp(16) - size) : dp(16);
+            float top = cy - size / 2f;
+            iconRect.set(left, top, left + size, top + size);
+            canvas.drawRoundRect(iconRect, dp(10), dp(10), iconBgPaint);
+
+            if (needDivider) {
+                dividerPaint.setColor(Theme.getColor(Theme.key_divider, resourcesProvider));
+                float divLeft = LocaleController.isRTL ? dp(16) : dp(64);
+                float divRight = LocaleController.isRTL ? (w - dp(64)) : (w - dp(16));
+                canvas.drawLine(divLeft, h - 1, divRight, h - 1, dividerPaint);
+            }
+        }
+
+        public static class Factory extends UItem.UItemFactory<IconSwitchCell> {
+            static { setup(new Factory()); }
+
+            @Override
+            public IconSwitchCell createView(Context context, RecyclerListView listView, int currentAccount, int classGuid, Theme.ResourcesProvider resourcesProvider) {
+                return new IconSwitchCell(context, resourcesProvider);
+            }
+
+            @Override
+            public void bindView(View view, UItem item, boolean divider, UniversalAdapter adapter, UniversalRecyclerView listView) {
+                ((IconSwitchCell) view).bind(item.iconResId, item.text, item.subtext, item.checked, divider);
+            }
+
+            public static UItem of(int id, int iconResId, CharSequence title, CharSequence subtitle, boolean checked) {
+                UItem item = UItem.ofFactory(Factory.class);
+                item.id = id;
+                item.iconResId = iconResId;
+                item.text = title;
+                item.subtext = subtitle;
+                item.checked = checked;
+                return item;
+            }
+        }
+    }
+
+    // =============================================================================================
+    // 3. SegmentedPillCell (Opexgram lc/j3.java & lc/i3.java)
     // Compact single-row or titled segmented pill selector with spring width & checkmark animation.
     // =============================================================================================
     public static class SegmentedPillCell extends FrameLayout {
@@ -97,9 +419,7 @@ public final class LagramSettingsComponents {
                     if (selectedIndex == index) {
                         return;
                     }
-                    try {
-                        v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
-                    } catch (Throwable ignore) {}
+                    AndroidUtilities.vibrate(v);
                     setSelectedIndex(index, true);
                     if (onSelectCallback != null) {
                         onSelectCallback.run(index);
@@ -324,7 +644,7 @@ public final class LagramSettingsComponents {
     }
 
     // =============================================================================================
-    // 2. InlineSliderCell (Opexgram lc/z5.java & lc/b6.java)
+    // 4. InlineSliderCell (Opexgram lc/z5.java & lc/b6.java)
     // Compact inline SeekBarView with title, live pill badge, and 1-tap default reset button.
     // =============================================================================================
     public static class InlineSliderCell extends FrameLayout {
@@ -371,9 +691,7 @@ public final class LagramSettingsComponents {
             resetBadgeView.setPadding(dp(7), dp(2), dp(7), dp(2));
             resetBadgeView.setOnClickListener(v -> {
                 if (currentValue != defaultValue) {
-                    try {
-                        v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
-                    } catch (Throwable ignore) {}
+                    AndroidUtilities.vibrate(v);
                     applyValue(defaultValue, true);
                 }
             });
@@ -503,241 +821,219 @@ public final class LagramSettingsComponents {
     }
 
     // =============================================================================================
-    // 3. ChatAppearancePreviewCell (Opexgram lc/x1.java & lc/e4.java)
-    // Live interactive preview card showing chat wallpaper, Liquid Glass incoming & outgoing bubbles,
-    // specular border, corner radius preset, bubble tails, sticker/GIF size, seconds in time, & chat bar.
+    // 5. RealChatMessagesPreviewCell
+    // Embeds REAL Telegram ChatMessageCell instances over the user's actual chat wallpaper
+    // (`Theme.getCachedWallpaperNonBlocking()`), rendering through the real `MessageDrawable`.
     // =============================================================================================
-    public static class ChatAppearancePreviewCell extends View {
+    public static class RealChatMessagesPreviewCell extends LinearLayout {
 
         public static final int MODE_BUBBLES_AND_GLASS = 0;
         public static final int MODE_STICKER_AND_FOCUS = 1;
 
         private final Theme.ResourcesProvider resourcesProvider;
-        private final Paint cardBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint patternDotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint inBubblePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint outBubblePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint glassSheenPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint glassBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint chatBarPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint pillBadgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final TextPaint namePaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        private final TextPaint msgPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        private final TextPaint timePaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        private final TextPaint badgeTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        private final RectF cardRect = new RectF();
-        private final RectF bubbleRect = new RectF();
-        private final RectF barRect = new RectF();
-        private final RectF badgeRect = new RectF();
-        private final Path tailPath = new Path();
-        private final SimpleDateFormat fmtHm = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        private final SimpleDateFormat fmtHms = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
-        private final Date reusableDate = new Date();
-        private int lastCardW = -1;
-        private int lastCardH = -1;
-        private boolean lastIsDark;
-        private int mode = MODE_BUBBLES_AND_GLASS;
+        private final ChatMessageCell[] cells = new ChatMessageCell[2];
+        private final MessageObject[] messageObjects = new MessageObject[2];
+        private BackgroundGradientDrawable.Disposable backgroundGradientDisposable;
+        private ColorDrawable fallbackBgDrawable;
+        private int mode = -1;
 
-        public ChatAppearancePreviewCell(Context context, Theme.ResourcesProvider resourcesProvider) {
+        @SuppressLint("ClickableViewAccessibility")
+        public RealChatMessagesPreviewCell(Context context, Theme.ResourcesProvider resourcesProvider) {
             super(context);
             this.resourcesProvider = resourcesProvider;
-            glassBorderPaint.setStyle(Paint.Style.STROKE);
-            glassBorderPaint.setStrokeWidth(dpf2(1.1f));
+            setWillNotDraw(false);
+            setOrientation(LinearLayout.VERTICAL);
+            setPadding(0, dp(10), 0, dp(10));
 
-            namePaint.setTextSize(dp(12));
-            namePaint.setTypeface(AndroidUtilities.bold());
-
-            msgPaint.setTextSize(dp(13.5f));
-
-            timePaint.setTextSize(dp(10.5f));
-
-            badgeTextPaint.setTextSize(dp(10.5f));
-            badgeTextPaint.setTypeface(AndroidUtilities.bold());
+            int currentAccount = UserConfig.selectedAccount;
+            for (int a = 0; a < cells.length; a++) {
+                cells[a] = new ChatMessageCell(context, currentAccount, false, null, resourcesProvider) {
+                    @Override
+                    public boolean onTouchEvent(MotionEvent event) {
+                        return false;
+                    }
+                };
+                cells[a].setDelegate(new ChatMessageCell.ChatMessageCellDelegate() {
+                    @Override
+                    public boolean canPerformActions() {
+                        return false;
+                    }
+                });
+                cells[a].isChat = false;
+                cells[a].setFullyDraw(true);
+                addView(cells[a], LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+            }
+            buildMessages(MODE_BUBBLES_AND_GLASS);
         }
 
-        public void setMode(int mode) {
-            this.mode = mode;
+        private void buildMessages(int targetMode) {
+            this.mode = targetMode;
+            int currentAccount = UserConfig.selectedAccount;
+            int now = (int) (System.currentTimeMillis() / 1000);
+            long selfId = UserConfig.getInstance(currentAccount).getClientUserId();
+
+            // Reply target message
+            TLRPC.Message replyMsg = new TLRPC.TL_message();
+            replyMsg.message = targetMode == MODE_STICKER_AND_FOCUS
+                    ? "Mantén pulsada una burbuja en cualquier chat ✨"
+                    : "Burbujas Liquid Glass con borde especular y redondeo";
+            replyMsg.date = now - 120;
+            replyMsg.dialog_id = 1;
+            replyMsg.flags = 259;
+            replyMsg.from_id = new TLRPC.TL_peerUser();
+            replyMsg.from_id.user_id = selfId;
+            replyMsg.id = 1;
+            replyMsg.media = new TLRPC.TL_messageMediaEmpty();
+            replyMsg.out = true;
+            replyMsg.peer_id = new TLRPC.TL_peerUser();
+            replyMsg.peer_id.user_id = 0;
+            MessageObject replyObj = new MessageObject(currentAccount, replyMsg, true, false);
+
+            // 1. Incoming message with reply & forwarded info
+            TLRPC.Message inMsg = new TLRPC.TL_message();
+            inMsg.message = targetMode == MODE_STICKER_AND_FOCUS
+                    ? "Menú Focus real + Stickers y GIFs escalables en vivo"
+                    : "¿Qué tal se ven las burbujas reales de Lagram sobre tu fondo?";
+            inMsg.date = now - 60;
+            inMsg.dialog_id = 1;
+            inMsg.flags = 257 + 8 + 4;
+            inMsg.from_id = new TLRPC.TL_peerUser();
+            inMsg.id = 2;
+            inMsg.reply_to = new TLRPC.TL_messageReplyHeader();
+            inMsg.reply_to.flags |= 16;
+            inMsg.reply_to.reply_to_msg_id = 1;
+            inMsg.fwd_from = new TLRPC.TL_messageFwdHeader();
+            inMsg.fwd_from.from_name = "Lagram Turbo";
+            inMsg.fwd_from.date = now - 3600;
+            inMsg.forwards = 42;
+            inMsg.media = new TLRPC.TL_messageMediaEmpty();
+            inMsg.out = false;
+            inMsg.peer_id = new TLRPC.TL_peerUser();
+            inMsg.peer_id.user_id = selfId;
+
+            MessageObject inObj = new MessageObject(currentAccount, inMsg, true, false);
+            inObj.customReplyName = "Lagram";
+            inObj.replyMessageObject = replyObj;
+            inObj.resetLayout();
+            messageObjects[0] = inObj;
+
+            // 2. Outgoing message
+            TLRPC.Message outMsg = new TLRPC.TL_message();
+            outMsg.message = targetMode == MODE_STICKER_AND_FOCUS
+                    ? ("Estilo Focus: " + getFocusStyleName() + " • Sticker " + LagramConfig.stickerSize + " • GIF " + LagramConfig.gifSize)
+                    : ("Liquid Glass " + (LagramConfig.glassMessages ? (LagramConfig.glassMessagesAlpha + "%") : "Desactivado")
+                            + " • Radio " + LagramConfig.getEffectiveBubbleRadiusDp() + "dp");
+            outMsg.date = now;
+            outMsg.dialog_id = 1;
+            outMsg.flags = 259;
+            outMsg.from_id = new TLRPC.TL_peerUser();
+            outMsg.from_id.user_id = selfId;
+            outMsg.id = 3;
+            outMsg.media = new TLRPC.TL_messageMediaEmpty();
+            outMsg.out = true;
+            outMsg.peer_id = new TLRPC.TL_peerUser();
+            outMsg.peer_id.user_id = 0;
+
+            MessageObject outObj = new MessageObject(currentAccount, outMsg, true, false);
+            outObj.resetLayout();
+            messageObjects[1] = outObj;
+
+            for (int i = 0; i < cells.length; i++) {
+                cells[i].setMessageObject(messageObjects[i], null, false, false, false);
+            }
+        }
+
+        private String getFocusStyleName() {
+            switch (LagramConfig.messageFocusStyle) {
+                case LagramConfig.FOCUS_STYLE_LIST:
+                    return LocaleController.getString(R.string.LagramFocusStyleList);
+                case LagramConfig.FOCUS_STYLE_TILES:
+                    return LocaleController.getString(R.string.LagramFocusStyleTiles);
+                case LagramConfig.FOCUS_STYLE_CAPSULE:
+                default:
+                    return LocaleController.getString(R.string.LagramFocusStyleCapsule);
+            }
+        }
+
+        public void setMode(int newMode) {
+            buildMessages(newMode);
+            refreshPreview();
+        }
+
+        public void refreshPreview() {
+            buildMessages(this.mode < 0 ? MODE_BUBBLES_AND_GLASS : this.mode);
+            for (ChatMessageCell cell : cells) {
+                if (cell != null) {
+                    if (cell.currentBackgroundDrawable != null) {
+                        cell.currentBackgroundDrawable.forceInvalidatePath = true;
+                    }
+                    cell.requestLayout();
+                    cell.invalidate();
+                }
+            }
             invalidate();
         }
 
         @Override
-        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            int h = dp(mode == MODE_STICKER_AND_FOCUS ? 184 : 176);
-            super.onMeasure(
-                    MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY),
-                    MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY)
-            );
+        protected void onDraw(Canvas canvas) {
+            Drawable wallpaper = Theme.getCachedWallpaperNonBlocking();
+            if (Theme.wallpaperLoadTask != null) {
+                invalidate();
+            }
+            if (SharedConfig.compactMode) {
+                int color = Theme.getColor(Theme.key_chat_compact_background, resourcesProvider);
+                if (fallbackBgDrawable == null || fallbackBgDrawable.getColor() != color) {
+                    fallbackBgDrawable = new ColorDrawable(color);
+                }
+                wallpaper = fallbackBgDrawable;
+            }
+            if (wallpaper != null) {
+                wallpaper.setAlpha(255);
+                if (wallpaper instanceof ColorDrawable || wallpaper instanceof GradientDrawable || wallpaper instanceof MotionBackgroundDrawable) {
+                    wallpaper.setBounds(0, 0, getMeasuredWidth(), getMeasuredHeight());
+                    if (wallpaper instanceof BackgroundGradientDrawable) {
+                        if (backgroundGradientDisposable != null) {
+                            backgroundGradientDisposable.dispose();
+                        }
+                        backgroundGradientDisposable = ((BackgroundGradientDrawable) wallpaper).drawExactBoundsSize(canvas, this);
+                    } else {
+                        wallpaper.draw(canvas);
+                    }
+                } else {
+                    StoryEntry.drawBackgroundDrawable(canvas, wallpaper, getWidth(), getHeight());
+                }
+            }
+            for (ChatMessageCell cell : cells) {
+                if (cell != null && cell.drawBackgroundInParent() && cell.currentBackgroundDrawable != null) {
+                    canvas.save();
+                    canvas.translate(0, cell.getY());
+                    cell.setBackgroundTopY(true);
+                    cell.currentBackgroundDrawable.draw(canvas);
+                    canvas.restore();
+                }
+            }
         }
 
         @Override
-        protected void onDraw(@NonNull Canvas canvas) {
-            int w = getWidth();
-            int h = getHeight();
-            if (w <= 0 || h <= 0) return;
-
-            boolean isDark = Theme.isCurrentThemeDark();
-            float cardPadH = dp(14);
-            float cardPadV = dp(10);
-            cardRect.set(cardPadH, cardPadV, w - cardPadH, h - cardPadV);
-            float cardRadius = dp(16);
-
-            // Cache gradient wallpaper backdrop shader per dimensions & theme
-            if (w != lastCardW || h != lastCardH || isDark != lastIsDark) {
-                lastCardW = w;
-                lastCardH = h;
-                lastIsDark = isDark;
-                int bgStart = isDark ? 0xFF131B2E : 0xFFD4E6F8;
-                int bgEnd = isDark ? 0xFF1E293B : 0xFFE5F0DC;
-                cardBgPaint.setShader(new LinearGradient(
-                        cardRect.left, cardRect.top, cardRect.right, cardRect.bottom,
-                        new int[]{bgStart, bgEnd}, null, Shader.TileMode.CLAMP
-                ));
-            }
-            canvas.drawRoundRect(cardRect, cardRadius, cardRadius, cardBgPaint);
-
-            // Subtle ambient orbs to visibly demonstrate Liquid Glass translucency
-            patternDotPaint.setColor(isDark ? 0x2838BDF8 : 0x353B82F6);
-            canvas.drawCircle(cardRect.left + dp(75), cardRect.top + dp(52), dp(34), patternDotPaint);
-            patternDotPaint.setColor(isDark ? 0x28A855F7 : 0x3010B981);
-            canvas.drawCircle(cardRect.right - dp(80), cardRect.top + dp(94), dp(38), patternDotPaint);
-
-            float cornerRad = dp(LagramConfig.getEffectiveBubbleRadiusDp());
-            boolean glass = LagramConfig.glassMessages;
-            int alphaPercent = glass ? Utilities.clamp(LagramConfig.glassMessagesAlpha, 100, 20) : 100;
-            boolean glassBorder = glass && LagramConfig.glassMessagesBorder;
-            boolean tails = LagramConfig.showBubbleTails;
-
-            int rawInColor = Theme.getColor(Theme.key_chat_inBubble, resourcesProvider);
-            int rawOutColor = Theme.getColor(Theme.key_chat_outBubble, resourcesProvider);
-            int inAlpha = Math.round(Color.alpha(rawInColor) * (alphaPercent / 100f));
-            int outAlpha = Math.round(Color.alpha(rawOutColor) * (alphaPercent / 100f));
-            inBubblePaint.setColor(ColorUtils.setAlphaComponent(rawInColor, inAlpha));
-            outBubblePaint.setColor(ColorUtils.setAlphaComponent(rawOutColor, outAlpha));
-
-            reusableDate.setTime(System.currentTimeMillis());
-            String timeStr = (LagramConfig.showSecondsInTime ? fmtHms : fmtHm).format(reusableDate);
-
-            // Top live status pill badge
-            String badgeLabel;
-            if (mode == MODE_STICKER_AND_FOCUS) {
-                String styleStr = LagramConfig.messageFocusStyle == LagramConfig.FOCUS_STYLE_CAPSULE ? "Cápsula"
-                        : (LagramConfig.messageFocusStyle == LagramConfig.FOCUS_STYLE_TILES ? "Cuadrícula" : "Lista");
-                badgeLabel = "Focus: " + styleStr + "  •  Sticker " + LagramConfig.stickerSize + "  •  GIF " + LagramConfig.gifSize;
-            } else {
-                badgeLabel = (glass ? ("Liquid Glass " + alphaPercent + "%") : "Sólido")
-                        + "  •  Radio " + LagramConfig.getEffectiveBubbleRadiusDp() + "dp"
-                        + (tails ? "  •  Colas" : "");
-            }
-            float badgeW = badgeTextPaint.measureText(badgeLabel) + dp(18);
-            badgeRect.set(cardRect.centerX() - badgeW / 2f, cardRect.top + dp(8),
-                    cardRect.centerX() + badgeW / 2f, cardRect.top + dp(26));
-            pillBadgePaint.setColor(isDark ? 0x66000000 : 0x55FFFFFF);
-            canvas.drawRoundRect(badgeRect, dp(9), dp(9), pillBadgePaint);
-            badgeTextPaint.setColor(isDark ? 0xFFE2E8F0 : 0xFF1E293B);
-            canvas.drawText(badgeLabel, badgeRect.left + dp(9), badgeRect.centerY() + dp(3.8f), badgeTextPaint);
-
-            // 1. Incoming Bubble (top-left)
-            float inLeft = cardRect.left + dp(14);
-            float inTop = cardRect.top + dp(34);
-            float inWidth = Math.min(dp(230), cardRect.width() * 0.68f);
-            float inHeight = dp(48);
-            bubbleRect.set(inLeft, inTop, inLeft + inWidth, inTop + inHeight);
-            float rIn = Math.min(cornerRad, inHeight / 2f);
-            canvas.drawRoundRect(bubbleRect, rIn, rIn, inBubblePaint);
-
-            if (tails) {
-                tailPath.rewind();
-                tailPath.moveTo(bubbleRect.left + dp(4), bubbleRect.bottom - dp(8));
-                tailPath.quadTo(bubbleRect.left - dp(5), bubbleRect.bottom, bubbleRect.left - dp(6), bubbleRect.bottom);
-                tailPath.lineTo(bubbleRect.left + dp(8), bubbleRect.bottom);
-                tailPath.close();
-                canvas.drawPath(tailPath, inBubblePaint);
-            }
-
-            if (glass) {
-                drawGlassOverlay(canvas, bubbleRect, rIn, isDark, glassBorder);
-            }
-
-            namePaint.setColor(Theme.getColor(Theme.key_chat_inMenu, resourcesProvider));
-            String senderText = mode == MODE_STICKER_AND_FOCUS ? "Lagram Focus ✨" : "Lagram Liquid Glass";
-            canvas.drawText(senderText, bubbleRect.left + dp(11), bubbleRect.top + dp(17), namePaint);
-
-            msgPaint.setColor(Theme.getColor(Theme.key_chat_messageTextIn, resourcesProvider));
-            String inMsg = mode == MODE_STICKER_AND_FOCUS
-                    ? "Mantén pulsado para menú " + (LagramConfig.messageFocusBlur ? "Blur" : "Focus")
-                    : "Burbujas traslúcidas y bordes suaves";
-            CharSequence inEllip = TextUtils.ellipsize(inMsg, msgPaint, bubbleRect.width() - dp(22), TextUtils.TruncateAt.END);
-            canvas.drawText(inEllip, 0, inEllip.length(), bubbleRect.left + dp(11), bubbleRect.top + dp(36), msgPaint);
-
-            // 2. Outgoing Bubble (bottom-right)
-            float scaleFactor = mode == MODE_STICKER_AND_FOCUS ? (0.72f + (LagramConfig.stickerSize / 20f) * 0.35f) : 1.0f;
-            float outWidth = Math.min(dp(220) * scaleFactor, cardRect.width() * 0.68f);
-            float outHeight = dp(38);
-            float outRight = cardRect.right - dp(14);
-            float outTop = inTop + inHeight + dp(8);
-            bubbleRect.set(outRight - outWidth, outTop, outRight, outTop + outHeight);
-            float rOut = Math.min(cornerRad, outHeight / 2f);
-            canvas.drawRoundRect(bubbleRect, rOut, rOut, outBubblePaint);
-
-            if (tails) {
-                tailPath.rewind();
-                tailPath.moveTo(bubbleRect.right - dp(4), bubbleRect.bottom - dp(8));
-                tailPath.quadTo(bubbleRect.right + dp(5), bubbleRect.bottom, bubbleRect.right + dp(6), bubbleRect.bottom);
-                tailPath.lineTo(bubbleRect.right - dp(8), bubbleRect.bottom);
-                tailPath.close();
-                canvas.drawPath(tailPath, outBubblePaint);
-            }
-
-            if (glass) {
-                drawGlassOverlay(canvas, bubbleRect, rOut, isDark, glassBorder);
-            }
-
-            msgPaint.setColor(Theme.getColor(Theme.key_chat_messageTextOut, resourcesProvider));
-            String outMsg = mode == MODE_STICKER_AND_FOCUS
-                    ? ("Tamaño Sticker: " + LagramConfig.stickerSize + " / GIF: " + LagramConfig.gifSize)
-                    : "¡Estilo Opexgram optimizado!";
-            float timeW = timePaint.measureText(timeStr);
-            CharSequence outEllip = TextUtils.ellipsize(outMsg, msgPaint, Math.max(dp(40), bubbleRect.width() - timeW - dp(28)), TextUtils.TruncateAt.END);
-            canvas.drawText(outEllip, 0, outEllip.length(), bubbleRect.left + dp(11), bubbleRect.centerY() + dp(4.5f), msgPaint);
-
-            timePaint.setColor(Theme.getColor(Theme.key_chat_outSentCheck, resourcesProvider));
-            canvas.drawText(timeStr, bubbleRect.right - timeW - dp(10), bubbleRect.bottom - dp(7), timePaint);
-
-            // 3. Bottom Chat Input Bar Preview
-            float barTop = cardRect.bottom - dp(28);
-            barRect.set(cardRect.left + dp(12), barTop, cardRect.right - dp(12), cardRect.bottom - dp(6));
-            int barColor = ColorUtils.setAlphaComponent(rawInColor, glass ? Math.max(150, inAlpha) : 235);
-            chatBarPaint.setColor(barColor);
-            canvas.drawRoundRect(barRect, barRect.height() / 2f, barRect.height() / 2f, chatBarPaint);
-            if (glass && glassBorder) {
-                glassBorderPaint.setColor(isDark ? 0x40FFFFFF : 0x70FFFFFF);
-                canvas.drawRoundRect(barRect, barRect.height() / 2f, barRect.height() / 2f, glassBorderPaint);
-            }
-            timePaint.setColor(Theme.getColor(Theme.key_chat_messagePanelHint, resourcesProvider));
-            canvas.drawText(LocaleController.getString(R.string.Message), barRect.left + dp(12), barRect.centerY() + dp(3.5f), timePaint);
-        }
-
-        private void drawGlassOverlay(Canvas canvas, RectF rect, float radius, boolean isDark, boolean drawBorder) {
-            glassSheenPaint.setColor(isDark ? 0x16FFFFFF : 0x26FFFFFF);
-            canvas.drawRoundRect(rect, radius, radius, glassSheenPaint);
-
-            if (drawBorder) {
-                glassBorderPaint.setColor(isDark ? 0x48FFFFFF : 0x78FFFFFF);
-                canvas.drawRoundRect(rect, radius, radius, glassBorderPaint);
+        protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            if (backgroundGradientDisposable != null) {
+                backgroundGradientDisposable.dispose();
+                backgroundGradientDisposable = null;
             }
         }
 
-        public static class Factory extends UItem.UItemFactory<ChatAppearancePreviewCell> {
+        public static class Factory extends UItem.UItemFactory<RealChatMessagesPreviewCell> {
             static { setup(new Factory()); }
 
             @Override
-            public ChatAppearancePreviewCell createView(Context context, RecyclerListView listView, int currentAccount, int classGuid, Theme.ResourcesProvider resourcesProvider) {
-                return new ChatAppearancePreviewCell(context, resourcesProvider);
+            public RealChatMessagesPreviewCell createView(Context context, RecyclerListView listView, int currentAccount, int classGuid, Theme.ResourcesProvider resourcesProvider) {
+                return new RealChatMessagesPreviewCell(context, resourcesProvider);
             }
 
             @Override
             public void bindView(View view, UItem item, boolean divider, UniversalAdapter adapter, UniversalRecyclerView listView) {
-                ((ChatAppearancePreviewCell) view).setMode(item.intValue);
+                ((RealChatMessagesPreviewCell) view).setMode(item.intValue);
             }
 
             @Override
@@ -755,157 +1051,141 @@ public final class LagramSettingsComponents {
     }
 
     // =============================================================================================
-    // 4. FolderTabsPreviewCell (Opexgram lc/t2.java)
-    // Live folder tabs preview showing Icon+Text / Icon Only / Text Only and Unread Counters.
+    // 6. RealFolderTabsPreviewCell
+    // Embeds the REAL Telegram FilterTabsView inside the settings card so folder tabs look &
+    // animate identically to the main chat list header.
     // =============================================================================================
-    public static class FolderTabsPreviewCell extends View {
+    public static class RealFolderTabsPreviewCell extends FrameLayout {
 
         private final Theme.ResourcesProvider resourcesProvider;
-        private final Paint cardPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint activePillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint counterPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final FilterTabsView filterTabsView;
         private final Paint dividerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final TextPaint tabTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        private final TextPaint counterTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        private final RectF cardRect = new RectF();
-        private final RectF pillRect = new RectF();
-        private final RectF badgeRect = new RectF();
-        private final Drawable[] cachedTabDrawables = new Drawable[4];
         private boolean needDivider;
 
-        private static final String[] TAB_NAMES = new String[]{"Todos", "Personal", "Grupos", "Canales"};
-        private static final String[] TAB_COUNTS = new String[]{"12", "3", "28", "5"};
-        private static final int[] TAB_ICONS = new int[]{
-                R.drawable.msg_chats_remove,
-                R.drawable.msg_contacts,
-                R.drawable.msg_groups,
-                R.drawable.msg_channel
-        };
+        private static final int[] SAMPLE_COUNTS = new int[]{14, 3, 28, 7};
 
-        public FolderTabsPreviewCell(Context context, Theme.ResourcesProvider resourcesProvider) {
+        public RealFolderTabsPreviewCell(Context context, Theme.ResourcesProvider resourcesProvider) {
             super(context);
             this.resourcesProvider = resourcesProvider;
-            tabTextPaint.setTextSize(dp(13));
-            tabTextPaint.setTypeface(AndroidUtilities.bold());
-            counterTextPaint.setTextSize(dp(10.5f));
-            counterTextPaint.setTypeface(AndroidUtilities.bold());
-            for (int i = 0; i < TAB_ICONS.length; i++) {
-                Drawable d = ContextCompat.getDrawable(context, TAB_ICONS[i]);
-                if (d != null) {
-                    cachedTabDrawables[i] = d.mutate();
+            setWillNotDraw(false);
+
+            filterTabsView = new FilterTabsView(context, resourcesProvider);
+            filterTabsView.setDelegate(new FilterTabsView.FilterTabsViewDelegate() {
+                @Override
+                public void onPageSelected(FilterTabsView.Tab tab, boolean forward) {}
+
+                @Override
+                public void onPageScrolled(float progress) {}
+
+                @Override
+                public void onSamePageSelected() {}
+
+                @Override
+                public int getTabCounter(int tabId) {
+                    if (!LagramConfig.showFolderCounters) {
+                        return 0;
+                    }
+                    if (tabId >= 0 && tabId < SAMPLE_COUNTS.length) {
+                        return SAMPLE_COUNTS[tabId];
+                    }
+                    return 0;
                 }
+
+                @Override
+                public boolean didSelectTab(FilterTabsView.TabView tabView, boolean selected) {
+                    return false;
+                }
+
+                @Override
+                public boolean isTabMenuVisible() {
+                    return false;
+                }
+
+                @Override
+                public void onDeletePressed(int id) {}
+
+                @Override
+                public void onPageReorder(int fromId, int toId) {}
+
+                @Override
+                public boolean canPerformActions() {
+                    return true;
+                }
+            });
+            addView(filterTabsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.CENTER_VERTICAL, 4, 4, 4, 4));
+            rebuildTabs();
+        }
+
+        public void rebuildTabs() {
+            LagramConfig.ensureLoaded();
+            filterTabsView.removeTabs();
+            int style = LagramConfig.folderTabsStyle;
+
+            String[] icons = new String[]{"💬", "👤", "👥", "📢"};
+            String[] titles = new String[]{
+                    LocaleController.getString(R.string.FilterAllChats),
+                    LocaleController.getString(R.string.FilterContacts),
+                    LocaleController.getString(R.string.FilterGroups),
+                    LocaleController.getString(R.string.FilterChannels)
+            };
+
+            int sortId = 0;
+            for (int i = 0; i < titles.length; i++) {
+                if (i == 0 && LagramConfig.hideAllChatsFolder) {
+                    continue;
+                }
+                String label;
+                if (style == LagramConfig.FOLDER_TABS_ICON_ONLY) {
+                    label = icons[i];
+                } else if (style == LagramConfig.FOLDER_TABS_TEXT_ONLY) {
+                    label = titles[i];
+                } else {
+                    label = icons[i] + " " + titles[i];
+                }
+                filterTabsView.addTab(sortId++, i, label, null, false, i == 0, false);
             }
+            filterTabsView.finishAddingTabs(false);
+            filterTabsView.updateTabsWidths();
+            filterTabsView.invalidate();
+            if (filterTabsView.getListView() != null) {
+                filterTabsView.getListView().invalidateViews();
+            }
+            invalidate();
         }
 
         public void setNeedDivider(boolean divider) {
             this.needDivider = divider;
-            invalidate();
+            rebuildTabs();
         }
 
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             super.onMeasure(
                     MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY),
-                    MeasureSpec.makeMeasureSpec(dp(64) + (needDivider ? 1 : 0), MeasureSpec.EXACTLY)
+                    MeasureSpec.makeMeasureSpec(dp(56) + (needDivider ? 1 : 0), MeasureSpec.EXACTLY)
             );
         }
 
         @Override
         protected void onDraw(@NonNull Canvas canvas) {
-            int w = getWidth();
-            int h = getHeight();
-            if (w <= 0 || h <= 0) return;
-
-            int accent = Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4, resourcesProvider);
-            int grayText = Theme.getColor(Theme.key_windowBackgroundWhiteGrayText, resourcesProvider);
-            boolean isDark = Theme.isCurrentThemeDark();
-
-            cardRect.set(dp(14), dp(8), w - dp(14), h - dp(8));
-            cardPaint.setColor(ColorUtils.setAlphaComponent(grayText, isDark ? 24 : 16));
-            canvas.drawRoundRect(cardRect, dp(14), dp(14), cardPaint);
-
-            int style = LagramConfig.folderTabsStyle;
-            boolean showIcons = style == LagramConfig.FOLDER_TABS_ICON_AND_TEXT || style == LagramConfig.FOLDER_TABS_ICON_ONLY;
-            boolean showText = style == LagramConfig.FOLDER_TABS_ICON_AND_TEXT || style == LagramConfig.FOLDER_TABS_TEXT_ONLY;
-            boolean showCounters = LagramConfig.showFolderCounters;
-            boolean hideAllChats = LagramConfig.hideAllChatsFolder;
-
-            int startIdx = hideAllChats ? 1 : 0;
-            int tabCount = TAB_NAMES.length - startIdx;
-            float slotW = (cardRect.width() - dp(12)) / tabCount;
-
-            for (int i = startIdx; i < TAB_NAMES.length; i++) {
-                int slot = i - startIdx;
-                boolean isSelected = (slot == 0);
-                float slotLeft = cardRect.left + dp(6) + slot * slotW;
-                float slotRight = slotLeft + slotW;
-                float cy = cardRect.centerY();
-
-                if (isSelected) {
-                    pillRect.set(slotLeft + dp(2), cardRect.top + dp(5), slotRight - dp(2), cardRect.bottom - dp(5));
-                    activePillPaint.setColor(ColorUtils.setAlphaComponent(accent, isDark ? 48 : 32));
-                    canvas.drawRoundRect(pillRect, pillRect.height() / 2f, pillRect.height() / 2f, activePillPaint);
-                }
-
-                int fgColor = isSelected ? accent : grayText;
-                tabTextPaint.setColor(fgColor);
-
-                float iconW = showIcons ? dp(16) : 0;
-                float textW = showText ? tabTextPaint.measureText(TAB_NAMES[i]) : 0;
-                float countW = showCounters ? (counterTextPaint.measureText(TAB_COUNTS[i]) + dp(10)) : 0;
-                float gap1 = (showIcons && showText) ? dp(4) : 0;
-                float gap2 = (showCounters && (showIcons || showText)) ? dp(4) : 0;
-                float totalW = iconW + gap1 + textW + gap2 + countW;
-
-                float curX = (slotLeft + slotRight - totalW) / 2f;
-
-                if (showIcons) {
-                    Drawable d = cachedTabDrawables[i];
-                    if (d != null) {
-                        d.setTint(fgColor);
-                        int iy = (int) (cy - dp(8));
-                        d.setBounds((int) curX, iy, (int) (curX + dp(16)), iy + dp(16));
-                        d.draw(canvas);
-                    }
-                    curX += iconW + gap1;
-                }
-
-                if (showText) {
-                    Paint.FontMetrics fm = tabTextPaint.getFontMetrics();
-                    float ty = cy - (fm.ascent + fm.descent) / 2f;
-                    canvas.drawText(TAB_NAMES[i], curX, ty, tabTextPaint);
-                    curX += textW + gap2;
-                }
-
-                if (showCounters) {
-                    float bh = dp(15);
-                    badgeRect.set(curX, cy - bh / 2f, curX + countW, cy + bh / 2f);
-                    counterPaint.setColor(isSelected ? accent : ColorUtils.setAlphaComponent(grayText, 60));
-                    canvas.drawRoundRect(badgeRect, bh / 2f, bh / 2f, counterPaint);
-                    counterTextPaint.setColor(isSelected ? Color.WHITE : fgColor);
-                    Paint.FontMetrics fm = counterTextPaint.getFontMetrics();
-                    float cty = cy - (fm.ascent + fm.descent) / 2f;
-                    canvas.drawText(TAB_COUNTS[i], badgeRect.left + dp(5), cty, counterTextPaint);
-                }
-            }
-
+            super.onDraw(canvas);
             if (needDivider) {
                 dividerPaint.setColor(Theme.getColor(Theme.key_divider, resourcesProvider));
-                canvas.drawLine(dp(20), h - 1, w - dp(20), h - 1, dividerPaint);
+                canvas.drawLine(dp(20), getMeasuredHeight() - 1, getMeasuredWidth() - dp(20), getMeasuredHeight() - 1, dividerPaint);
             }
         }
 
-        public static class Factory extends UItem.UItemFactory<FolderTabsPreviewCell> {
+        public static class Factory extends UItem.UItemFactory<RealFolderTabsPreviewCell> {
             static { setup(new Factory()); }
 
             @Override
-            public FolderTabsPreviewCell createView(Context context, RecyclerListView listView, int currentAccount, int classGuid, Theme.ResourcesProvider resourcesProvider) {
-                return new FolderTabsPreviewCell(context, resourcesProvider);
+            public RealFolderTabsPreviewCell createView(Context context, RecyclerListView listView, int currentAccount, int classGuid, Theme.ResourcesProvider resourcesProvider) {
+                return new RealFolderTabsPreviewCell(context, resourcesProvider);
             }
 
             @Override
             public void bindView(View view, UItem item, boolean divider, UniversalAdapter adapter, UniversalRecyclerView listView) {
-                ((FolderTabsPreviewCell) view).setNeedDivider(divider);
+                ((RealFolderTabsPreviewCell) view).setNeedDivider(divider);
             }
 
             @Override

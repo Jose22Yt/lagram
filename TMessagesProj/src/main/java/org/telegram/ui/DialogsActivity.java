@@ -2277,6 +2277,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 if (AndroidUtilities.isAccessibilityScreenReaderEnabled()) {
                                     AndroidUtilities.makeAccessibilityAnnouncement(LocaleController.getString(R.string.AccDescrArchivedChatsShown));
                                 }
+                                LagramConfig.ensureLoaded();
+                                if (LagramConfig.openArchiveOnPull) {
+                                    Bundle args = new Bundle();
+                                    args.putInt("folderId", 1);
+                                    presentFragment(new DialogsActivity(args));
+                                }
                             }
                         }
 
@@ -6802,15 +6808,35 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
                 filterTabsView.removeTabs();
                 LagramConfig.ensureLoaded();
+                int tabStyle = LagramConfig.folderTabsStyle;
                 for (int a = 0, N = filters.size(); a < N; a++) {
                     if (filters.get(a).isDefault()) {
                         if (LagramConfig.hideAllChatsFolder && N > 1) {
                             continue;
                         }
-                        filterTabsView.addTab(a, 0, LocaleController.getString(R.string.FilterAllChats), null, false, true, filters.get(a).locked);
+                        String allTitle = LocaleController.getString(R.string.FilterAllChats);
+                        if (tabStyle == LagramConfig.FOLDER_TABS_ICON_ONLY) {
+                            allTitle = "💬";
+                        }
+                        filterTabsView.addTab(a, 0, allTitle, null, false, true, filters.get(a).locked);
                     } else {
                         final MessagesController.DialogFilter filter = filters.get(a);
-                        filterTabsView.addTab(a, filter.localId, filter.name, filter.entities, filter.title_noanimate, false, filters.get(a).locked);
+                        String tabName = filter.name;
+                        if (tabStyle == LagramConfig.FOLDER_TABS_ICON_ONLY) {
+                            int fl = filter.flags;
+                            if ((fl & MessagesController.DIALOG_FILTER_FLAG_CHANNELS) != 0 && (fl & MessagesController.DIALOG_FILTER_FLAG_GROUPS) == 0) {
+                                tabName = "📢";
+                            } else if ((fl & MessagesController.DIALOG_FILTER_FLAG_GROUPS) != 0) {
+                                tabName = "👥";
+                            } else if ((fl & MessagesController.DIALOG_FILTER_FLAG_CONTACTS) != 0) {
+                                tabName = "👤";
+                            } else if ((fl & MessagesController.DIALOG_FILTER_FLAG_BOTS) != 0) {
+                                tabName = "🤖";
+                            } else {
+                                tabName = "📁";
+                            }
+                        }
+                        filterTabsView.addTab(a, filter.localId, tabName, filter.entities, filter.title_noanimate, false, filters.get(a).locked);
                     }
                 }
                 if (stableId >= 0) {
@@ -8794,7 +8820,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             floatingButton3.setButtonVisible(isVisible, animated);
         }
         if (floatingButtonStories != null) {
-            floatingButtonStories.setButtonVisible(isVisible, animated);
+            LagramConfig.ensureLoaded();
+            final boolean showStoriesBtn = isVisible && !LagramConfig.hideStories && !LagramConfig.hideStoryPosting;
+            floatingButtonStories.setButtonVisible(showStoriesBtn, animated);
+            if (!showStoriesBtn) {
+                floatingButtonStories.setVisibility(View.GONE);
+            }
         }
     }
 

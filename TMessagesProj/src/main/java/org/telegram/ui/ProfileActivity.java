@@ -10719,6 +10719,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private boolean needInsetForStories() {
+        org.telegram.messenger.LagramConfig.ensureLoaded();
+        if (org.telegram.messenger.LagramConfig.hideStories || org.telegram.messenger.LagramConfig.hideStoriesInProfile) {
+            return false;
+        }
         return getMessagesController().getStoriesController().hasStories(getDialogId()) && !isTopic;
     }
 

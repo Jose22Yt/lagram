@@ -7,7 +7,6 @@ import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalFragment;
@@ -63,32 +62,77 @@ public class LagramMediaActivity extends UniversalFragment {
                 LagramConfig.downloadSpeedBoost,
                 LagramConfig::setDownloadSpeedBoost
         ));
-        items.add(UItem.asCheck(ID_TURBO_UPLOADS, LocaleController.getString(R.string.LagramTurboUploads))
-                .setChecked(LagramConfig.turboUploads));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_TURBO_UPLOADS,
+                R.drawable.msg_send,
+                LocaleController.getString(R.string.LagramTurboUploads),
+                "Aumentar fragmentos paralelos al subir archivos y videos",
+                LagramConfig.turboUploads
+        ));
         items.add(UItem.asShadow(null));
 
         // Section 2: Sequential Autoplay
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAutoplayHeader)));
-        items.add(UItem.asCheck(ID_AUTOPLAY_VOICE, LocaleController.getString(R.string.LagramAutoplayVoice))
-                .setChecked(LagramConfig.autoplayVoiceInRow));
-        items.add(UItem.asCheck(ID_AUTOPLAY_ROUND, LocaleController.getString(R.string.LagramAutoplayRound))
-                .setChecked(LagramConfig.autoplayRoundInRow));
-        items.add(UItem.asCheck(ID_AUTOPLAY_MUSIC, LocaleController.getString(R.string.LagramAutoplayMusic))
-                .setChecked(LagramConfig.autoplayMusicInRow));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_AUTOPLAY_VOICE,
+                R.drawable.msg_filled_data_voice,
+                LocaleController.getString(R.string.LagramAutoplayVoice),
+                "Continuar automáticamente con la siguiente nota de voz del chat",
+                LagramConfig.autoplayVoiceInRow
+        ));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_AUTOPLAY_ROUND,
+                R.drawable.msg_video,
+                LocaleController.getString(R.string.LagramAutoplayRound),
+                "Reproducir el siguiente videomensaje circular al terminar",
+                LagramConfig.autoplayRoundInRow
+        ));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_AUTOPLAY_MUSIC,
+                R.drawable.msg_filled_data_music,
+                LocaleController.getString(R.string.LagramAutoplayMusic),
+                "Continuar con la siguiente pista de audio en la lista",
+                LagramConfig.autoplayMusicInRow
+        ));
         items.add(UItem.asShadow(null));
 
         // Section 3: Camera, HD Photos & Ambient Glow
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramMediaHeader)));
-        items.add(UItem.asCheck(ID_SEND_PHOTOS_HD, LocaleController.getString(R.string.LagramSendPhotosHd))
-                .setChecked(LagramConfig.sendPhotosInHd));
-        items.add(UItem.asCheck(ID_REAR_CAMERA_ROUND, LocaleController.getString(R.string.LagramRearCameraRound))
-                .setChecked(LagramConfig.rearCameraForRoundVideo));
-        items.add(UItem.asCheck(ID_COMPACT_ROUND_CAMERA, LocaleController.getString(R.string.LagramCompactRoundCamera))
-                .setChecked(LagramConfig.compactRoundCamera));
-        items.add(UItem.asCheck(ID_MEDIA_GLOW, LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramMediaGlow)))
-                .setChecked(LagramConfig.mediaGlow));
-        items.add(UItem.asCheck(ID_PAUSE_VIDEO_MINIMIZE, LocaleController.getString(R.string.LagramPauseVideoMinimize))
-                .setChecked(LagramConfig.pauseVideoOnMinimize));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_SEND_PHOTOS_HD,
+                R.drawable.msg_photos,
+                LocaleController.getString(R.string.LagramSendPhotosHd),
+                "Enviar imágenes en resolución HD (2560px) por defecto",
+                LagramConfig.sendPhotosInHd
+        ));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_REAR_CAMERA_ROUND,
+                R.drawable.msg_camera,
+                LocaleController.getString(R.string.LagramRearCameraRound),
+                "Iniciar grabación de videomensajes con la cámara trasera",
+                LagramConfig.rearCameraForRoundVideo
+        ));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_COMPACT_ROUND_CAMERA,
+                R.drawable.msg_video,
+                LocaleController.getString(R.string.LagramCompactRoundCamera),
+                "Vista previa compacta al grabar videomensajes circulares",
+                LagramConfig.compactRoundCamera
+        ));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_MEDIA_GLOW,
+                R.drawable.msg_theme,
+                LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramMediaGlow)),
+                "Iluminación ambiental dinámica en el visor de fotos y videos",
+                LagramConfig.mediaGlow
+        ));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_PAUSE_VIDEO_MINIMIZE,
+                R.drawable.msg_played,
+                LocaleController.getString(R.string.LagramPauseVideoMinimize),
+                "Pausar reproducción de video al salir de Lagram",
+                LagramConfig.pauseVideoOnMinimize
+        ));
         items.add(UItem.asShadow(LocaleController.getString(R.string.LagramMediaInfo)));
     }
 
@@ -134,8 +178,8 @@ public class LagramMediaActivity extends UniversalFragment {
                 checkChanged = true;
                 break;
         }
-        if (checkChanged && view instanceof TextCheckCell) {
-            ((TextCheckCell) view).setChecked(newVal);
+        if (checkChanged && view instanceof LagramSettingsComponents.IconSwitchCell) {
+            ((LagramSettingsComponents.IconSwitchCell) view).setChecked(newVal);
         }
     }
 

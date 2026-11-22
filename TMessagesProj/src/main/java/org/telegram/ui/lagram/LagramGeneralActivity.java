@@ -7,7 +7,6 @@ import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalFragment;
@@ -47,10 +46,15 @@ public class LagramGeneralActivity extends UniversalFragment {
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         LagramConfig.ensureLoaded();
 
-        // Section 1: Performance & Haptics with Segmented Pill Selectors
+        // Section 1: Performance & Haptics with Segmented Pill Selectors & Icon Switches
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramPerformanceHeader)));
-        items.add(UItem.asCheck(ID_HIGH_REFRESH, LocaleController.getString(R.string.LagramHighRefreshRate))
-                .setChecked(LagramConfig.highRefreshRateScroll));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_HIGH_REFRESH,
+                R.drawable.msg_speed,
+                LocaleController.getString(R.string.LagramHighRefreshRate),
+                "Sincronización fluida a 120 Hz durante el desplazamiento de listas",
+                LagramConfig.highRefreshRateScroll
+        ));
         items.add(LagramSettingsComponents.SegmentedPillCell.Factory.of(
                 ID_PERF_CLASS,
                 LocaleController.getString(R.string.LagramForcePerfClass),
@@ -79,18 +83,38 @@ public class LagramGeneralActivity extends UniversalFragment {
 
         // Section 2: Profile & Chat List Behavior
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramBehaviorHeader)));
-        items.add(UItem.asCheck(ID_SHOW_JOIN_DATE, LocaleController.getString(R.string.LagramShowJoinDate))
-                .setChecked(LagramConfig.showJoinDate));
-        items.add(UItem.asCheck(ID_OPEN_ARCHIVE_PULL, LocaleController.getString(R.string.LagramOpenArchiveOnPull))
-                .setChecked(LagramConfig.openArchiveOnPull));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_SHOW_JOIN_DATE,
+                R.drawable.msg_calendar2,
+                LocaleController.getString(R.string.LagramShowJoinDate),
+                "Mostrar fecha de ingreso en perfiles de grupos y canales",
+                LagramConfig.showJoinDate
+        ));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_OPEN_ARCHIVE_PULL,
+                R.drawable.msg_archive,
+                LocaleController.getString(R.string.LagramOpenArchiveOnPull),
+                "Entrar directamente a Chats Archivados al deslizar hacia abajo",
+                LagramConfig.openArchiveOnPull
+        ));
         items.add(UItem.asShadow(null));
 
         // Section 3: Anti-Bloat & Sponsored Cleanup
         items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAntiBloatHeader)));
-        items.add(UItem.asCheck(ID_DISABLE_SPONSORED, LocaleController.getString(R.string.LagramDisableSponsored))
-                .setChecked(LagramConfig.disableSponsoredMessages));
-        items.add(UItem.asCheck(ID_HIDE_SIMILAR_CHANNELS, LocaleController.getString(R.string.LagramHideSimilarChannels))
-                .setChecked(LagramConfig.hideSimilarChannels));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_DISABLE_SPONSORED,
+                R.drawable.msg_clear,
+                LocaleController.getString(R.string.LagramDisableSponsored),
+                "Bloquear anuncios y mensajes patrocinados en canales y bots",
+                LagramConfig.disableSponsoredMessages
+        ));
+        items.add(LagramSettingsComponents.IconSwitchCell.Factory.of(
+                ID_HIDE_SIMILAR_CHANNELS,
+                R.drawable.msg_channel,
+                LocaleController.getString(R.string.LagramHideSimilarChannels),
+                "Ocultar sugerencias de canales similares al unirte",
+                LagramConfig.hideSimilarChannels
+        ));
         items.add(UItem.asShadow(LocaleController.getString(R.string.LagramGeneralInfo)));
     }
 
@@ -120,8 +144,8 @@ public class LagramGeneralActivity extends UniversalFragment {
                 checkChanged = true;
                 break;
         }
-        if (checkChanged && view instanceof TextCheckCell) {
-            ((TextCheckCell) view).setChecked(newVal);
+        if (checkChanged && view instanceof LagramSettingsComponents.IconSwitchCell) {
+            ((LagramSettingsComponents.IconSwitchCell) view).setChecked(newVal);
         }
     }
 

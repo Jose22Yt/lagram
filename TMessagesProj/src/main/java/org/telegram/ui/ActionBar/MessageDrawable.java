@@ -493,7 +493,7 @@ public class MessageDrawable extends Drawable {
     }
 
     public Drawable getShadowDrawable() {
-        if (isCrossfadeBackground || isCompact()) {
+        if (isCrossfadeBackground || isCompact() || LagramConfig.glassMessages) {
             return null;
         }
         if (gradientShader == null && !isSelected && crossfadeFromDrawable == null) {
@@ -609,7 +609,7 @@ public class MessageDrawable extends Drawable {
             return;
         }
         Rect bounds = getBounds();
-        boolean useGlass = LagramConfig.glassMessages && !renderingBackgroundCache && currentType != TYPE_PREVIEW;
+        boolean useGlass = LagramConfig.glassMessages && !renderingBackgroundCache;
         if (!useGlass && paintToUse == null && paint.getStyle() == Paint.Style.FILL && gradientShader == null && overrideRoundRadius == 0 && overrideRounding <= 0) {
             Drawable background = getBackgroundDrawable();
             if (background != null) {
@@ -687,7 +687,10 @@ public class MessageDrawable extends Drawable {
 
         int savedPaintAlpha = p.getAlpha();
         if (useGlass && paintToUse == null) {
-            int glassAlpha = Math.round(savedPaintAlpha * (Math.max(20, Math.min(100, LagramConfig.glassMessagesAlpha)) / 100f));
+            // Note: when gradientShader != null, paint.setColor(0xffffffff) resets paint alpha to 255,
+            // so we multiply this.alpha (the drawable alpha) by glassMessagesAlpha%
+            int baseAlpha = gradientShader != null ? this.alpha : savedPaintAlpha;
+            int glassAlpha = Math.round(baseAlpha * (Math.max(20, Math.min(100, LagramConfig.glassMessagesAlpha)) / 100f));
             p.setAlpha(glassAlpha);
         }
         canvas.drawPath(path, p);
@@ -714,7 +717,7 @@ public class MessageDrawable extends Drawable {
         if (glassBorderPaint == null) {
             glassBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             glassBorderPaint.setStyle(Paint.Style.STROKE);
-            glassBorderPaint.setStrokeWidth(AndroidUtilities.dpf2(1.05f));
+            glassBorderPaint.setStrokeWidth(AndroidUtilities.dpf2(1.25f));
         }
         if (bounds.top != lastGlassBoundsTop || bounds.bottom != lastGlassBoundsBottom
                 || bounds.left != lastGlassBoundsLeft || bounds.right != lastGlassBoundsRight
@@ -725,13 +728,16 @@ public class MessageDrawable extends Drawable {
             lastGlassBoundsRight = bounds.right;
             lastGlassDark = isDark;
 
-            int sheenTopColor = isDark ? 0x20FFFFFF : 0x3AFFFFFF;
+            int sheenTopColor = isDark ? 0x2AFFFFFF : 0x48FFFFFF;
+            int sheenMidColor = isDark ? 0x08FFFFFF : 0x12FFFFFF;
             glassSheenPaint.setShader(new LinearGradient(
                     bounds.left, bounds.top, bounds.left, bounds.bottom,
-                    new int[]{sheenTopColor, 0x00FFFFFF}, null, Shader.TileMode.CLAMP
+                    new int[]{sheenTopColor, sheenMidColor, 0x00FFFFFF},
+                    new float[]{0f, 0.45f, 1f},
+                    Shader.TileMode.CLAMP
             ));
-            int borderTopLeft = isDark ? 0x58FFFFFF : 0x88FFFFFF;
-            int borderBottomRight = isDark ? 0x16FFFFFF : 0x26FFFFFF;
+            int borderTopLeft = isDark ? 0x7AFFFFFF : 0xAAFFFFFF;
+            int borderBottomRight = isDark ? 0x22FFFFFF : 0x38FFFFFF;
             glassBorderPaint.setShader(new LinearGradient(
                     bounds.left, bounds.top, bounds.right, bounds.bottom,
                     new int[]{borderTopLeft, borderBottomRight}, null, Shader.TileMode.CLAMP
@@ -1007,11 +1013,17 @@ public class MessageDrawable extends Drawable {
         Rect lastRect = new Rect();
         boolean lastDrawFullTop;
         boolean lastDrawFullBottom;
+        int lastBubbleRad = -1;
+        boolean lastShowTails = true;
 
         public boolean invalidatePath(Rect bounds, boolean drawFullBottom, boolean drawFullTop) {
-            boolean invalidate = lastRect.isEmpty() || lastRect.top != bounds.top || lastRect.bottom != bounds.bottom || lastRect.right != bounds.right || lastRect.left != bounds.left || lastDrawFullTop != drawFullTop || lastDrawFullBottom != drawFullBottom || !drawFullTop || !drawFullBottom;
+            int curRad = LagramConfig.getEffectiveBubbleRadiusDp();
+            boolean curTails = LagramConfig.showBubbleTails;
+            boolean invalidate = lastRect.isEmpty() || lastRect.top != bounds.top || lastRect.bottom != bounds.bottom || lastRect.right != bounds.right || lastRect.left != bounds.left || lastDrawFullTop != drawFullTop || lastDrawFullBottom != drawFullBottom || lastBubbleRad != curRad || lastShowTails != curTails || !drawFullTop || !drawFullBottom;
             lastDrawFullTop = drawFullTop;
             lastDrawFullBottom = drawFullBottom;
+            lastBubbleRad = curRad;
+            lastShowTails = curTails;
             lastRect.set(bounds);
             return invalidate;
         }

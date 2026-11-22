@@ -2664,7 +2664,13 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 }
                 if (voiceMessagesPlaylist != null && index < voiceMessagesPlaylist.size()) {
                     MessageObject nextVoiceMessage = voiceMessagesPlaylist.get(index);
-                    playMessage(nextVoiceMessage);
+                    LagramConfig.ensureLoaded();
+                    if ((nextVoiceMessage.isVoice() && !LagramConfig.autoplayVoiceInRow) || (nextVoiceMessage.isRoundVideo() && !LagramConfig.autoplayRoundInRow)) {
+                        voiceMessagesPlaylist = null;
+                        voiceMessagesPlaylistMap = null;
+                    } else {
+                        playMessage(nextVoiceMessage);
+                    }
                     playingNext = true;
                     if (!nextVoiceMessage.isRoundVideo() && pipRoundVideoView != null) {
                         pipRoundVideoView.close(true);
@@ -3051,6 +3057,11 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
     }
 
     private void playNextMessageWithoutOrder(boolean byStop) {
+        LagramConfig.ensureLoaded();
+        if (byStop && !LagramConfig.autoplayMusicInRow && playingMessageObject != null && playingMessageObject.isMusic()) {
+            cleanupPlayer(true, true);
+            return;
+        }
         ArrayList<MessageObject> currentPlayList = SharedConfig.shuffleMusic ? shuffledPlaylist : playlist;
 
         if (byStop && (SharedConfig.repeatMode == 2 || SharedConfig.repeatMode == 1 && currentPlayList.size() == 1) && !forceLoopCurrentPlaylist) {
