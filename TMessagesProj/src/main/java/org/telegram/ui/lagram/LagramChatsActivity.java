@@ -227,13 +227,12 @@ public class LagramChatsActivity extends UniversalFragment {
         int cur = isOutgoing ? LagramConfig.doubleTapActionOutgoing : LagramConfig.doubleTapActionIncoming;
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
         builder.setTitle(LocaleController.getString(isOutgoing ? R.string.LagramDoubleTapOutgoing : R.string.LagramDoubleTapIncoming));
-        builder.setSingleChoiceItems(options, cur, (dialog, which) -> {
+        builder.setItems(options, (dialog, which) -> {
             if (isOutgoing) {
                 LagramConfig.setDoubleTapActionOutgoing(which);
             } else {
                 LagramConfig.setDoubleTapActionIncoming(which);
             }
-            dialog.dismiss();
             if (listView != null && listView.adapter != null) {
                 listView.adapter.update(true);
             }

@@ -11803,6 +11803,7 @@
     <string name="LagramDeveloperTitle">Developer</string>
 
     <string name="LagramGlassMessages">Liquid Glass message bubbles</string>
+    <string name="LagramGlassMessagesAlpha">Liquid Glass bubble opacity</string>
     <string name="LagramGlassMessagesBorder">Specular glass bubble border</string>
     <string name="LagramChatEdgeBlur">Chat top &amp; bottom edge blur</string>
     <string name="LagramShowBubbleTails">Show message bubble tails</string>

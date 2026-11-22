@@ -1440,6 +1440,7 @@
     <string name="LagramDeveloperTitle">Desarrollador</string>
 
     <string name="LagramGlassMessages">Burbujas de mensaje Liquid Glass</string>
+    <string name="LagramGlassMessagesAlpha">Opacidad de burbujas Liquid Glass</string>
     <string name="LagramGlassMessagesBorder">Borde especular brillante en burbujas</string>
     <string name="LagramChatEdgeBlur">Desenfoque en bordes superior e inferior del chat</string>
     <string name="LagramShowBubbleTails">Mostrar cola en las burbujas de chat</string>
