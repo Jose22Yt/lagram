@@ -146,6 +146,10 @@ public class ActionBarPopupWindow extends PopupWindow {
             return bgPaddings;
         }
 
+        public Theme.ResourcesProvider getResourcesProvider() {
+            return resourcesProvider;
+        }
+
         public ActionBarPopupWindowLayout(Context context) {
             this(context, null);
         }

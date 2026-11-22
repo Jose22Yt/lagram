@@ -971,6 +971,8 @@ public class ChatActivity extends BaseFragment implements
     private boolean topicChangedFromMessage;
     private Runnable closeInstantCameraAnimation;
 
+    private final org.telegram.ui.lagram.focus.LagramMessageFocusController messageFocus = new org.telegram.ui.lagram.focus.LagramMessageFocusController();
+
     {
         skeletonOutlinePaint.setStyle(Paint.Style.STROKE);
         skeletonOutlinePaint.setStrokeWidth(AndroidUtilities.dp(1));
