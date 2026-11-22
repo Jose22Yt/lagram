@@ -18,7 +18,13 @@ public class LagramGeneralActivity extends BaseLagramSettingsActivity {
     private int performanceHeaderRow;
     private int highRefreshRateRow;
     private int forcePerfClassRow;
+    private int hapticsLevelRow;
     private int divider1Row;
+
+    private int behaviorHeaderRow;
+    private int showJoinDateRow;
+    private int openArchiveOnPullRow;
+    private int dividerBehaviorRow;
 
     private int cleanupHeaderRow;
     private int disableSponsoredRow;
@@ -36,7 +42,13 @@ public class LagramGeneralActivity extends BaseLagramSettingsActivity {
         performanceHeaderRow = rowCount++;
         highRefreshRateRow = rowCount++;
         forcePerfClassRow = rowCount++;
+        hapticsLevelRow = rowCount++;
         divider1Row = rowCount++;
+
+        behaviorHeaderRow = rowCount++;
+        showJoinDateRow = rowCount++;
+        openArchiveOnPullRow = rowCount++;
+        dividerBehaviorRow = rowCount++;
 
         cleanupHeaderRow = rowCount++;
         disableSponsoredRow = rowCount++;
@@ -46,13 +58,13 @@ public class LagramGeneralActivity extends BaseLagramSettingsActivity {
 
     @Override
     protected int getItemViewType(int position) {
-        if (position == performanceHeaderRow || position == cleanupHeaderRow) {
+        if (position == performanceHeaderRow || position == behaviorHeaderRow || position == cleanupHeaderRow) {
             return VIEW_TYPE_HEADER;
-        } else if (position == forcePerfClassRow) {
+        } else if (position == forcePerfClassRow || position == hapticsLevelRow) {
             return VIEW_TYPE_SETTINGS;
         } else if (position == infoRow) {
             return VIEW_TYPE_INFO;
-        } else if (position == divider1Row) {
+        } else if (position == divider1Row || position == dividerBehaviorRow) {
             return VIEW_TYPE_SHADOW;
         }
         return VIEW_TYPE_CHECK;
@@ -71,6 +83,20 @@ public class LagramGeneralActivity extends BaseLagramSettingsActivity {
         }
     }
 
+    private String getHapticsLabel() {
+        switch (LagramConfig.hapticsLevel) {
+            case LagramConfig.HAPTICS_OFF:
+                return LocaleController.getString(R.string.LagramHapticsOff);
+            case LagramConfig.HAPTICS_SOFT:
+                return LocaleController.getString(R.string.LagramHapticsSoft);
+            case LagramConfig.HAPTICS_STRONG:
+                return LocaleController.getString(R.string.LagramHapticsStrong);
+            case LagramConfig.HAPTICS_NORMAL:
+            default:
+                return LocaleController.getString(R.string.LagramHapticsNormal);
+        }
+    }
+
     @Override
     protected void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         switch (holder.getItemViewType()) {
@@ -78,6 +104,8 @@ public class LagramGeneralActivity extends BaseLagramSettingsActivity {
                 HeaderCell cell = (HeaderCell) holder.itemView;
                 if (position == performanceHeaderRow) {
                     cell.setText(LocaleController.getString(R.string.LagramPerformanceHeader));
+                } else if (position == behaviorHeaderRow) {
+                    cell.setText(LocaleController.getString(R.string.LagramBehaviorHeader));
                 } else if (position == cleanupHeaderRow) {
                     cell.setText(LocaleController.getString(R.string.LagramAntiBloatHeader));
                 }
@@ -86,7 +114,9 @@ public class LagramGeneralActivity extends BaseLagramSettingsActivity {
             case VIEW_TYPE_SETTINGS: {
                 TextSettingsCell cell = (TextSettingsCell) holder.itemView;
                 if (position == forcePerfClassRow) {
-                    cell.setTextAndValue(LocaleController.getString(R.string.LagramForcePerfClass), getPerfClassLabel(), false);
+                    cell.setTextAndValue(LocaleController.getString(R.string.LagramForcePerfClass), getPerfClassLabel(), true);
+                } else if (position == hapticsLevelRow) {
+                    cell.setTextAndValue(LocaleController.getString(R.string.LagramHapticsLevel), getHapticsLabel(), false);
                 }
                 break;
             }
@@ -94,6 +124,10 @@ public class LagramGeneralActivity extends BaseLagramSettingsActivity {
                 TextCheckCell cell = (TextCheckCell) holder.itemView;
                 if (position == highRefreshRateRow) {
                     cell.setTextAndCheck(LocaleController.getString(R.string.LagramHighRefreshRate), LagramConfig.highRefreshRateScroll, true);
+                } else if (position == showJoinDateRow) {
+                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramShowJoinDate), LagramConfig.showJoinDate, true);
+                } else if (position == openArchiveOnPullRow) {
+                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramOpenArchiveOnPull), LagramConfig.openArchiveOnPull, false);
                 } else if (position == disableSponsoredRow) {
                     cell.setTextAndCheck(LocaleController.getString(R.string.LagramDisableSponsored), LagramConfig.disableSponsoredMessages, true);
                 } else if (position == hideSimilarChannelsRow) {
@@ -121,12 +155,26 @@ public class LagramGeneralActivity extends BaseLagramSettingsActivity {
             showSelectorDialog(LocaleController.getString(R.string.LagramForcePerfClass), options, selected, which -> LagramConfig.setForcePerformanceClass(which - 1));
             return;
         }
+        if (position == hapticsLevelRow) {
+            String[] options = new String[]{
+                    LocaleController.getString(R.string.LagramHapticsOff),
+                    LocaleController.getString(R.string.LagramHapticsSoft),
+                    LocaleController.getString(R.string.LagramHapticsNormal),
+                    LocaleController.getString(R.string.LagramHapticsStrong)
+            };
+            showSelectorDialog(LocaleController.getString(R.string.LagramHapticsLevel), options, LagramConfig.hapticsLevel, LagramConfig::setHapticsLevel);
+            return;
+        }
         if (!(view instanceof TextCheckCell)) {
             return;
         }
         TextCheckCell cell = (TextCheckCell) view;
         if (position == highRefreshRateRow) {
             cell.setChecked(LagramConfig.toggleHighRefreshRateScroll());
+        } else if (position == showJoinDateRow) {
+            cell.setChecked(LagramConfig.toggleShowJoinDate());
+        } else if (position == openArchiveOnPullRow) {
+            cell.setChecked(LagramConfig.toggleOpenArchiveOnPull());
         } else if (position == disableSponsoredRow) {
             cell.setChecked(LagramConfig.toggleDisableSponsoredMessages());
         } else if (position == hideSimilarChannelsRow) {

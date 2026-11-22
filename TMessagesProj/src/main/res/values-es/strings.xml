@@ -1433,4 +1433,75 @@
     <string name="LagramAllowScreenshots">Permitir capturas de pantalla</string>
     <string name="LagramBypassNoForwards">Permitir copiar y guardar en chats protegidos</string>
     <string name="LagramPrivacyInfo">El Modo Fantasma bloquea localmente los paquetes de lectura, escritura y conexión. El anti-borrado conserva mensajes eliminados mientras Lagram está activo.</string>
+
+    <!-- Adiciones Estilo Opexgram -->
+    <string name="LagramLinksHeader">ENLACES Y COMUNIDAD</string>
+    <string name="LagramRepoTitle">Repositorio oficial de Lagram</string>
+    <string name="LagramDeveloperTitle">Desarrollador</string>
+
+    <string name="LagramGlassMessages">Burbujas de mensaje Liquid Glass</string>
+    <string name="LagramGlassMessagesBorder">Borde especular brillante en burbujas</string>
+    <string name="LagramChatEdgeBlur">Desenfoque en bordes superior e inferior del chat</string>
+    <string name="LagramShowBubbleTails">Mostrar cola en las burbujas de chat</string>
+    <string name="LagramScrollEdgeScale">Efecto elástico al llegar al borde del scroll</string>
+    <string name="LagramRoundingPreset">Estilo de redondeo de esquinas</string>
+    <string name="LagramRoundingDefault">Por defecto (Telegram)</string>
+    <string name="LagramRoundingRound">Extra Redondeado (Opexgram)</string>
+    <string name="LagramRoundingSquircle">Squircle iOS</string>
+    <string name="LagramRoundingSquare">Compacto / Cuadrado</string>
+
+    <string name="LagramFoldersHeader">PESTAÑAS DE CARPETAS</string>
+    <string name="LagramFolderTabsStyle">Estilo de pestañas de carpetas</string>
+    <string name="LagramFolderTabsIconText">Icono y texto</string>
+    <string name="LagramFolderTabsIconOnly">Solo iconos</string>
+    <string name="LagramFolderTabsTextOnly">Solo texto</string>
+    <string name="LagramShowFolderCounters">Mostrar contadores en carpetas</string>
+    <string name="LagramRememberLastFolder">Recordar última carpeta activa</string>
+    <string name="LagramHideStoriesProfile">Ocultar historias en perfiles</string>
+    <string name="LagramHideStoryPosting">Ocultar botón de publicar historias</string>
+
+    <string name="LagramMessageFocusHeader">ENFOQUE DE MENSAJE Y MENÚ</string>
+    <string name="LagramMessageFocus">Animación de enfoque al tocar burbuja</string>
+    <string name="LagramMessageFocusBlur">Desenfocar fondo del chat al tocar burbuja</string>
+    <string name="LagramMessageFocusStyle">Estilo del menú de mensaje</string>
+    <string name="LagramFocusStyleList">Lista (Clásico)</string>
+    <string name="LagramFocusStyleTiles">Cuadrícula (4 tarjetas superiores)</string>
+    <string name="LagramFocusStyleCapsule">Cápsula (Barra de iconos + desplegable)</string>
+    <string name="LagramMessageFocusInfo">Eleva la burbuja de mensaje con animación spring al tocarla, desenfoca el fondo del chat y transforma el menú en una barra tipo Cápsula o Cuadrícula como Opexgram.</string>
+
+    <string name="LagramDoubleTapOutgoing">Doble toque en mensaje enviado</string>
+    <string name="LagramDoubleTapIncoming">Doble toque en mensaje recibido</string>
+    <string name="LagramShowPageUpButton">Mostrar botón para saltar al inicio del chat</string>
+    <string name="LagramTextAppearAnimation">Animación fluida al escribir texto</string>
+    <string name="LagramDeleteEffect">Efecto al eliminar mensajes</string>
+    <string name="LagramDeleteEffectDefault">Por defecto</string>
+    <string name="LagramDeleteEffectThanos">Polvo de Thanos (Partículas)</string>
+    <string name="LagramDeleteEffectShards">Fragmentos de cristal</string>
+    <string name="LagramDeleteEffectPortal">Portal dimensional</string>
+    <string name="LagramGifSize">Tamaño de GIFs</string>
+    <string name="LagramUnlimitedSelection">Selección de mensajes sin límite</string>
+    <string name="LagramFastSelection">Selección múltiple rápida al deslizar</string>
+
+    <string name="LagramChatDetailsHeader">DETALLES DE MENSAJES Y CHAT</string>
+    <string name="LagramShowWeekdayInDate">Mostrar día de la semana en fechas</string>
+    <string name="LagramShowForwardTime">Mostrar hora original en reenviados</string>
+    <string name="LagramShowPollPreview">Vista previa de resultados en encuestas</string>
+    <string name="LagramShowStickerPackOwner">Mostrar autor del pack de stickers</string>
+    <string name="LagramShowForwardsCounter">Mostrar contador de reenvíos</string>
+
+    <string name="LagramAutoplayHeader">REPRODUCCIÓN CONTINUA</string>
+    <string name="LagramAutoplayVoice">Reproducir notas de voz seguidas</string>
+    <string name="LagramAutoplayRound">Reproducir videomensajes seguidos</string>
+    <string name="LagramAutoplayMusic">Reproducir música seguida</string>
+    <string name="LagramCompactRoundCamera">Cámara de videomensaje compacta</string>
+    <string name="LagramMediaGlow">Resplandor ambiental en fotos y videos</string>
+
+    <string name="LagramBehaviorHeader">INTERFAZ Y VIBRACIÓN HÁPTICA</string>
+    <string name="LagramShowJoinDate">Mostrar fecha de unión en perfiles</string>
+    <string name="LagramOpenArchiveOnPull">Abrir Archivados al deslizar hacia abajo</string>
+    <string name="LagramHapticsLevel">Intensidad de vibración háptica</string>
+    <string name="LagramHapticsOff">Desactivada</string>
+    <string name="LagramHapticsSoft">Suave</string>
+    <string name="LagramHapticsNormal">Normal</string>
+    <string name="LagramHapticsStrong">Fuerte</string>
 </resources>

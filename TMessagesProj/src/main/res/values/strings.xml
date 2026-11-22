@@ -11796,4 +11796,75 @@
     <string name="LagramAllowScreenshots">Allow screenshots everywhere</string>
     <string name="LagramBypassNoForwards">Allow copy &amp; save in restricted chats</string>
     <string name="LagramPrivacyInfo">Ghost Mode intercepts outgoing read, typing, and online status packets locally. Anti-delete keeps messages deleted while Lagram is running.</string>
+
+    <!-- Opexgram-Style Additions -->
+    <string name="LagramLinksHeader">LINKS &amp; COMMUNITY</string>
+    <string name="LagramRepoTitle">Lagram Source Repository</string>
+    <string name="LagramDeveloperTitle">Developer</string>
+
+    <string name="LagramGlassMessages">Liquid Glass message bubbles</string>
+    <string name="LagramGlassMessagesBorder">Specular glass bubble border</string>
+    <string name="LagramChatEdgeBlur">Chat top &amp; bottom edge blur</string>
+    <string name="LagramShowBubbleTails">Show message bubble tails</string>
+    <string name="LagramScrollEdgeScale">Scroll edge elastic scale</string>
+    <string name="LagramRoundingPreset">Corner rounding style</string>
+    <string name="LagramRoundingDefault">Default (Telegram)</string>
+    <string name="LagramRoundingRound">Extra Round (Opexgram)</string>
+    <string name="LagramRoundingSquircle">iOS Squircle</string>
+    <string name="LagramRoundingSquare">Sharp / Compact</string>
+
+    <string name="LagramFoldersHeader">FOLDER TABS</string>
+    <string name="LagramFolderTabsStyle">Folder tabs style</string>
+    <string name="LagramFolderTabsIconText">Icons &amp; Text</string>
+    <string name="LagramFolderTabsIconOnly">Icons only</string>
+    <string name="LagramFolderTabsTextOnly">Text only</string>
+    <string name="LagramShowFolderCounters">Show unread counters in folders</string>
+    <string name="LagramRememberLastFolder">Remember last active folder</string>
+    <string name="LagramHideStoriesProfile">Hide stories in profiles</string>
+    <string name="LagramHideStoryPosting">Hide story camera / posting button</string>
+
+    <string name="LagramMessageFocusHeader">MESSAGE FOCUS &amp; CONTEXT MENU</string>
+    <string name="LagramMessageFocus">Message Focus animation on tap</string>
+    <string name="LagramMessageFocusBlur">Blur chat background on message tap</string>
+    <string name="LagramMessageFocusStyle">Message menu layout style</string>
+    <string name="LagramFocusStyleList">List (Classic)</string>
+    <string name="LagramFocusStyleTiles">Tiles (4 top action cards)</string>
+    <string name="LagramFocusStyleCapsule">Capsule (Icon pill bar + expandable)</string>
+    <string name="LagramMessageFocusInfo">Lifts the tapped message bubble into focus with a spring animation, blurs the chat background, and transforms the popup menu into a Capsule or Tiles bar.</string>
+
+    <string name="LagramDoubleTapOutgoing">Double-tap on outgoing message</string>
+    <string name="LagramDoubleTapIncoming">Double-tap on incoming message</string>
+    <string name="LagramShowPageUpButton">Show Page Up (jump to top) button</string>
+    <string name="LagramTextAppearAnimation">Smooth text typing animation</string>
+    <string name="LagramDeleteEffect">Message delete animation</string>
+    <string name="LagramDeleteEffectDefault">Default</string>
+    <string name="LagramDeleteEffectThanos">Thanos Dust (Particles)</string>
+    <string name="LagramDeleteEffectShards">Glass Shards</string>
+    <string name="LagramDeleteEffectPortal">Vortex Portal</string>
+    <string name="LagramGifSize">GIF size</string>
+    <string name="LagramUnlimitedSelection">Unlimited message selection</string>
+    <string name="LagramFastSelection">Fast drag multi-selection</string>
+
+    <string name="LagramChatDetailsHeader">MESSAGE &amp; CHAT DETAILS</string>
+    <string name="LagramShowWeekdayInDate">Show weekday in chat date headers</string>
+    <string name="LagramShowForwardTime">Show original timestamp on forwards</string>
+    <string name="LagramShowPollPreview">Preview poll results before voting</string>
+    <string name="LagramShowStickerPackOwner">Show sticker pack creator in preview</string>
+    <string name="LagramShowForwardsCounter">Show forwards counter on messages</string>
+
+    <string name="LagramAutoplayHeader">AUTOPLAY IN A ROW</string>
+    <string name="LagramAutoplayVoice">Autoplay next voice message</string>
+    <string name="LagramAutoplayRound">Autoplay next round video</string>
+    <string name="LagramAutoplayMusic">Autoplay next audio track</string>
+    <string name="LagramCompactRoundCamera">Compact round video camera</string>
+    <string name="LagramMediaGlow">Ambient glow behind photos &amp; videos</string>
+
+    <string name="LagramBehaviorHeader">INTERFACE &amp; HAPTICS</string>
+    <string name="LagramShowJoinDate">Show join date in group profiles</string>
+    <string name="LagramOpenArchiveOnPull">Open Archived Chats on pull-down</string>
+    <string name="LagramHapticsLevel">Haptic feedback intensity</string>
+    <string name="LagramHapticsOff">Disabled</string>
+    <string name="LagramHapticsSoft">Soft</string>
+    <string name="LagramHapticsNormal">Normal</string>
+    <string name="LagramHapticsStrong">Strong</string>
 </resources>

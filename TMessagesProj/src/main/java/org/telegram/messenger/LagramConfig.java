@@ -38,11 +38,41 @@ public final class LagramConfig {
     public static final int DOUBLE_TAP_SAVE = 5;
     public static final int DOUBLE_TAP_NONE = 6;
 
+    // Opexgram Message Focus menu styles
+    public static final int FOCUS_STYLE_LIST = 0;
+    public static final int FOCUS_STYLE_TILES = 1;
+    public static final int FOCUS_STYLE_CAPSULE = 2;
+
+    // Folder tab styles
+    public static final int FOLDER_TABS_ICON_AND_TEXT = 0;
+    public static final int FOLDER_TABS_ICON_ONLY = 1;
+    public static final int FOLDER_TABS_TEXT_ONLY = 2;
+
+    // Corner rounding presets
+    public static final int ROUNDING_DEFAULT = 0;
+    public static final int ROUNDING_ROUND = 1;
+    public static final int ROUNDING_SQUIRCLE = 2;
+    public static final int ROUNDING_SQUARE = 3;
+
+    // Delete message effects
+    public static final int DELETE_EFFECT_DEFAULT = 0;
+    public static final int DELETE_EFFECT_THANOS = 1;
+    public static final int DELETE_EFFECT_SHARDS = 2;
+    public static final int DELETE_EFFECT_PORTAL = 3;
+
+    // Haptics levels
+    public static final int HAPTICS_OFF = 0;
+    public static final int HAPTICS_SOFT = 1;
+    public static final int HAPTICS_NORMAL = 2;
+    public static final int HAPTICS_STRONG = 3;
+
     // Appearance & UI
     public static boolean ios27BottomBar = true;
     public static boolean amoledSettingsBackdrop = true;
     public static int animationSpeed = ANIM_SPEED_FAST;
     public static boolean hideStories = false;
+    public static boolean hideStoriesInProfile = false;
+    public static boolean hideStoryPosting = false;
     public static boolean hideAllChatsFolder = false;
     public static boolean hidePhoneNumber = false;
     public static boolean hideTelegramBloat = false;
@@ -50,9 +80,24 @@ public final class LagramConfig {
     public static boolean showIdAndDc = true;
     public static boolean idFormatBotApi = false;
     public static boolean useSystemFonts = false;
+    public static boolean showBubbleTails = true;
+    public static boolean glassMessages = false;
+    public static int glassMessagesAlpha = 75;
+    public static boolean glassMessagesBorder = true;
+    public static boolean chatEdgeBlur = true;
+    public static int folderTabsStyle = FOLDER_TABS_ICON_AND_TEXT;
+    public static boolean showFolderCounters = true;
+    public static boolean rememberLastFolder = false;
+    public static int roundingPreset = ROUNDING_DEFAULT;
+    public static boolean scrollEdgeScale = true;
 
-    // Chats & Messages
+    // Chats & Messages (including Opexgram Message Focus)
+    public static boolean messageFocusEnabled = true;
+    public static boolean messageFocusBlur = true;
+    public static int messageFocusStyle = FOCUS_STYLE_CAPSULE;
     public static int doubleTapAction = DOUBLE_TAP_REACTION;
+    public static int doubleTapActionOutgoing = DOUBLE_TAP_REACTION;
+    public static int doubleTapActionIncoming = DOUBLE_TAP_REACTION;
     public static boolean hideKeyboardOnScroll = false;
     public static boolean disableNextChannelJump = false;
     public static boolean confirmBeforeCall = true;
@@ -62,6 +107,17 @@ public final class LagramConfig {
     public static boolean forwardWithoutQuote = false;
     public static boolean hideShareButtonInChannels = false;
     public static int stickerSize = 14;
+    public static int gifSize = 14;
+    public static int deleteEffect = DELETE_EFFECT_THANOS;
+    public static boolean showPageUpButton = true;
+    public static boolean unlimitedSelection = true;
+    public static boolean fastSelection = true;
+    public static boolean showWeekdayInDate = true;
+    public static boolean showForwardTime = true;
+    public static boolean showPollPreview = true;
+    public static boolean showStickerPackOwner = true;
+    public static boolean showForwardsCounter = true;
+    public static boolean textAppearAnimation = true;
 
     // Media & Network
     public static boolean turboDownloads = true;
@@ -70,12 +126,20 @@ public final class LagramConfig {
     public static boolean sendPhotosInHd = false;
     public static boolean rearCameraForRoundVideo = false;
     public static boolean pauseVideoOnMinimize = false;
+    public static boolean autoplayVoiceInRow = true;
+    public static boolean autoplayRoundInRow = true;
+    public static boolean autoplayMusicInRow = true;
+    public static boolean mediaGlow = true;
+    public static boolean compactRoundCamera = false;
 
     // Performance & General
     public static boolean highRefreshRateScroll = true;
     public static boolean disableSponsoredMessages = true;
     public static boolean hideSimilarChannels = false;
     public static int forcePerformanceClass = -1; // -1 = Auto, 0 = Low, 1 = Average, 2 = High
+    public static boolean showJoinDate = true;
+    public static boolean openArchiveOnPull = true;
+    public static int hapticsLevel = HAPTICS_NORMAL;
 
     // Privacy & Ghost Mode (AyuGram-style)
     public static boolean ghostModeEnabled = false;
@@ -106,6 +170,8 @@ public final class LagramConfig {
         amoledSettingsBackdrop = prefs.getBoolean("amoledSettingsBackdrop", true);
         animationSpeed = prefs.getInt("animationSpeed", ANIM_SPEED_FAST);
         hideStories = prefs.getBoolean("hideStories", false);
+        hideStoriesInProfile = prefs.getBoolean("hideStoriesInProfile", false);
+        hideStoryPosting = prefs.getBoolean("hideStoryPosting", false);
         hideAllChatsFolder = prefs.getBoolean("hideAllChatsFolder", false);
         hidePhoneNumber = prefs.getBoolean("hidePhoneNumber", false);
         hideTelegramBloat = prefs.getBoolean("hideTelegramBloat", false);
@@ -113,9 +179,24 @@ public final class LagramConfig {
         showIdAndDc = prefs.getBoolean("showIdAndDc", true);
         idFormatBotApi = prefs.getBoolean("idFormatBotApi", false);
         useSystemFonts = prefs.getBoolean("useSystemFonts", false);
+        showBubbleTails = prefs.getBoolean("showBubbleTails", true);
+        glassMessages = prefs.getBoolean("glassMessages", false);
+        glassMessagesAlpha = prefs.getInt("glassMessagesAlpha", 75);
+        glassMessagesBorder = prefs.getBoolean("glassMessagesBorder", true);
+        chatEdgeBlur = prefs.getBoolean("chatEdgeBlur", true);
+        folderTabsStyle = prefs.getInt("folderTabsStyle", FOLDER_TABS_ICON_AND_TEXT);
+        showFolderCounters = prefs.getBoolean("showFolderCounters", true);
+        rememberLastFolder = prefs.getBoolean("rememberLastFolder", false);
+        roundingPreset = prefs.getInt("roundingPreset", ROUNDING_DEFAULT);
+        scrollEdgeScale = prefs.getBoolean("scrollEdgeScale", true);
 
-        // Chats
+        // Chats & Message Focus
+        messageFocusEnabled = prefs.getBoolean("messageFocusEnabled", true);
+        messageFocusBlur = prefs.getBoolean("messageFocusBlur", true);
+        messageFocusStyle = prefs.getInt("messageFocusStyle", FOCUS_STYLE_CAPSULE);
         doubleTapAction = prefs.getInt("doubleTapAction", DOUBLE_TAP_REACTION);
+        doubleTapActionOutgoing = prefs.getInt("doubleTapActionOutgoing", doubleTapAction);
+        doubleTapActionIncoming = prefs.getInt("doubleTapActionIncoming", doubleTapAction);
         hideKeyboardOnScroll = prefs.getBoolean("hideKeyboardOnScroll", false);
         disableNextChannelJump = prefs.getBoolean("disableNextChannelJump", false);
         confirmBeforeCall = prefs.getBoolean("confirmBeforeCall", true);
@@ -125,6 +206,17 @@ public final class LagramConfig {
         forwardWithoutQuote = prefs.getBoolean("forwardWithoutQuote", false);
         hideShareButtonInChannels = prefs.getBoolean("hideShareButtonInChannels", false);
         stickerSize = prefs.getInt("stickerSize", 14);
+        gifSize = prefs.getInt("gifSize", 14);
+        deleteEffect = prefs.getInt("deleteEffect", DELETE_EFFECT_THANOS);
+        showPageUpButton = prefs.getBoolean("showPageUpButton", true);
+        unlimitedSelection = prefs.getBoolean("unlimitedSelection", true);
+        fastSelection = prefs.getBoolean("fastSelection", true);
+        showWeekdayInDate = prefs.getBoolean("showWeekdayInDate", true);
+        showForwardTime = prefs.getBoolean("showForwardTime", true);
+        showPollPreview = prefs.getBoolean("showPollPreview", true);
+        showStickerPackOwner = prefs.getBoolean("showStickerPackOwner", true);
+        showForwardsCounter = prefs.getBoolean("showForwardsCounter", true);
+        textAppearAnimation = prefs.getBoolean("textAppearAnimation", true);
 
         // Media & Network
         turboDownloads = prefs.getBoolean("turboDownloads", true);
@@ -133,12 +225,20 @@ public final class LagramConfig {
         sendPhotosInHd = prefs.getBoolean("sendPhotosInHd", false);
         rearCameraForRoundVideo = prefs.getBoolean("rearCameraForRoundVideo", false);
         pauseVideoOnMinimize = prefs.getBoolean("pauseVideoOnMinimize", false);
+        autoplayVoiceInRow = prefs.getBoolean("autoplayVoiceInRow", true);
+        autoplayRoundInRow = prefs.getBoolean("autoplayRoundInRow", true);
+        autoplayMusicInRow = prefs.getBoolean("autoplayMusicInRow", true);
+        mediaGlow = prefs.getBoolean("mediaGlow", true);
+        compactRoundCamera = prefs.getBoolean("compactRoundCamera", false);
 
         // Performance & General
         highRefreshRateScroll = prefs.getBoolean("highRefreshRateScroll", true);
         disableSponsoredMessages = prefs.getBoolean("disableSponsoredMessages", true);
         hideSimilarChannels = prefs.getBoolean("hideSimilarChannels", false);
         forcePerformanceClass = prefs.getInt("forcePerformanceClass", -1);
+        showJoinDate = prefs.getBoolean("showJoinDate", true);
+        openArchiveOnPull = prefs.getBoolean("openArchiveOnPull", true);
+        hapticsLevel = prefs.getInt("hapticsLevel", HAPTICS_NORMAL);
 
         // Privacy & Ghost Mode
         ghostModeEnabled = prefs.getBoolean("ghostModeEnabled", false);
@@ -210,6 +310,20 @@ public final class LagramConfig {
         return hideStories;
     }
 
+    public static boolean toggleHideStoriesInProfile() {
+        ensureLoaded();
+        hideStoriesInProfile = !hideStoriesInProfile;
+        saveBoolean("hideStoriesInProfile", hideStoriesInProfile);
+        return hideStoriesInProfile;
+    }
+
+    public static boolean toggleHideStoryPosting() {
+        ensureLoaded();
+        hideStoryPosting = !hideStoryPosting;
+        saveBoolean("hideStoryPosting", hideStoryPosting);
+        return hideStoryPosting;
+    }
+
     public static boolean toggleHideAllChatsFolder() {
         ensureLoaded();
         hideAllChatsFolder = !hideAllChatsFolder;
@@ -259,11 +373,114 @@ public final class LagramConfig {
         return useSystemFonts;
     }
 
-    // --- Chats setters/toggles ---
+    public static boolean toggleShowBubbleTails() {
+        ensureLoaded();
+        showBubbleTails = !showBubbleTails;
+        saveBoolean("showBubbleTails", showBubbleTails);
+        return showBubbleTails;
+    }
+
+    public static boolean toggleGlassMessages() {
+        ensureLoaded();
+        glassMessages = !glassMessages;
+        saveBoolean("glassMessages", glassMessages);
+        return glassMessages;
+    }
+
+    public static void setGlassMessagesAlpha(int alpha) {
+        ensureLoaded();
+        glassMessagesAlpha = Math.max(20, Math.min(100, alpha));
+        saveInt("glassMessagesAlpha", glassMessagesAlpha);
+    }
+
+    public static boolean toggleGlassMessagesBorder() {
+        ensureLoaded();
+        glassMessagesBorder = !glassMessagesBorder;
+        saveBoolean("glassMessagesBorder", glassMessagesBorder);
+        return glassMessagesBorder;
+    }
+
+    public static boolean toggleChatEdgeBlur() {
+        ensureLoaded();
+        chatEdgeBlur = !chatEdgeBlur;
+        saveBoolean("chatEdgeBlur", chatEdgeBlur);
+        return chatEdgeBlur;
+    }
+
+    public static void setFolderTabsStyle(int style) {
+        ensureLoaded();
+        folderTabsStyle = style;
+        saveInt("folderTabsStyle", folderTabsStyle);
+    }
+
+    public static boolean toggleShowFolderCounters() {
+        ensureLoaded();
+        showFolderCounters = !showFolderCounters;
+        saveBoolean("showFolderCounters", showFolderCounters);
+        return showFolderCounters;
+    }
+
+    public static boolean toggleRememberLastFolder() {
+        ensureLoaded();
+        rememberLastFolder = !rememberLastFolder;
+        saveBoolean("rememberLastFolder", rememberLastFolder);
+        return rememberLastFolder;
+    }
+
+    public static void setRoundingPreset(int preset) {
+        ensureLoaded();
+        roundingPreset = preset;
+        saveInt("roundingPreset", roundingPreset);
+    }
+
+    public static boolean toggleScrollEdgeScale() {
+        ensureLoaded();
+        scrollEdgeScale = !scrollEdgeScale;
+        saveBoolean("scrollEdgeScale", scrollEdgeScale);
+        return scrollEdgeScale;
+    }
+
+    // --- Chats & Message Focus setters/toggles ---
+    public static boolean toggleMessageFocusEnabled() {
+        ensureLoaded();
+        messageFocusEnabled = !messageFocusEnabled;
+        saveBoolean("messageFocusEnabled", messageFocusEnabled);
+        return messageFocusEnabled;
+    }
+
+    public static boolean toggleMessageFocusBlur() {
+        ensureLoaded();
+        messageFocusBlur = !messageFocusBlur;
+        saveBoolean("messageFocusBlur", messageFocusBlur);
+        return messageFocusBlur;
+    }
+
+    public static void setMessageFocusStyle(int style) {
+        ensureLoaded();
+        messageFocusStyle = style;
+        saveInt("messageFocusStyle", messageFocusStyle);
+    }
+
     public static void setDoubleTapAction(int value) {
         ensureLoaded();
         doubleTapAction = value;
+        doubleTapActionOutgoing = value;
+        doubleTapActionIncoming = value;
         saveInt("doubleTapAction", doubleTapAction);
+        saveInt("doubleTapActionOutgoing", doubleTapActionOutgoing);
+        saveInt("doubleTapActionIncoming", doubleTapActionIncoming);
+    }
+
+    public static void setDoubleTapActionOutgoing(int value) {
+        ensureLoaded();
+        doubleTapActionOutgoing = value;
+        saveInt("doubleTapActionOutgoing", doubleTapActionOutgoing);
+    }
+
+    public static void setDoubleTapActionIncoming(int value) {
+        ensureLoaded();
+        doubleTapActionIncoming = value;
+        saveInt("doubleTapActionIncoming", doubleTapActionIncoming);
     }
 
     public static boolean toggleHideKeyboardOnScroll() {
@@ -328,6 +545,81 @@ public final class LagramConfig {
         saveInt("stickerSize", stickerSize);
     }
 
+    public static void setGifSize(int size) {
+        ensureLoaded();
+        gifSize = Math.max(4, Math.min(20, size));
+        saveInt("gifSize", gifSize);
+    }
+
+    public static void setDeleteEffect(int effect) {
+        ensureLoaded();
+        deleteEffect = effect;
+        saveInt("deleteEffect", deleteEffect);
+    }
+
+    public static boolean toggleShowPageUpButton() {
+        ensureLoaded();
+        showPageUpButton = !showPageUpButton;
+        saveBoolean("showPageUpButton", showPageUpButton);
+        return showPageUpButton;
+    }
+
+    public static boolean toggleUnlimitedSelection() {
+        ensureLoaded();
+        unlimitedSelection = !unlimitedSelection;
+        saveBoolean("unlimitedSelection", unlimitedSelection);
+        return unlimitedSelection;
+    }
+
+    public static boolean toggleFastSelection() {
+        ensureLoaded();
+        fastSelection = !fastSelection;
+        saveBoolean("fastSelection", fastSelection);
+        return fastSelection;
+    }
+
+    public static boolean toggleShowWeekdayInDate() {
+        ensureLoaded();
+        showWeekdayInDate = !showWeekdayInDate;
+        saveBoolean("showWeekdayInDate", showWeekdayInDate);
+        return showWeekdayInDate;
+    }
+
+    public static boolean toggleShowForwardTime() {
+        ensureLoaded();
+        showForwardTime = !showForwardTime;
+        saveBoolean("showForwardTime", showForwardTime);
+        return showForwardTime;
+    }
+
+    public static boolean toggleShowPollPreview() {
+        ensureLoaded();
+        showPollPreview = !showPollPreview;
+        saveBoolean("showPollPreview", showPollPreview);
+        return showPollPreview;
+    }
+
+    public static boolean toggleShowStickerPackOwner() {
+        ensureLoaded();
+        showStickerPackOwner = !showStickerPackOwner;
+        saveBoolean("showStickerPackOwner", showStickerPackOwner);
+        return showStickerPackOwner;
+    }
+
+    public static boolean toggleShowForwardsCounter() {
+        ensureLoaded();
+        showForwardsCounter = !showForwardsCounter;
+        saveBoolean("showForwardsCounter", showForwardsCounter);
+        return showForwardsCounter;
+    }
+
+    public static boolean toggleTextAppearAnimation() {
+        ensureLoaded();
+        textAppearAnimation = !textAppearAnimation;
+        saveBoolean("textAppearAnimation", textAppearAnimation);
+        return textAppearAnimation;
+    }
+
     // --- Media & Network setters/toggles ---
     public static boolean toggleTurboDownloads() {
         ensureLoaded();
@@ -374,6 +666,41 @@ public final class LagramConfig {
         return pauseVideoOnMinimize;
     }
 
+    public static boolean toggleAutoplayVoiceInRow() {
+        ensureLoaded();
+        autoplayVoiceInRow = !autoplayVoiceInRow;
+        saveBoolean("autoplayVoiceInRow", autoplayVoiceInRow);
+        return autoplayVoiceInRow;
+    }
+
+    public static boolean toggleAutoplayRoundInRow() {
+        ensureLoaded();
+        autoplayRoundInRow = !autoplayRoundInRow;
+        saveBoolean("autoplayRoundInRow", autoplayRoundInRow);
+        return autoplayRoundInRow;
+    }
+
+    public static boolean toggleAutoplayMusicInRow() {
+        ensureLoaded();
+        autoplayMusicInRow = !autoplayMusicInRow;
+        saveBoolean("autoplayMusicInRow", autoplayMusicInRow);
+        return autoplayMusicInRow;
+    }
+
+    public static boolean toggleMediaGlow() {
+        ensureLoaded();
+        mediaGlow = !mediaGlow;
+        saveBoolean("mediaGlow", mediaGlow);
+        return mediaGlow;
+    }
+
+    public static boolean toggleCompactRoundCamera() {
+        ensureLoaded();
+        compactRoundCamera = !compactRoundCamera;
+        saveBoolean("compactRoundCamera", compactRoundCamera);
+        return compactRoundCamera;
+    }
+
     // --- Performance & General setters/toggles ---
     public static boolean toggleHighRefreshRateScroll() {
         ensureLoaded();
@@ -400,6 +727,26 @@ public final class LagramConfig {
         ensureLoaded();
         forcePerformanceClass = value;
         saveInt("forcePerformanceClass", forcePerformanceClass);
+    }
+
+    public static boolean toggleShowJoinDate() {
+        ensureLoaded();
+        showJoinDate = !showJoinDate;
+        saveBoolean("showJoinDate", showJoinDate);
+        return showJoinDate;
+    }
+
+    public static boolean toggleOpenArchiveOnPull() {
+        ensureLoaded();
+        openArchiveOnPull = !openArchiveOnPull;
+        saveBoolean("openArchiveOnPull", openArchiveOnPull);
+        return openArchiveOnPull;
+    }
+
+    public static void setHapticsLevel(int level) {
+        ensureLoaded();
+        hapticsLevel = level;
+        saveInt("hapticsLevel", hapticsLevel);
     }
 
     // --- Privacy & Ghost Mode setters/toggles ---
@@ -510,6 +857,8 @@ public final class LagramConfig {
             obj.put("amoledSettingsBackdrop", amoledSettingsBackdrop);
             obj.put("animationSpeed", animationSpeed);
             obj.put("hideStories", hideStories);
+            obj.put("hideStoriesInProfile", hideStoriesInProfile);
+            obj.put("hideStoryPosting", hideStoryPosting);
             obj.put("hideAllChatsFolder", hideAllChatsFolder);
             obj.put("hidePhoneNumber", hidePhoneNumber);
             obj.put("hideTelegramBloat", hideTelegramBloat);
@@ -517,7 +866,22 @@ public final class LagramConfig {
             obj.put("showIdAndDc", showIdAndDc);
             obj.put("idFormatBotApi", idFormatBotApi);
             obj.put("useSystemFonts", useSystemFonts);
+            obj.put("showBubbleTails", showBubbleTails);
+            obj.put("glassMessages", glassMessages);
+            obj.put("glassMessagesAlpha", glassMessagesAlpha);
+            obj.put("glassMessagesBorder", glassMessagesBorder);
+            obj.put("chatEdgeBlur", chatEdgeBlur);
+            obj.put("folderTabsStyle", folderTabsStyle);
+            obj.put("showFolderCounters", showFolderCounters);
+            obj.put("rememberLastFolder", rememberLastFolder);
+            obj.put("roundingPreset", roundingPreset);
+            obj.put("scrollEdgeScale", scrollEdgeScale);
+            obj.put("messageFocusEnabled", messageFocusEnabled);
+            obj.put("messageFocusBlur", messageFocusBlur);
+            obj.put("messageFocusStyle", messageFocusStyle);
             obj.put("doubleTapAction", doubleTapAction);
+            obj.put("doubleTapActionOutgoing", doubleTapActionOutgoing);
+            obj.put("doubleTapActionIncoming", doubleTapActionIncoming);
             obj.put("hideKeyboardOnScroll", hideKeyboardOnScroll);
             obj.put("disableNextChannelJump", disableNextChannelJump);
             obj.put("confirmBeforeCall", confirmBeforeCall);
@@ -527,15 +891,34 @@ public final class LagramConfig {
             obj.put("forwardWithoutQuote", forwardWithoutQuote);
             obj.put("hideShareButtonInChannels", hideShareButtonInChannels);
             obj.put("stickerSize", stickerSize);
+            obj.put("gifSize", gifSize);
+            obj.put("deleteEffect", deleteEffect);
+            obj.put("showPageUpButton", showPageUpButton);
+            obj.put("unlimitedSelection", unlimitedSelection);
+            obj.put("fastSelection", fastSelection);
+            obj.put("showWeekdayInDate", showWeekdayInDate);
+            obj.put("showForwardTime", showForwardTime);
+            obj.put("showPollPreview", showPollPreview);
+            obj.put("showStickerPackOwner", showStickerPackOwner);
+            obj.put("showForwardsCounter", showForwardsCounter);
+            obj.put("textAppearAnimation", textAppearAnimation);
             obj.put("downloadSpeedBoost", downloadSpeedBoost);
             obj.put("turboUploads", turboUploads);
             obj.put("sendPhotosInHd", sendPhotosInHd);
             obj.put("rearCameraForRoundVideo", rearCameraForRoundVideo);
             obj.put("pauseVideoOnMinimize", pauseVideoOnMinimize);
+            obj.put("autoplayVoiceInRow", autoplayVoiceInRow);
+            obj.put("autoplayRoundInRow", autoplayRoundInRow);
+            obj.put("autoplayMusicInRow", autoplayMusicInRow);
+            obj.put("mediaGlow", mediaGlow);
+            obj.put("compactRoundCamera", compactRoundCamera);
             obj.put("highRefreshRateScroll", highRefreshRateScroll);
             obj.put("disableSponsoredMessages", disableSponsoredMessages);
             obj.put("hideSimilarChannels", hideSimilarChannels);
             obj.put("forcePerformanceClass", forcePerformanceClass);
+            obj.put("showJoinDate", showJoinDate);
+            obj.put("openArchiveOnPull", openArchiveOnPull);
+            obj.put("hapticsLevel", hapticsLevel);
             obj.put("ghostModeEnabled", ghostModeEnabled);
             obj.put("ghostDontReadMessages", ghostDontReadMessages);
             obj.put("ghostDontReadStories", ghostDontReadStories);
@@ -567,6 +950,8 @@ public final class LagramConfig {
             if (obj.has("amoledSettingsBackdrop")) editor.putBoolean("amoledSettingsBackdrop", obj.getBoolean("amoledSettingsBackdrop"));
             if (obj.has("animationSpeed")) editor.putInt("animationSpeed", obj.getInt("animationSpeed"));
             if (obj.has("hideStories")) editor.putBoolean("hideStories", obj.getBoolean("hideStories"));
+            if (obj.has("hideStoriesInProfile")) editor.putBoolean("hideStoriesInProfile", obj.getBoolean("hideStoriesInProfile"));
+            if (obj.has("hideStoryPosting")) editor.putBoolean("hideStoryPosting", obj.getBoolean("hideStoryPosting"));
             if (obj.has("hideAllChatsFolder")) editor.putBoolean("hideAllChatsFolder", obj.getBoolean("hideAllChatsFolder"));
             if (obj.has("hidePhoneNumber")) editor.putBoolean("hidePhoneNumber", obj.getBoolean("hidePhoneNumber"));
             if (obj.has("hideTelegramBloat")) editor.putBoolean("hideTelegramBloat", obj.getBoolean("hideTelegramBloat"));
@@ -574,7 +959,22 @@ public final class LagramConfig {
             if (obj.has("showIdAndDc")) editor.putBoolean("showIdAndDc", obj.getBoolean("showIdAndDc"));
             if (obj.has("idFormatBotApi")) editor.putBoolean("idFormatBotApi", obj.getBoolean("idFormatBotApi"));
             if (obj.has("useSystemFonts")) editor.putBoolean("useSystemFonts", obj.getBoolean("useSystemFonts"));
+            if (obj.has("showBubbleTails")) editor.putBoolean("showBubbleTails", obj.getBoolean("showBubbleTails"));
+            if (obj.has("glassMessages")) editor.putBoolean("glassMessages", obj.getBoolean("glassMessages"));
+            if (obj.has("glassMessagesAlpha")) editor.putInt("glassMessagesAlpha", obj.getInt("glassMessagesAlpha"));
+            if (obj.has("glassMessagesBorder")) editor.putBoolean("glassMessagesBorder", obj.getBoolean("glassMessagesBorder"));
+            if (obj.has("chatEdgeBlur")) editor.putBoolean("chatEdgeBlur", obj.getBoolean("chatEdgeBlur"));
+            if (obj.has("folderTabsStyle")) editor.putInt("folderTabsStyle", obj.getInt("folderTabsStyle"));
+            if (obj.has("showFolderCounters")) editor.putBoolean("showFolderCounters", obj.getBoolean("showFolderCounters"));
+            if (obj.has("rememberLastFolder")) editor.putBoolean("rememberLastFolder", obj.getBoolean("rememberLastFolder"));
+            if (obj.has("roundingPreset")) editor.putInt("roundingPreset", obj.getInt("roundingPreset"));
+            if (obj.has("scrollEdgeScale")) editor.putBoolean("scrollEdgeScale", obj.getBoolean("scrollEdgeScale"));
+            if (obj.has("messageFocusEnabled")) editor.putBoolean("messageFocusEnabled", obj.getBoolean("messageFocusEnabled"));
+            if (obj.has("messageFocusBlur")) editor.putBoolean("messageFocusBlur", obj.getBoolean("messageFocusBlur"));
+            if (obj.has("messageFocusStyle")) editor.putInt("messageFocusStyle", obj.getInt("messageFocusStyle"));
             if (obj.has("doubleTapAction")) editor.putInt("doubleTapAction", obj.getInt("doubleTapAction"));
+            if (obj.has("doubleTapActionOutgoing")) editor.putInt("doubleTapActionOutgoing", obj.getInt("doubleTapActionOutgoing"));
+            if (obj.has("doubleTapActionIncoming")) editor.putInt("doubleTapActionIncoming", obj.getInt("doubleTapActionIncoming"));
             if (obj.has("hideKeyboardOnScroll")) editor.putBoolean("hideKeyboardOnScroll", obj.getBoolean("hideKeyboardOnScroll"));
             if (obj.has("disableNextChannelJump")) editor.putBoolean("disableNextChannelJump", obj.getBoolean("disableNextChannelJump"));
             if (obj.has("confirmBeforeCall")) editor.putBoolean("confirmBeforeCall", obj.getBoolean("confirmBeforeCall"));
@@ -584,6 +984,17 @@ public final class LagramConfig {
             if (obj.has("forwardWithoutQuote")) editor.putBoolean("forwardWithoutQuote", obj.getBoolean("forwardWithoutQuote"));
             if (obj.has("hideShareButtonInChannels")) editor.putBoolean("hideShareButtonInChannels", obj.getBoolean("hideShareButtonInChannels"));
             if (obj.has("stickerSize")) editor.putInt("stickerSize", obj.getInt("stickerSize"));
+            if (obj.has("gifSize")) editor.putInt("gifSize", obj.getInt("gifSize"));
+            if (obj.has("deleteEffect")) editor.putInt("deleteEffect", obj.getInt("deleteEffect"));
+            if (obj.has("showPageUpButton")) editor.putBoolean("showPageUpButton", obj.getBoolean("showPageUpButton"));
+            if (obj.has("unlimitedSelection")) editor.putBoolean("unlimitedSelection", obj.getBoolean("unlimitedSelection"));
+            if (obj.has("fastSelection")) editor.putBoolean("fastSelection", obj.getBoolean("fastSelection"));
+            if (obj.has("showWeekdayInDate")) editor.putBoolean("showWeekdayInDate", obj.getBoolean("showWeekdayInDate"));
+            if (obj.has("showForwardTime")) editor.putBoolean("showForwardTime", obj.getBoolean("showForwardTime"));
+            if (obj.has("showPollPreview")) editor.putBoolean("showPollPreview", obj.getBoolean("showPollPreview"));
+            if (obj.has("showStickerPackOwner")) editor.putBoolean("showStickerPackOwner", obj.getBoolean("showStickerPackOwner"));
+            if (obj.has("showForwardsCounter")) editor.putBoolean("showForwardsCounter", obj.getBoolean("showForwardsCounter"));
+            if (obj.has("textAppearAnimation")) editor.putBoolean("textAppearAnimation", obj.getBoolean("textAppearAnimation"));
             if (obj.has("downloadSpeedBoost")) {
                 int boost = obj.getInt("downloadSpeedBoost");
                 editor.putInt("downloadSpeedBoost", boost);
@@ -593,10 +1004,18 @@ public final class LagramConfig {
             if (obj.has("sendPhotosInHd")) editor.putBoolean("sendPhotosInHd", obj.getBoolean("sendPhotosInHd"));
             if (obj.has("rearCameraForRoundVideo")) editor.putBoolean("rearCameraForRoundVideo", obj.getBoolean("rearCameraForRoundVideo"));
             if (obj.has("pauseVideoOnMinimize")) editor.putBoolean("pauseVideoOnMinimize", obj.getBoolean("pauseVideoOnMinimize"));
+            if (obj.has("autoplayVoiceInRow")) editor.putBoolean("autoplayVoiceInRow", obj.getBoolean("autoplayVoiceInRow"));
+            if (obj.has("autoplayRoundInRow")) editor.putBoolean("autoplayRoundInRow", obj.getBoolean("autoplayRoundInRow"));
+            if (obj.has("autoplayMusicInRow")) editor.putBoolean("autoplayMusicInRow", obj.getBoolean("autoplayMusicInRow"));
+            if (obj.has("mediaGlow")) editor.putBoolean("mediaGlow", obj.getBoolean("mediaGlow"));
+            if (obj.has("compactRoundCamera")) editor.putBoolean("compactRoundCamera", obj.getBoolean("compactRoundCamera"));
             if (obj.has("highRefreshRateScroll")) editor.putBoolean("highRefreshRateScroll", obj.getBoolean("highRefreshRateScroll"));
             if (obj.has("disableSponsoredMessages")) editor.putBoolean("disableSponsoredMessages", obj.getBoolean("disableSponsoredMessages"));
             if (obj.has("hideSimilarChannels")) editor.putBoolean("hideSimilarChannels", obj.getBoolean("hideSimilarChannels"));
             if (obj.has("forcePerformanceClass")) editor.putInt("forcePerformanceClass", obj.getInt("forcePerformanceClass"));
+            if (obj.has("showJoinDate")) editor.putBoolean("showJoinDate", obj.getBoolean("showJoinDate"));
+            if (obj.has("openArchiveOnPull")) editor.putBoolean("openArchiveOnPull", obj.getBoolean("openArchiveOnPull"));
+            if (obj.has("hapticsLevel")) editor.putInt("hapticsLevel", obj.getInt("hapticsLevel"));
             if (obj.has("ghostModeEnabled")) editor.putBoolean("ghostModeEnabled", obj.getBoolean("ghostModeEnabled"));
             if (obj.has("ghostDontReadMessages")) editor.putBoolean("ghostDontReadMessages", obj.getBoolean("ghostDontReadMessages"));
             if (obj.has("ghostDontReadStories")) editor.putBoolean("ghostDontReadStories", obj.getBoolean("ghostDontReadStories"));

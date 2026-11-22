@@ -147,6 +147,14 @@ public class ActionBarMenuSubItem extends FrameLayout implements Theme.Colorable
         this.itemHeight = itemHeight;
     }
 
+    public int getItemHeight() {
+        return itemHeight;
+    }
+
+    public int getSelectorColor() {
+        return selectorColor;
+    }
+
     public void setChecked(boolean checked) {
         if (checkView == null) {
             return;

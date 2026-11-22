@@ -20,9 +20,17 @@ public class LagramMediaActivity extends BaseLagramSettingsActivity {
     private int turboUploadsRow;
     private int divider1Row;
 
+    private int autoplayHeaderRow;
+    private int autoplayVoiceRow;
+    private int autoplayRoundRow;
+    private int autoplayMusicRow;
+    private int dividerAutoplayRow;
+
     private int mediaHeaderRow;
     private int sendPhotosHdRow;
     private int rearCameraRoundRow;
+    private int compactRoundCameraRow;
+    private int mediaGlowRow;
     private int pauseVideoMinimizeRow;
     private int infoRow;
 
@@ -39,22 +47,30 @@ public class LagramMediaActivity extends BaseLagramSettingsActivity {
         turboUploadsRow = rowCount++;
         divider1Row = rowCount++;
 
+        autoplayHeaderRow = rowCount++;
+        autoplayVoiceRow = rowCount++;
+        autoplayRoundRow = rowCount++;
+        autoplayMusicRow = rowCount++;
+        dividerAutoplayRow = rowCount++;
+
         mediaHeaderRow = rowCount++;
         sendPhotosHdRow = rowCount++;
         rearCameraRoundRow = rowCount++;
+        compactRoundCameraRow = rowCount++;
+        mediaGlowRow = rowCount++;
         pauseVideoMinimizeRow = rowCount++;
         infoRow = rowCount++;
     }
 
     @Override
     protected int getItemViewType(int position) {
-        if (position == networkHeaderRow || position == mediaHeaderRow) {
+        if (position == networkHeaderRow || position == autoplayHeaderRow || position == mediaHeaderRow) {
             return VIEW_TYPE_HEADER;
         } else if (position == downloadBoostRow) {
             return VIEW_TYPE_SETTINGS;
         } else if (position == infoRow) {
             return VIEW_TYPE_INFO;
-        } else if (position == divider1Row) {
+        } else if (position == divider1Row || position == dividerAutoplayRow) {
             return VIEW_TYPE_SHADOW;
         }
         return VIEW_TYPE_CHECK;
@@ -79,6 +95,8 @@ public class LagramMediaActivity extends BaseLagramSettingsActivity {
                 HeaderCell cell = (HeaderCell) holder.itemView;
                 if (position == networkHeaderRow) {
                     cell.setText(LocaleController.getString(R.string.LagramNetworkHeader));
+                } else if (position == autoplayHeaderRow) {
+                    cell.setText(LocaleController.getString(R.string.LagramAutoplayHeader));
                 } else if (position == mediaHeaderRow) {
                     cell.setText(LocaleController.getString(R.string.LagramMediaHeader));
                 }
@@ -95,10 +113,20 @@ public class LagramMediaActivity extends BaseLagramSettingsActivity {
                 TextCheckCell cell = (TextCheckCell) holder.itemView;
                 if (position == turboUploadsRow) {
                     cell.setTextAndCheck(LocaleController.getString(R.string.LagramTurboUploads), LagramConfig.turboUploads, false);
+                } else if (position == autoplayVoiceRow) {
+                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramAutoplayVoice), LagramConfig.autoplayVoiceInRow, true);
+                } else if (position == autoplayRoundRow) {
+                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramAutoplayRound), LagramConfig.autoplayRoundInRow, true);
+                } else if (position == autoplayMusicRow) {
+                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramAutoplayMusic), LagramConfig.autoplayMusicInRow, false);
                 } else if (position == sendPhotosHdRow) {
                     cell.setTextAndCheck(LocaleController.getString(R.string.LagramSendPhotosHd), LagramConfig.sendPhotosInHd, true);
                 } else if (position == rearCameraRoundRow) {
                     cell.setTextAndCheck(LocaleController.getString(R.string.LagramRearCameraRound), LagramConfig.rearCameraForRoundVideo, true);
+                } else if (position == compactRoundCameraRow) {
+                    cell.setTextAndCheck(LocaleController.getString(R.string.LagramCompactRoundCamera), LagramConfig.compactRoundCamera, true);
+                } else if (position == mediaGlowRow) {
+                    cell.setTextAndCheck(LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramMediaGlow)), LagramConfig.mediaGlow, true);
                 } else if (position == pauseVideoMinimizeRow) {
                     cell.setTextAndCheck(LocaleController.getString(R.string.LagramPauseVideoMinimize), LagramConfig.pauseVideoOnMinimize, false);
                 }
@@ -128,10 +156,20 @@ public class LagramMediaActivity extends BaseLagramSettingsActivity {
         TextCheckCell cell = (TextCheckCell) view;
         if (position == turboUploadsRow) {
             cell.setChecked(LagramConfig.toggleTurboUploads());
+        } else if (position == autoplayVoiceRow) {
+            cell.setChecked(LagramConfig.toggleAutoplayVoiceInRow());
+        } else if (position == autoplayRoundRow) {
+            cell.setChecked(LagramConfig.toggleAutoplayRoundInRow());
+        } else if (position == autoplayMusicRow) {
+            cell.setChecked(LagramConfig.toggleAutoplayMusicInRow());
         } else if (position == sendPhotosHdRow) {
             cell.setChecked(LagramConfig.toggleSendPhotosInHd());
         } else if (position == rearCameraRoundRow) {
             cell.setChecked(LagramConfig.toggleRearCameraForRoundVideo());
+        } else if (position == compactRoundCameraRow) {
+            cell.setChecked(LagramConfig.toggleCompactRoundCamera());
+        } else if (position == mediaGlowRow) {
+            cell.setChecked(LagramConfig.toggleMediaGlow());
         } else if (position == pauseVideoMinimizeRow) {
             cell.setChecked(LagramConfig.togglePauseVideoOnMinimize());
         }

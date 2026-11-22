@@ -227,6 +227,13 @@ public class SettingsSearchCell extends FrameLayout {
             } else if (item.object instanceof MessagesController.FaqSearchResult) {
                 final MessagesController.FaqSearchResult r = (MessagesController.FaqSearchResult) item.object;
                 ((SettingsSearchCell) view).setTextAndValue(item.text, r.path, true, divider);
+            } else if (item.object instanceof CharSequence[]) {
+                CharSequence[] arr = (CharSequence[]) item.object;
+                String[] path = new String[arr.length];
+                for (int i = 0; i < arr.length; i++) {
+                    path[i] = arr[i] != null ? arr[i].toString() : "";
+                }
+                ((SettingsSearchCell) view).setTextAndValueAndIcon(item.text, path, item.iconResId, divider);
             }
         }
 
