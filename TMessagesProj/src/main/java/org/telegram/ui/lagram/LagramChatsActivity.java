@@ -1,17 +1,20 @@
 package org.telegram.ui.lagram;
 
+import android.content.Context;
 import android.view.View;
 
 import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.AlertDialog;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
+import org.telegram.ui.Components.UniversalFragment;
 
 import java.util.ArrayList;
 
-public class LagramChatsActivity extends BaseLagramSettingsActivity {
+public class LagramChatsActivity extends UniversalFragment {
 
     private static final int ID_PREVIEW_HEADER = 200;
     private static final int ID_HEADER_STYLE = 201;
@@ -59,6 +62,39 @@ public class LagramChatsActivity extends BaseLagramSettingsActivity {
     @Override
     protected CharSequence getTitle() {
         return LocaleController.getString(R.string.LagramCategoryChats);
+    }
+
+    @Override
+    public View createView(Context context) {
+        LagramConfig.ensureLoaded();
+        View view = super.createView(context);
+        listView.setSections();
+        listView.setSectionsDrawBackground(true);
+        updateBackdropColor();
+        return view;
+    }
+
+    private void updateBackdropColor() {
+        if (fragmentView == null || listView == null) return;
+        if (LagramConfig.amoledSettingsBackdrop && Theme.isCurrentThemeDark()) {
+            fragmentView.setBackgroundColor(0xFF000000);
+            listView.setBackgroundColor(0xFF000000);
+        } else {
+            int bg = Theme.getColor(Theme.key_windowBackgroundGray);
+            fragmentView.setBackgroundColor(bg);
+            listView.setBackgroundColor(bg);
+        }
+    }
+
+    private void refreshList() {
+        if (listView != null && listView.adapter != null) {
+            listView.adapter.update(true);
+        }
+    }
+
+    @Override
+    protected boolean onLongClick(UItem item, View view, int position, float x, float y) {
+        return false;
     }
 
     @Override

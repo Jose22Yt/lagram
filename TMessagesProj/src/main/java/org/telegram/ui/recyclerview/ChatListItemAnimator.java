@@ -1585,7 +1585,7 @@ public class ChatListItemAnimator extends DefaultItemAnimator {
                 );
                 set.setDuration(Math.max(300, getRemoveDuration()));
             } else if (effect == org.telegram.messenger.LagramConfig.DELETE_EFFECT_SLIDE) {
-                float shift = Math.max(AndroidUtilities.dp(120), view.getMeasuredWidth() * 0.48f);
+                float shift = Math.max(org.telegram.messenger.AndroidUtilities.dp(120), view.getMeasuredWidth() * 0.48f);
                 set.playTogether(
                         ObjectAnimator.ofFloat(view, View.TRANSLATION_X, 0f, shift),
                         ObjectAnimator.ofFloat(view, View.SCALE_Y, 1f, 0.88f),

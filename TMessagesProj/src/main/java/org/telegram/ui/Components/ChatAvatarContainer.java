@@ -425,6 +425,7 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         canvas.save();
         final float s = bounce.getScale(.02f);
         canvas.scale(s, s, getPivotX(), getHeight() - ActionBar.getCurrentActionBarHeight() / 2f);
+        drawLagramAdaptivePill(canvas);
         super.dispatchDraw(canvas);
         canvas.restore();
     }
@@ -775,8 +776,7 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
     private Paint lagramAdaptiveStrokePaint;
     private final android.graphics.RectF lagramPillRect = new android.graphics.RectF();
 
-    @Override
-    protected void dispatchDraw(Canvas canvas) {
+    private void drawLagramAdaptivePill(Canvas canvas) {
         org.telegram.messenger.LagramConfig.ensureLoaded();
         int hdrStyle = org.telegram.messenger.LagramConfig.chatHeaderStyle;
         if (hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_ADAPTIVE
@@ -799,7 +799,6 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
             canvas.drawRoundRect(lagramPillRect, dp(20), dp(20), lagramAdaptivePillPaint);
             canvas.drawRoundRect(lagramPillRect, dp(20), dp(20), lagramAdaptiveStrokePaint);
         }
-        super.dispatchDraw(canvas);
     }
 
     @Override
