@@ -2117,7 +2117,7 @@ public final class LagramRealPreviews {
                     ring.setColor(Color.TRANSPARENT);
                     ring.setStroke(dp(1), ColorUtils.setAlphaComponent(textSecondary, 45));
                     labelView.setTextColor(textPrimary);
-                    labelView.setTypeface(AndroidUtilities.getTypeface(AndroidUtilities.TYPEFACE_ROBOTO_REGULAR));
+                    labelView.setTypeface(android.graphics.Typeface.DEFAULT);
                 }
                 ringView.setBackground(ring);
             }
