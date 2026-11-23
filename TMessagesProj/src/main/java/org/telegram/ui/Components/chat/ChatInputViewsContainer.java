@@ -282,6 +282,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
         if (leftPillDrawable == null) {
             final BlurredBackgroundProvider provider = BlurredBackgroundProviderImpl.bottomPanelChatActivity(pillResourcesProvider);
             leftPillDrawable = BlurredBackgroundDrawableViewFactory.createDrawable(blurredBackgroundDrawable.getSource());
+            leftPillDrawable.setLiquidGlassEffectAllowed();
             leftPillDrawable.setColorProvider(provider);
             leftPillDrawable.setPadding(dp(7));
             leftPillDrawable.setRadius(dp(19));
@@ -291,6 +292,7 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
         if (rightPillDrawable == null) {
             final BlurredBackgroundProvider provider = BlurredBackgroundProviderImpl.bottomPanelChatActivity(pillResourcesProvider);
             rightPillDrawable = BlurredBackgroundDrawableViewFactory.createDrawable(blurredBackgroundDrawable.getSource());
+            rightPillDrawable.setLiquidGlassEffectAllowed();
             rightPillDrawable.setColorProvider(provider);
             rightPillDrawable.setPadding(dp(7));
             rightPillDrawable.setRadius(dp(19));

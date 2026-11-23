@@ -101,6 +101,9 @@ public final class LagramGlassBubbleEngine {
         lastCaptureTime = 0L;
         lastCapturedBlurLevel = -1;
         readyBlurredBitmap = null;
+        backBufferBitmap = null;
+        backBufferCanvas = null;
+        lastFastCheckTime = 0L;
         stagingBitmap = null;
         stagingCanvas = null;
         invalidateShaderCache();
@@ -273,47 +276,54 @@ public final class LagramGlassBubbleEngine {
         scheduleAsyncCapture(capturable, LagramConfig.getGlassBlurRadius());
     }
 
+    private static Bitmap backBufferBitmap;
+    private static Canvas backBufferCanvas;
+    private static long lastFastCheckTime;
+
     private static void scheduleAsyncCapture(Drawable drawable, int blurRadius) {
         if (!blurInFlight.compareAndSet(false, true)) {
             return;
         }
-        // Lightweight 144px thumbnail keeps memory tiny (~50KB) and blur sub-millisecond
+        // Lightweight 144px double-buffered thumbnail: ~50KB RAM, 0 per-capture Bitmap allocations!
         int targetH = 144;
         int targetW = Math.max(36, Math.min(256, Math.round((viewportWidth * (float) targetH) / Math.max(1, viewportHeight))));
-        if (stagingBitmap == null || stagingBitmap.isRecycled()
-                || stagingBitmap.getWidth() != targetW || stagingBitmap.getHeight() != targetH) {
-            stagingBitmap = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888);
-            stagingBitmap.setHasAlpha(false);
-            stagingCanvas = new Canvas(stagingBitmap);
+        Bitmap targetBuf = (backBufferBitmap != null && !backBufferBitmap.isRecycled() && backBufferBitmap != readyBlurredBitmap
+                && backBufferBitmap.getWidth() == targetW && backBufferBitmap.getHeight() == targetH)
+                ? backBufferBitmap
+                : null;
+        if (targetBuf == null) {
+            targetBuf = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888);
+            targetBuf.setHasAlpha(false);
+            backBufferBitmap = targetBuf;
+            backBufferCanvas = new Canvas(targetBuf);
+        } else if (backBufferCanvas == null) {
+            backBufferCanvas = new Canvas(targetBuf);
+        } else {
+            backBufferCanvas.setBitmap(targetBuf);
         }
-        stagingBitmap.eraseColor(Color.BLACK);
+        targetBuf.eraseColor(Color.BLACK);
         tmpBounds.set(drawable.getBounds());
-        Bitmap workCopy = null;
         try {
             drawable.setBounds(0, 0, targetW, targetH);
-            drawable.draw(stagingCanvas);
-            workCopy = stagingBitmap.copy(Bitmap.Config.ARGB_8888, true);
+            drawable.draw(backBufferCanvas);
         } catch (Throwable ignored) {
             blurInFlight.set(false);
             return;
         } finally {
             drawable.setBounds(tmpBounds);
         }
-        if (workCopy == null) {
-            blurInFlight.set(false);
-            return;
-        }
 
-        final Bitmap finalWork = workCopy;
+        final Bitmap finalWork = targetBuf;
         final int gen = captureGeneration.get();
         final int radius = Math.max(2, blurRadius);
 
-        // If we have NO blurred bitmap yet (very first frame), blur synchronously at 144px (~0.6ms)
-        // so the very first frame never flashes unblurred; subsequent updates run 100% off-UI-thread!
+        // First frame blurs synchronously at 144px (~0.6ms) so bubbles never flash unblurred;
+        // subsequent animated wallpaper refreshes run 100% off the UI thread with zero allocations.
         if (readyBlurredBitmap == null) {
             try {
                 Utilities.stackBlurBitmap(finalWork, radius);
                 readyBlurredBitmap = finalWork;
+                backBufferBitmap = null;
                 captureValid = true;
                 invalidateShaderCache();
             } catch (Throwable ignored) {
@@ -330,7 +340,11 @@ public final class LagramGlassBubbleEngine {
                 if (gen == captureGeneration.get()) {
                     AndroidUtilities.runOnUIThread(() -> {
                         if (gen == captureGeneration.get()) {
+                            Bitmap prevReady = readyBlurredBitmap;
                             readyBlurredBitmap = finalWork;
+                            if (prevReady != null && !prevReady.isRecycled() && prevReady != finalWork) {
+                                backBufferBitmap = prevReady;
+                            }
                             captureValid = true;
                             invalidateShaderCache();
                         }
@@ -346,7 +360,11 @@ public final class LagramGlassBubbleEngine {
 
     @Nullable
     public static Bitmap getBlurredWallpaperBitmap() {
-        ensureCapturedBitmap();
+        long now = SystemClock.elapsedRealtime();
+        if (!captureValid || readyBlurredBitmap == null || (now - lastFastCheckTime) >= 120L) {
+            lastFastCheckTime = now;
+            ensureCapturedBitmap();
+        }
         Bitmap ready = readyBlurredBitmap;
         if (ready != null && !ready.isRecycled()) {
             return ready;

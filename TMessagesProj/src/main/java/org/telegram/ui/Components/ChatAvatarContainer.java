@@ -795,6 +795,11 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
     private int lagramTargetPillWidth;
     private int lagramLivePillWidth;
     private int lagramLaidOutPillWidth;
+    private boolean lagramRelayoutPending;
+    private final Runnable lagramRelayoutRunnable = () -> {
+        lagramRelayoutPending = false;
+        requestLayout();
+    };
 
     public void setLagramTargetPillWidth(int width) {
         if (lagramTargetPillWidth != width) {
@@ -807,10 +812,21 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
 
     public void updateLagramLivePillWidth(int width) {
         lagramLivePillWidth = width;
-        if (org.telegram.messenger.LagramConfig.chatHeaderStyle != org.telegram.messenger.LagramConfig.CHAT_HEADER_DEFAULT
-                && width > 0 && Math.abs(width - lagramLaidOutPillWidth) > dp(1) && !isInLayout()) {
-            lagramTargetPillWidth = width;
-            post(this::requestLayout);
+        if (org.telegram.messenger.LagramConfig.chatHeaderStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_DEFAULT
+                || width <= 0 || lagramLaidOutPillWidth <= 0 || lagramRelayoutPending || isInLayout()) {
+            return;
+        }
+        final int measuredW = getMeasuredWidth();
+        if (measuredW <= 0) {
+            return;
+        }
+        final int startX = resolveLagramPillStartX();
+        final int maxPossibleW = Math.max(dp(88), measuredW - startX);
+        final int clampedW = Math.min(maxPossibleW, Math.max(dp(88), width));
+        if (Math.abs(clampedW - lagramLaidOutPillWidth) > dp(2)) {
+            lagramTargetPillWidth = clampedW;
+            lagramRelayoutPending = true;
+            post(lagramRelayoutRunnable);
         }
     }
 
@@ -1852,6 +1868,8 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        removeCallbacks(lagramRelayoutRunnable);
+        lagramRelayoutPending = false;
         if (parentFragment != null) {
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.didUpdateConnectionState);
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);

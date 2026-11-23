@@ -126,8 +126,8 @@ public final class LagramMessageFocusLayout extends FrameLayout {
     }
 
     public void applyEnterProgress(float progress) {
-        float scale = 0.01f + 0.99f * progress;
-        float alpha = Utilities.clamp(progress * 5.0f, 1.0f, 0.0f);
+        float scale = 0.86f + 0.14f * progress;
+        float alpha = Utilities.clamp(progress * 2.4f, 1.0f, 0.0f);
         boolean wasCompleted = alphaCompleted;
         alphaCompleted = alpha >= 1.0f;
         int count = scrimPopupContainerLayout.getChildCount();
@@ -373,8 +373,8 @@ public final class LagramMessageFocusLayout extends FrameLayout {
         SpringAnimation spring = new SpringAnimation(new FloatValueHolder(0.0f));
         enterSpring = spring;
         SpringForce force = new SpringForce(1.0f);
-        force.setStiffness(450.0f);
-        force.setDampingRatio(0.78f);
+        force.setStiffness(520.0f);
+        force.setDampingRatio(0.82f);
         spring.setSpring(force);
         spring.setMinimumVisibleChange(0.002f);
         spring.addUpdateListener((animation, value, velocity) -> applyEnterProgress(value));

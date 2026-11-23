@@ -3134,7 +3134,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             } else if (showPlayer) {
                 if (!actionBarLayout.getFragmentStack().isEmpty()) {
                     BaseFragment fragment = actionBarLayout.getFragmentStack().get(0);
-                    fragment.showDialog(new AudioPlayerAlert(this, null));
+                    fragment.showDialog(org.telegram.ui.lagram.player.LagramPlayer.create(this, null));
                 }
                 pushOpened = false;
             } else if (showLocations) {

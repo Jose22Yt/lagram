@@ -447,8 +447,8 @@ public final class LagramMessageFocusController {
             clipProgress = val;
             updateTranslations();
         });
-        progressAnimator.setDuration(200L);
-        progressAnimator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
+        progressAnimator.setDuration(240L);
+        progressAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
         progressAnimator.start();
 
         if (hasFocusLayout && state.targetShiftY != 0.0f) {
@@ -612,7 +612,7 @@ public final class LagramMessageFocusController {
         applyTopFade = hasFocusLayout && state.isTallScrollable;
         chromeOverlayAlpha = chromeViews != null ? 1.0f - blurProgress : 0.0f;
         int saveCount;
-        if (scrimViewAlpha < 1.0f || applyTopFade || chromeOverlayAlpha > 0.0f) {
+        if (scrimViewAlpha < 0.995f || applyTopFade || chromeOverlayAlpha > 0.01f) {
             saveCount = canvas.saveLayerAlpha(0.0f, 0.0f, width, height, (int) (Utilities.clamp(scrimViewAlpha, 1.0f, 0.0f) * 255.0f), Canvas.ALL_SAVE_FLAG);
         } else {
             saveCount = canvas.save();

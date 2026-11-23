@@ -443,26 +443,30 @@ public final class LagramScrollEdgeController implements
                 // start curving smoothly as soon as they approach the top or bottom bar!
                 float dist = nearTop ? (top - topEdge) : (bottomEdge - bottom);
                 float t = clamp01(1.0f - (dist / zone)) * edgeReach;
-                if (t > 0.001f) {
+                if (t > 0.002f) {
                     float heightFactor = Math.min(1.0f, maxScaleRefHeightPx / Math.max(1.0f, h));
-                    float ease = t * t;
+                    // Silky cubic smoothstep curve (zero abrupt snap at edge entry)
+                    float ease = t * t * (3.0f - 2.0f * t);
+                    // Defer alpha < 1 until deep in the edge (t > 0.28) to avoid HWUI offscreen saveLayer thrashing
+                    float alphaT = t > 0.28f ? ((t - 0.28f) / 0.72f) : 0.0f;
+                    float alphaEase = alphaT * alphaT;
                     if (drumMode) {
                         // True edge-hinged 3D cylindrical drum curve:
                         // Top items hinge on their bottom edge and tilt backward (+rotX).
                         // Bottom items hinge on their top edge and tilt backward (-rotX).
-                        float angleDeg = (nearTop ? 30.0f : -30.0f) * ease * heightFactor;
-                        float sc = 1.0f - (0.12f * ease * heightFactor);
-                        float al = 1.0f - (0.46f * ease);
+                        float angleDeg = (nearTop ? 28.0f : -28.0f) * ease * heightFactor;
+                        float sc = 1.0f - (0.11f * ease * heightFactor);
+                        float al = 1.0f - (0.42f * alphaEase);
                         itemRotX[i] = angleDeg;
                         itemScale[i] = sc;
-                        itemAlpha[i] = Math.max(0.24f, al);
+                        itemAlpha[i] = Math.max(0.28f, al);
                         itemShrinkH[i] = (1.0f - sc) * h * 0.72f;
                     } else {
                         // Elastic Edge Scale mode
-                        float sc = 1.0f - (0.15f * ease * heightFactor);
-                        float al = 1.0f - (0.38f * ease);
+                        float sc = 1.0f - (0.14f * ease * heightFactor);
+                        float al = 1.0f - (0.35f * alphaEase);
                         itemScale[i] = sc;
-                        itemAlpha[i] = Math.max(0.30f, al);
+                        itemAlpha[i] = Math.max(0.34f, al);
                         itemShrinkH[i] = (1.0f - sc) * h;
                     }
                 }
@@ -566,34 +570,44 @@ public final class LagramScrollEdgeController implements
             float curSx = child.getScaleX();
             if (curSx != trackedState[base + 5]) trackedState[base] = curSx;
             float targetSx = trackedState[base] * sc;
-            if (targetSx != curSx) child.setScaleX(targetSx);
-            trackedState[base + 5] = targetSx;
+            if (isIdentity ? (targetSx != curSx) : (Math.abs(targetSx - curSx) > 0.0012f)) {
+                child.setScaleX(targetSx);
+                trackedState[base + 5] = targetSx;
+            }
 
             float curSy = child.getScaleY();
             if (curSy != trackedState[base + 6]) trackedState[base + 1] = curSy;
             float targetSy = trackedState[base + 1] * sc;
-            if (targetSy != curSy) child.setScaleY(targetSy);
-            trackedState[base + 6] = targetSy;
+            if (isIdentity ? (targetSy != curSy) : (Math.abs(targetSy - curSy) > 0.0012f)) {
+                child.setScaleY(targetSy);
+                trackedState[base + 6] = targetSy;
+            }
 
             float curA = child.getAlpha();
             if (curA != trackedState[base + 7]) trackedState[base + 2] = curA;
             float targetA = trackedState[base + 2] * al;
-            if (targetA != curA) child.setAlpha(targetA);
-            trackedState[base + 7] = targetA;
+            if (isIdentity ? (targetA != curA) : (Math.abs(targetA - curA) > 0.008f)) {
+                child.setAlpha(targetA);
+                trackedState[base + 7] = targetA;
+            }
 
             float curTy = child.getTranslationY();
             if (curTy != trackedState[base + 8]) {
                 trackedState[base + 3] = resolveExternalTranslationY(trackedState, base, curTy);
             }
             float targetTy = trackedState[base + 3] + dy;
-            if (targetTy != curTy) child.setTranslationY(targetTy);
-            trackedState[base + 8] = targetTy;
+            if (isIdentity ? (targetTy != curTy) : (Math.abs(targetTy - curTy) > 0.1f)) {
+                child.setTranslationY(targetTy);
+                trackedState[base + 8] = targetTy;
+            }
 
             float curRx = child.getRotationX();
             if (curRx != trackedState[base + 9]) trackedState[base + 4] = curRx;
             float targetRx = trackedState[base + 4] + rx;
-            if (targetRx != curRx) child.setRotationX(targetRx);
-            trackedState[base + 9] = targetRx;
+            if (isIdentity ? (targetRx != curRx) : (Math.abs(targetRx - curRx) > 0.06f)) {
+                child.setRotationX(targetRx);
+                trackedState[base + 9] = targetRx;
+            }
 
             visibleViews[i] = null;
         }
