@@ -1650,4 +1650,8 @@
     <string name="LagramAutoTranslateChatsDesc">Traduce automáticamente al abrir chats en un idioma extranjero</string>
     <string name="LagramClearTranslateCache">Limpiar caché de traducciones</string>
     <string name="LagramTranslateCacheCleared">Caché de traducciones limpiada</string>
+    <string name="LagramChatHeaderSignature">Signature</string>
+    <string name="LagramChatHeaderFusion">Fusion</string>
+    <string name="LagramChatHeaderPortrait">Retrato Mate</string>
+    <string name="LagramChatHeaderFloating">Flotante</string>
 </resources>

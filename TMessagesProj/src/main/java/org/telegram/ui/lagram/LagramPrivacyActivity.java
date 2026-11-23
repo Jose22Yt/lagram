@@ -34,9 +34,6 @@ public class LagramPrivacyActivity extends UniversalFragment {
     private static final int ID_DELETED_STRIKE = 316;
     private static final int ID_DELETED_TIME = 317;
 
-    private static final int ID_ALLOW_SCREENSHOTS = 320;
-    private static final int ID_BYPASS_NO_FORWARDS = 321;
-
     private static final int[] BUBBLE_TINT_PALETTE = {
             0,          // Default / none
             0xFFE53935, // Crimson
@@ -204,20 +201,6 @@ public class LagramPrivacyActivity extends UniversalFragment {
                 LocaleController.getString(R.string.LagramShowDeletedTime),
                 LocaleController.getString(R.string.LagramShowDeletedTimeDesc),
                 LagramConfig.showDeletedTime));
-        items.add(UItem.asShadow(null));
-
-        // 3. Anti-Restrictions
-        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramAntiRestrictHeader)));
-        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_ALLOW_SCREENSHOTS, 0,
-                LocaleController.getString(R.string.LagramAllowScreenshots),
-                null,
-                LagramConfig.allowScreenshots));
-        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                ID_BYPASS_NO_FORWARDS, 0,
-                LocaleController.getString(R.string.LagramBypassNoForwards),
-                null,
-                LagramConfig.bypassNoForwards));
         items.add(UItem.asShadow(LocaleController.getString(R.string.LagramPrivacyInfo)));
     }
 
@@ -270,14 +253,6 @@ public class LagramPrivacyActivity extends UniversalFragment {
                 break;
             case ID_DELETED_TIME:
                 LagramConfig.toggleShowDeletedTime();
-                refreshList();
-                break;
-            case ID_ALLOW_SCREENSHOTS:
-                LagramConfig.toggleAllowScreenshots();
-                refreshList();
-                break;
-            case ID_BYPASS_NO_FORWARDS:
-                LagramConfig.toggleBypassNoForwards();
                 refreshList();
                 break;
         }

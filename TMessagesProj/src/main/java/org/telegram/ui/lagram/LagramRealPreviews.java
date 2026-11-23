@@ -296,6 +296,12 @@ public final class LagramRealPreviews {
             private final TextPaint titlePaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
             private final TextPaint subPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
             private final RectF rect = new RectF();
+            private final android.graphics.Path clipPath = new android.graphics.Path();
+            private final android.graphics.Matrix fadeMatrix = new android.graphics.Matrix();
+            private android.graphics.LinearGradient fadeShader;
+            private int lastFadeColor = Integer.MIN_VALUE;
+            private PorterDuffColorFilter cachedIconFilter;
+            private int lastIconTint = Integer.MIN_VALUE;
             private final AvatarDrawable avatarDrawable = new AvatarDrawable();
             private final Drawable backIcon;
             private final Drawable callIcon;
@@ -336,8 +342,12 @@ public final class LagramRealPreviews {
 
             private void drawIcon(Canvas c, Drawable d, int cx, int cy, int size, int tint) {
                 if (d == null) return;
+                if (cachedIconFilter == null || lastIconTint != tint) {
+                    lastIconTint = tint;
+                    cachedIconFilter = new PorterDuffColorFilter(tint, PorterDuff.Mode.SRC_IN);
+                }
                 Drawable m = d.mutate();
-                m.setColorFilter(new PorterDuffColorFilter(tint, PorterDuff.Mode.SRC_IN));
+                m.setColorFilter(cachedIconFilter);
                 m.setBounds(cx - size / 2, cy - size / 2, cx + size / 2, cy + size / 2);
                 m.draw(c);
             }
@@ -351,12 +361,18 @@ public final class LagramRealPreviews {
                 LagramConfig.ensureLoaded();
                 int style = LagramConfig.chatHeaderStyle;
                 boolean isDark = Theme.isCurrentThemeDark();
+                boolean liquidGlassOn = org.telegram.messenger.LiteMode.isEnabled(org.telegram.messenger.LiteMode.FLAG_LIQUID_GLASS);
                 int barBg = Theme.getColor(Theme.key_actionBarDefault, resourcesProvider);
                 int titleColor = Theme.getColor(Theme.key_actionBarDefaultTitle, resourcesProvider);
                 int subColor = Theme.getColor(Theme.key_actionBarDefaultSubtitle, resourcesProvider);
                 int iconColor = Theme.getColor(Theme.key_actionBarDefaultIcon, resourcesProvider);
-                int glassFill = ColorUtils.setAlphaComponent(isDark ? 0xFF171A21 : 0xFFFFFFFF, isDark ? 188 : 210);
-                int glassStroke = ColorUtils.setAlphaComponent(isDark ? Color.WHITE : Color.BLACK, isDark ? 34 : 20);
+                int solidSurface = Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider) | 0xFF000000;
+                int pillFill = liquidGlassOn
+                        ? ColorUtils.setAlphaComponent(isDark ? 0xFF171A21 : 0xFFFFFFFF, isDark ? 184 : 206)
+                        : solidSurface;
+                int pillStroke = liquidGlassOn
+                        ? ColorUtils.setAlphaComponent(isDark ? Color.WHITE : Color.BLACK, isDark ? 34 : 20)
+                        : ColorUtils.setAlphaComponent(Theme.getColor(Theme.key_divider, resourcesProvider), 0x77);
                 int cy = h / 2;
 
                 String name = longName ? "Alejandro Morales • Lagram" : "Alex";
@@ -380,119 +396,195 @@ public final class LagramRealPreviews {
                     return;
                 }
 
-                if (style == LagramConfig.CHAT_HEADER_IOS) {
-                    // iOS Centered: glass bar + back pill left + centered name/status + avatar right
-                    paint.setColor(glassFill);
-                    canvas.drawRect(0, 0, w, h, paint);
-                    strokePaint.setColor(glassStroke);
-                    canvas.drawLine(0, h - 1, w, h - 1, strokePaint);
-                    int pillColor = isDark ? Color.WHITE : 0xFF11141A;
-                    paint.setColor(ColorUtils.setAlphaComponent(isDark ? Color.WHITE : Color.BLACK, isDark ? 24 : 14));
-                    canvas.drawCircle(dp(26), cy, dp(17), paint);
-                    drawIcon(canvas, backIcon, dp(26), cy, dp(20), pillColor);
+                int fg = isDark ? Color.WHITE : 0xFF11141A;
+                int subAccent = Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4, resourcesProvider);
 
-                    int av = dp(36);
-                    avatarDrawable.setBounds(w - dp(14) - av, cy - av / 2, w - dp(14), cy + av / 2);
-                    avatarDrawable.draw(canvas);
-
-                    titlePaint.setColor(pillColor);
-                    subPaint.setColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4, resourcesProvider));
-                    float maxTw = w - dp(126);
-                    CharSequence ellTitle = TextUtils.ellipsize(name, titlePaint, maxTw, TextUtils.TruncateAt.END);
-                    float tw = titlePaint.measureText(ellTitle, 0, ellTitle.length());
-                    float sw = subPaint.measureText(sub);
-                    canvas.drawText(ellTitle, 0, ellTitle.length(), (w - tw) * 0.5f, cy - dp(2), titlePaint);
-                    canvas.drawText(sub, (w - sw) * 0.5f, cy + dp(14), subPaint);
-                    return;
-                }
-
-                if (style == LagramConfig.CHAT_HEADER_COMPACT) {
-                    // Compact slim floating top strip
-                    paint.setColor(ColorUtils.setAlphaComponent(barBg, 232));
-                    rect.set(dp(10), dp(9), w - dp(10), h - dp(9));
-                    canvas.drawRoundRect(rect, dp(22), dp(22), paint);
-                    strokePaint.setColor(glassStroke);
-                    canvas.drawRoundRect(rect, dp(22), dp(22), strokePaint);
-                    drawIcon(canvas, backIcon, dp(30), cy, dp(20), iconColor);
-                    int av = dp(30);
-                    avatarDrawable.setBounds(dp(48), cy - av / 2, dp(48) + av, cy + av / 2);
-                    avatarDrawable.draw(canvas);
-                    titlePaint.setColor(titleColor);
-                    subPaint.setColor(subColor);
-                    float maxTw = w - dp(148);
-                    CharSequence ellTitle = TextUtils.ellipsize(name, titlePaint, maxTw, TextUtils.TruncateAt.END);
-                    canvas.drawText(ellTitle, 0, ellTitle.length(), dp(86), cy - dp(1), titlePaint);
-                    canvas.drawText(sub, dp(86), cy + dp(12), subPaint);
-                    drawIcon(canvas, moreIcon, w - dp(28), cy, dp(20), iconColor);
-                    return;
-                }
-
-                if (style == LagramConfig.CHAT_HEADER_ADAPTIVE) {
-                    // Adaptive Name-Width Pill: pill shrinks/grows dynamically with contact name length!
-                    int fg = isDark ? Color.WHITE : 0xFF11141A;
-                    paint.setColor(glassFill);
-                    strokePaint.setColor(glassStroke);
-                    // Back circle pill
-                    canvas.drawCircle(dp(26), cy, dp(18), paint);
-                    canvas.drawCircle(dp(26), cy, dp(18), strokePaint);
+                if (style == LagramConfig.CHAT_HEADER_SIGNATURE) {
+                    // FlexyGram Signature: 3 floating equal-height pills, centered adaptive title pill + avatar right
+                    paint.setColor(pillFill);
+                    strokePaint.setColor(pillStroke);
+                    canvas.drawCircle(dp(26), cy, dp(19), paint);
+                    canvas.drawCircle(dp(26), cy, dp(19), strokePaint);
                     drawIcon(canvas, backIcon, dp(26), cy, dp(20), fg);
-                    // Right menu pill
-                    canvas.drawCircle(w - dp(26), cy, dp(18), paint);
-                    canvas.drawCircle(w - dp(26), cy, dp(18), strokePaint);
+
+                    canvas.drawCircle(w - dp(26), cy, dp(19), paint);
+                    canvas.drawCircle(w - dp(26), cy, dp(19), strokePaint);
                     drawIcon(canvas, moreIcon, w - dp(26), cy, dp(20), fg);
 
-                    // Compute smooth adaptive width between short & long name
-                    float shortW = dp(34 + 26) + Math.max(titlePaint.measureText("Alex"), subPaint.measureText(sub));
-                    float longRawW = dp(34 + 26) + titlePaint.measureText("Alejandro Morales • Lagram");
+                    float shortW = dp(52) + Math.max(titlePaint.measureText("Alex"), subPaint.measureText(sub));
+                    float longRawW = dp(52) + titlePaint.measureText("Alejandro Morales • Lagram");
                     float maxPillW = w - dp(104);
-                    float targetW = Math.min(maxPillW, shortW + (longRawW - shortW) * nameAnim);
-                    float pillL = dp(52);
-                    float pillR = pillL + targetW;
-                    rect.set(pillL, cy - dp(21), pillR, cy + dp(21));
+                    float pillW = Math.min(maxPillW, Math.max(dp(118), shortW + (longRawW - shortW) * nameAnim));
+                    float pillL = (w - pillW) * 0.5f;
+                    rect.set(pillL, cy - dp(21), pillL + pillW, cy + dp(21));
                     canvas.drawRoundRect(rect, dp(21), dp(21), paint);
                     canvas.drawRoundRect(rect, dp(21), dp(21), strokePaint);
 
                     int av = dp(32);
-                    avatarDrawable.setBounds((int) pillL + dp(5), cy - av / 2, (int) pillL + dp(5) + av, cy + av / 2);
+                    int avL = (int) (rect.right - dp(5) - av);
+                    avatarDrawable.setBounds(avL, cy - av / 2, avL + av, cy + av / 2);
+                    avatarDrawable.draw(canvas);
+
+                    titlePaint.setColor(fg);
+                    subPaint.setColor(subAccent);
+                    float textAvail = Math.max(dp(36), rect.width() - dp(52));
+                    CharSequence ellTitle = TextUtils.ellipsize(name, titlePaint, textAvail, TextUtils.TruncateAt.END);
+                    float tw = titlePaint.measureText(ellTitle, 0, ellTitle.length());
+                    float sw = subPaint.measureText(sub);
+                    float textCenterX = rect.left + dp(8) + textAvail * 0.5f;
+                    canvas.drawText(ellTitle, 0, ellTitle.length(), textCenterX - tw * 0.5f, cy - dp(2), titlePaint);
+                    canvas.drawText(sub, textCenterX - sw * 0.5f, cy + dp(13), subPaint);
+                    return;
+                }
+
+                if (style == LagramConfig.CHAT_HEADER_FUSION) {
+                    // FlexyGram Fusion: adaptive pill with nested circular portrait left + centered text + dual action pill right
+                    paint.setColor(pillFill);
+                    strokePaint.setColor(pillStroke);
+                    canvas.drawCircle(dp(25), cy, dp(18), paint);
+                    canvas.drawCircle(dp(25), cy, dp(18), strokePaint);
+                    drawIcon(canvas, backIcon, dp(25), cy, dp(19), fg);
+
+                    // Dual action pill right with crisp center divider
+                    rect.set(w - dp(82), cy - dp(18), w - dp(8), cy + dp(18));
+                    canvas.drawRoundRect(rect, dp(18), dp(18), paint);
+                    canvas.drawRoundRect(rect, dp(18), dp(18), strokePaint);
+                    canvas.drawLine(rect.centerX(), rect.top + dp(9), rect.centerX(), rect.bottom - dp(9), strokePaint);
+                    drawIcon(canvas, callIcon, (int) (rect.left + rect.width() * 0.27f), cy, dp(18), fg);
+                    drawIcon(canvas, moreIcon, (int) (rect.left + rect.width() * 0.73f), cy, dp(18), fg);
+
+                    // Adaptive center Fusion pill
+                    float shortW = dp(58) + Math.max(titlePaint.measureText("Alex"), subPaint.measureText(sub));
+                    float longRawW = dp(58) + titlePaint.measureText("Alejandro Morales • Lagram");
+                    float maxPillW = Math.max(dp(116), (w - dp(88)) - dp(49));
+                    float pillW = Math.min(maxPillW, Math.max(dp(116), shortW + (longRawW - shortW) * nameAnim));
+                    float pillL = dp(49) + (maxPillW - pillW) * 0.5f;
+                    rect.set(pillL, cy - dp(21), pillL + pillW, cy + dp(21));
+                    canvas.drawRoundRect(rect, dp(21), dp(21), paint);
+                    canvas.drawRoundRect(rect, dp(21), dp(21), strokePaint);
+
+                    int av = dp(34);
+                    avatarDrawable.setBounds((int) rect.left + dp(4), cy - av / 2, (int) rect.left + dp(4) + av, cy + av / 2);
                     avatarDrawable.draw(canvas);
 
                     titlePaint.setColor(fg);
                     subPaint.setColor(ColorUtils.setAlphaComponent(fg, 165));
-                    float textAvail = Math.max(dp(24), targetW - dp(50));
+                    float textStart = rect.left + dp(44);
+                    float textAvail = Math.max(dp(36), rect.right - dp(10) - textStart);
                     CharSequence ellTitle = TextUtils.ellipsize(name, titlePaint, textAvail, TextUtils.TruncateAt.END);
-                    canvas.drawText(ellTitle, 0, ellTitle.length(), pillL + dp(43), cy - dp(2), titlePaint);
-                    canvas.drawText(sub, pillL + dp(43), cy + dp(13), subPaint);
+                    float tw = titlePaint.measureText(ellTitle, 0, ellTitle.length());
+                    float sw = subPaint.measureText(sub);
+                    float textCenterX = textStart + textAvail * 0.5f;
+                    canvas.drawText(ellTitle, 0, ellTitle.length(), textCenterX - tw * 0.5f, cy - dp(2), titlePaint);
+                    canvas.drawText(sub, textCenterX - sw * 0.5f, cy + dp(13), subPaint);
                     return;
                 }
 
-                // CHAT_HEADER_EXPRESSIVE: Liquid Glass full pill + floating circular actions
-                int fg = isDark ? Color.WHITE : 0xFF11141A;
-                paint.setColor(glassFill);
-                strokePaint.setColor(glassStroke);
-                canvas.drawCircle(dp(26), cy, dp(18), paint);
-                canvas.drawCircle(dp(26), cy, dp(18), strokePaint);
-                drawIcon(canvas, backIcon, dp(26), cy, dp(20), fg);
+                if (style == LagramConfig.CHAT_HEADER_PORTRAIT) {
+                    // FlexyGram Portrait Matte: solid opaque high-contrast matte pill + circular side buttons
+                    int matteFill = solidSurface;
+                    int matteStroke = ColorUtils.setAlphaComponent(Theme.getColor(Theme.key_divider, resourcesProvider), 0x77);
+                    paint.setColor(matteFill);
+                    strokePaint.setColor(matteStroke);
 
-                rect.set(dp(50), cy - dp(21), w - dp(86), cy + dp(21));
-                canvas.drawRoundRect(rect, dp(21), dp(21), paint);
-                canvas.drawRoundRect(rect, dp(21), dp(21), strokePaint);
+                    canvas.drawCircle(dp(26), cy, dp(20), paint);
+                    canvas.drawCircle(dp(26), cy, dp(20), strokePaint);
+                    drawIcon(canvas, backIcon, dp(26), cy, dp(19), fg);
 
-                int av = dp(34);
-                avatarDrawable.setBounds(dp(55), cy - av / 2, dp(55) + av, cy + av / 2);
-                avatarDrawable.draw(canvas);
-                titlePaint.setColor(fg);
-                subPaint.setColor(ColorUtils.setAlphaComponent(fg, 170));
-                float textAvail = Math.max(dp(40), rect.width() - dp(54));
-                CharSequence ellTitle = TextUtils.ellipsize(name, titlePaint, textAvail, TextUtils.TruncateAt.END);
-                canvas.drawText(ellTitle, 0, ellTitle.length(), dp(96), cy - dp(2), titlePaint);
-                canvas.drawText(sub, dp(96), cy + dp(13), subPaint);
+                    canvas.drawCircle(w - dp(68), cy, dp(19), paint);
+                    canvas.drawCircle(w - dp(68), cy, dp(19), strokePaint);
+                    drawIcon(canvas, callIcon, w - dp(68), cy, dp(18), fg);
 
-                // Floating dual action capsule right
-                rect.set(w - dp(80), cy - dp(18), w - dp(10), cy + dp(18));
+                    canvas.drawCircle(w - dp(26), cy, dp(19), paint);
+                    canvas.drawCircle(w - dp(26), cy, dp(19), strokePaint);
+                    drawIcon(canvas, moreIcon, w - dp(26), cy, dp(18), fg);
+
+                    float shortW = dp(58) + Math.max(titlePaint.measureText("Alex"), subPaint.measureText(sub));
+                    float longRawW = dp(58) + titlePaint.measureText("Alejandro Morales • Lagram");
+                    float maxPillW = Math.max(dp(116), (w - dp(93)) - dp(52));
+                    float pillW = Math.min(maxPillW, Math.max(dp(116), shortW + (longRawW - shortW) * nameAnim));
+                    float pillL = dp(52) + (maxPillW - pillW) * 0.5f;
+                    rect.set(pillL, cy - dp(21), pillL + pillW, cy + dp(21));
+                    canvas.drawRoundRect(rect, dp(21), dp(21), paint);
+                    canvas.drawRoundRect(rect, dp(21), dp(21), strokePaint);
+
+                    int av = dp(34);
+                    avatarDrawable.setBounds((int) rect.left + dp(4), cy - av / 2, (int) rect.left + dp(4) + av, cy + av / 2);
+                    avatarDrawable.draw(canvas);
+
+                    titlePaint.setColor(fg);
+                    subPaint.setColor(subAccent);
+                    float textStart = rect.left + dp(44);
+                    float textAvail = Math.max(dp(36), rect.right - dp(10) - textStart);
+                    CharSequence ellTitle = TextUtils.ellipsize(name, titlePaint, textAvail, TextUtils.TruncateAt.END);
+                    float tw = titlePaint.measureText(ellTitle, 0, ellTitle.length());
+                    float sw = subPaint.measureText(sub);
+                    float textCenterX = textStart + textAvail * 0.5f;
+                    canvas.drawText(ellTitle, 0, ellTitle.length(), textCenterX - tw * 0.5f, cy - dp(2), titlePaint);
+                    canvas.drawText(sub, textCenterX - sw * 0.5f, cy + dp(13), subPaint);
+                    return;
+                }
+
+                // CHAT_HEADER_FLOATING: panoramic fading portrait (solid by default; translucent only if Liquid Glass is ON in Power Saving)
+                int cardSolid = solidSurface;
+                int cardFill = liquidGlassOn ? ColorUtils.setAlphaComponent(solidSurface, 224) : solidSurface;
+                paint.setColor(pillFill);
+                strokePaint.setColor(pillStroke);
+
+                canvas.drawCircle(dp(25), cy, dp(18), paint);
+                canvas.drawCircle(dp(25), cy, dp(18), strokePaint);
+                drawIcon(canvas, backIcon, dp(25), cy, dp(19), fg);
+
+                rect.set(w - dp(82), cy - dp(18), w - dp(8), cy + dp(18));
                 canvas.drawRoundRect(rect, dp(18), dp(18), paint);
                 canvas.drawRoundRect(rect, dp(18), dp(18), strokePaint);
-                drawIcon(canvas, callIcon, w - dp(60), cy, dp(19), fg);
-                drawIcon(canvas, moreIcon, w - dp(28), cy, dp(19), fg);
+                drawIcon(canvas, callIcon, (int) (rect.left + rect.width() * 0.27f), cy, dp(18), fg);
+                drawIcon(canvas, moreIcon, (int) (rect.left + rect.width() * 0.73f), cy, dp(18), fg);
+
+                float shortW = dp(76) + Math.max(titlePaint.measureText("Alex"), subPaint.measureText(sub));
+                float longRawW = dp(64) + titlePaint.measureText("Alejandro Morales • Lagram");
+                float maxPillW = Math.max(dp(148), (w - dp(88)) - dp(49));
+                float pillW = Math.min(maxPillW, Math.max(dp(148), shortW + (longRawW - shortW) * nameAnim));
+                float pillL = dp(49) + (maxPillW - pillW) * 0.5f;
+                rect.set(pillL, cy - dp(22), pillL + pillW, cy + dp(22));
+                paint.setColor(cardFill);
+                canvas.drawRoundRect(rect, dp(22), dp(22), paint);
+
+                // Draw panoramic fading avatar banner inside clipped pill (zero per-frame allocations)
+                canvas.save();
+                clipPath.rewind();
+                clipPath.addRoundRect(rect, dp(22), dp(22), android.graphics.Path.Direction.CW);
+                canvas.clipPath(clipPath);
+                int avSize = (int) rect.height();
+                avatarDrawable.setBounds((int) rect.left, (int) rect.top, (int) rect.left + avSize + dp(16), (int) rect.bottom);
+                avatarDrawable.draw(canvas);
+                if (fadeShader == null || lastFadeColor != cardSolid) {
+                    lastFadeColor = cardSolid;
+                    fadeShader = new android.graphics.LinearGradient(
+                            0f, 0f, 1f, 0f,
+                            new int[]{ColorUtils.setAlphaComponent(cardSolid, 32), ColorUtils.setAlphaComponent(cardSolid, 185), cardSolid},
+                            new float[]{0f, 0.6f, 1f}, android.graphics.Shader.TileMode.CLAMP);
+                }
+                float fadeStart = rect.left + dp(8);
+                float fadeSpan = Math.max(1f, rect.width() * 0.65f - dp(8));
+                fadeMatrix.setScale(fadeSpan, 1f);
+                fadeMatrix.postTranslate(fadeStart, 0f);
+                fadeShader.setLocalMatrix(fadeMatrix);
+                paint.setShader(fadeShader);
+                canvas.drawRect(rect, paint);
+                paint.setShader(null);
+                canvas.restore();
+
+                canvas.drawRoundRect(rect, dp(22), dp(22), strokePaint);
+
+                titlePaint.setColor(fg);
+                subPaint.setColor(subAccent);
+                float textAvail = Math.max(dp(40), rect.width() - dp(20));
+                CharSequence ellTitle = TextUtils.ellipsize(name, titlePaint, textAvail, TextUtils.TruncateAt.END);
+                float tw = titlePaint.measureText(ellTitle, 0, ellTitle.length());
+                float sw = subPaint.measureText(sub);
+                canvas.drawText(ellTitle, 0, ellTitle.length(), rect.centerX() - tw * 0.5f, cy - dp(2), titlePaint);
+                canvas.drawText(sub, rect.centerX() - sw * 0.5f, cy + dp(13), subPaint);
             }
         }
 

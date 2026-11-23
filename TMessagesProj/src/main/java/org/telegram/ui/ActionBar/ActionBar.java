@@ -2353,7 +2353,12 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
             //visualWidth = Math.max(visualWidth, dp(168));
         }
 
-        final int width = Math.min(getMeasuredWidth() - dp(6 + 46 + 6 + 6 + 46 + 6), visualWidth);
+        final int maxAvailablePillW = getMeasuredWidth() - dp(6 + 46 + 6 + 6 + 46 + 6);
+        final int width = Math.min(maxAvailablePillW, visualWidth);
+        int rightOccupied = Math.max(dp(46 + 6), (menu != null && menu.getVisibility() == VISIBLE ? menu.getMeasuredWidth() : 0) + dp(6));
+        int leftOccupied = (backButtonImageView != null && backButtonImageView.getVisibility() == VISIBLE) ? dp(46 + 6) : dp(6);
+        int exactInnerMax = Math.max(dp(88), getMeasuredWidth() - leftOccupied - rightOccupied - dp(12));
+        chatAvatarContainer.setLagramTargetPillWidth(Math.min(exactInnerMax, width));
         if (animated) {
             if (animatorAvatarContainerWidth.getToFactor() != width) {
                 animatorAvatarContainerWidth.animateTo(width);
@@ -2511,7 +2516,15 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
                 }
 
                 glassDrawable.setBounds(left, t, right, b);
-                if (!doNotDrawCenterGlass) {
+                if (chatAvatarContainer != null) {
+                    chatAvatarContainer.updateLagramLivePillWidth(Math.max(dp(80), (right - left) - p * 2));
+                }
+                int lagramHdr = org.telegram.messenger.LagramConfig.chatHeaderStyle;
+                boolean customCenterSurface = chatAvatarContainer != null
+                        && searchFactor == 0f && actionModeFactor == 0f
+                        && (lagramHdr == org.telegram.messenger.LagramConfig.CHAT_HEADER_PORTRAIT
+                            || lagramHdr == org.telegram.messenger.LagramConfig.CHAT_HEADER_FLOATING);
+                if (!doNotDrawCenterGlass && !customCenterSurface) {
                     glassDrawable.draw(canvas);
                 }
             }

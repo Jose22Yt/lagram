@@ -56,7 +56,7 @@ public class TranslateController extends BaseController {
 
     public static final String UNKNOWN_LANGUAGE = "und";
 
-    private static final int REQUIRED_TOTAL_MESSAGES_CHECKED = 6;
+    private static final int REQUIRED_TOTAL_MESSAGES_CHECKED = 3;
     private static final int REQUIRED_TOTAL_MESSAGES_CHECKED_AUTOTRANSLATE = 2;
     private static final float REQUIRED_PERCENTAGE_MESSAGES_TRANSLATABLE = .60F;
     private static final float REQUIRED_MIN_MESSAGES_TRANSLATABLE_AUTOTRANSLATE = 2;
@@ -1055,6 +1055,37 @@ public class TranslateController extends BaseController {
             source.entities = message.messageOwner.entities;
         }
 
+        // Nagram / NagramX instant parallel per-message dispatch (0ms grouping delay, 8-thread pool)
+        if (LagramConfig.nagramTranslateEnabled
+                && LagramConfig.translateProvider != LagramConfig.TRANSLATE_PROVIDER_TELEGRAM) {
+            if (LagramTranslator.shouldSkipTranslation(source.text)) {
+                return;
+            }
+            final int msgId = message.getId();
+            synchronized (this) {
+                if (loadingTranslations.contains(msgId)) {
+                    return;
+                }
+                loadingTranslations.add(msgId);
+            }
+            LagramTranslator.translate(source.text, language, (translated, rateLimit) -> {
+                synchronized (TranslateController.this) {
+                    loadingTranslations.remove(msgId);
+                }
+                if (translated != null && !translated.isEmpty()) {
+                    TLRPC.TL_textWithEntities rawResult = new TLRPC.TL_textWithEntities();
+                    rawResult.text = LagramTranslator.formatOutput(source.text, translated);
+                    TLRPC.TL_textWithEntities finalResult = LagramConfig.translateKeepOriginal
+                            ? rawResult
+                            : TranslateAlert2.preprocess(source, rawResult);
+                    callback.run(isTranscription, msgId, finalResult, language);
+                } else {
+                    callback.run(isTranscription, msgId, null, language);
+                }
+            });
+            return;
+        }
+
         PendingTranslation pendingTranslation;
         synchronized (this) {
             ArrayList<PendingTranslation> dialogPendingTranslations = pendingTranslations.get(dialogId);
@@ -1110,54 +1141,6 @@ public class TranslateController extends BaseController {
                             pendingTranslations.remove(dialogId);
                         }
                     }
-                }
-
-                if (LagramConfig.nagramTranslateEnabled
-                        && LagramConfig.translateProvider != LagramConfig.TRANSLATE_PROVIDER_TELEGRAM) {
-                    final ArrayList<Integer> ids;
-                    final ArrayList<Utilities.Callback4<Boolean, Integer, TLRPC.TL_textWithEntities, String>> callbacks;
-                    final ArrayList<TLRPC.TL_textWithEntities> texts;
-                    final String toLanguage;
-                    synchronized (TranslateController.this) {
-                        ids = new ArrayList<>(pendingTranslation1.messageIds);
-                        callbacks = new ArrayList<>(pendingTranslation1.callbacks);
-                        texts = new ArrayList<>(pendingTranslation1.messageTexts);
-                        toLanguage = pendingTranslation1.language;
-                    }
-                    final ArrayList<String> rawTexts = new ArrayList<>(texts.size());
-                    for (int i = 0; i < texts.size(); i++) {
-                        TLRPC.TL_textWithEntities twe = texts.get(i);
-                        rawTexts.add(twe != null && twe.text != null ? twe.text : "");
-                    }
-                    LagramTranslator.translateBatch(rawTexts, toLanguage, (results, rateLimit) -> {
-                        boolean anySuccess = false;
-                        final int count = Math.min(callbacks.size(), results.length);
-                        for (int i = 0; i < count; i++) {
-                            String tr = results[i];
-                            if (tr != null && !tr.isEmpty()) {
-                                anySuccess = true;
-                                TLRPC.TL_textWithEntities resultWithEntities = new TLRPC.TL_textWithEntities();
-                                resultWithEntities.text = LagramTranslator.formatOutput(rawTexts.get(i), tr);
-                                callbacks.get(i).run(isTranscription, ids.get(i), resultWithEntities, toLanguage);
-                            } else {
-                                callbacks.get(i).run(isTranscription, ids.get(i), null, toLanguage);
-                            }
-                        }
-                        if (!anySuccess && count > 0) {
-                            toggleTranslatingDialog(dialogId, false);
-                            NotificationCenter.getGlobalInstance().postNotificationName(
-                                    NotificationCenter.showBulletin,
-                                    Bulletin.TYPE_ERROR,
-                                    getString(rateLimit ? R.string.TranslationFailedAlert1 : R.string.TranslationFailedAlert2)
-                            );
-                        }
-                        synchronized (TranslateController.this) {
-                            for (int i = 0; i < ids.size(); i++) {
-                                loadingTranslations.remove(ids.get(i));
-                            }
-                        }
-                    });
-                    return;
                 }
 
                 final String method = getMessagesController().translationsAutoEnabled;

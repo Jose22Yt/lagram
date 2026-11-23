@@ -453,6 +453,43 @@ public class SeekBarView extends FrameLayout implements Theme.Colorable {
         return pressed;
     }
 
+    private static final int M3_SIN_LUT_SIZE = 128;
+    private static final int M3_SIN_LUT_MASK = M3_SIN_LUT_SIZE - 1;
+    private static final float M3_LUT_PER_RAD = M3_SIN_LUT_SIZE / 6.2831853f;
+    private static final float[] M3_SIN_LUT = new float[M3_SIN_LUT_SIZE];
+    static {
+        for (int i = 0; i < M3_SIN_LUT_SIZE; i++) {
+            M3_SIN_LUT[i] = (float) Math.sin((i * 6.283185307179586) / M3_SIN_LUT_SIZE);
+        }
+    }
+
+    private boolean expressiveMode;
+    private boolean expressivePlaying;
+    private float expressiveWaveAmp;
+    private float expressiveWavePhase;
+    private float expressivePressT;
+    private long expressiveLastTime;
+    private Path expressiveWavePath;
+    private Paint expressiveWavePaint;
+    private final RectF expressiveHandleRect = new RectF();
+
+    public void setExpressiveMode(boolean enabled) {
+        if (expressiveMode != enabled) {
+            expressiveMode = enabled;
+            invalidate();
+        }
+    }
+
+    public void setExpressivePlaying(boolean playing) {
+        if (expressivePlaying != playing) {
+            expressivePlaying = playing;
+            if (expressiveMode) {
+                expressiveLastTime = 0L;
+                postInvalidateOnAnimation();
+            }
+        }
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         int thumbX = this.thumbX;
@@ -469,6 +506,127 @@ public class SeekBarView extends FrameLayout implements Theme.Colorable {
         float centerY = getMeasuredHeight() / 2f;
         float left = selectorWidth / 2f, right = getMeasuredWidth() - selectorWidth / 2;
         float top = centerY - AndroidUtilities.dp(lineWidthDp) / 2f, bottom = centerY + AndroidUtilities.dp(lineWidthDp) / 2f;
+
+        if (expressiveMode && !twoSided) {
+            boolean needInvalidate = false;
+            long nowMs = SystemClock.elapsedRealtime();
+            long dt = expressiveLastTime == 0L ? 16L : (nowMs - expressiveLastTime);
+            expressiveLastTime = nowMs;
+            if (dt > 34L || dt < 0L) {
+                dt = 16L;
+            }
+            float targetPress = pressed ? 1f : 0f;
+            if (expressivePressT != targetPress) {
+                float step = dt / 170f;
+                expressivePressT = targetPress > expressivePressT ? Math.min(1f, expressivePressT + step) : Math.max(0f, expressivePressT - step);
+                needInvalidate = true;
+            }
+            boolean wantWave = expressivePlaying && !pressed && (timestamps == null || timestamps.isEmpty());
+            float targetAmp = wantWave ? 1f : 0f;
+            if (Math.abs(expressiveWaveAmp - targetAmp) > 0.004f) {
+                float step = dt / 220f;
+                expressiveWaveAmp = targetAmp > expressiveWaveAmp ? Math.min(1f, expressiveWaveAmp + step) : Math.max(0f, expressiveWaveAmp - step);
+                needInvalidate = true;
+            } else {
+                expressiveWaveAmp = targetAmp;
+            }
+            if (expressiveWaveAmp > 0.01f) {
+                expressiveWavePhase += (dt / 1000f) * 4.2f;
+                if (expressiveWavePhase > 62.83185f) {
+                    expressiveWavePhase -= 62.83185f;
+                }
+                needInvalidate = true;
+            }
+            if (!needInvalidate) {
+                expressiveLastTime = 0L;
+            }
+
+            float easedPress = CubicBezierInterpolator.EASE_OUT_QUINT.getInterpolation(expressivePressT);
+            float handleX = left + thumbX;
+            float handleHalfW = AndroidUtilities.dpf2(AndroidUtilities.lerp(2.0f, 1.35f, easedPress));
+            float handleHalfH = AndroidUtilities.dpf2(AndroidUtilities.lerp(9.0f, 11.5f, easedPress));
+            float trackGap = AndroidUtilities.dpf2(AndroidUtilities.lerp(4.4f, 5.4f, easedPress));
+
+            // Inactive track after vertical handle gap
+            float inactiveStart = Math.min(right, Math.max(left, handleX + trackGap));
+            if (right > inactiveStart + 0.5f) {
+                rect.set(inactiveStart, top, right, bottom);
+                drawProgressBar(canvas, rect, innerPaint1);
+            }
+            if (bufferedProgress > 0) {
+                float bufRight = selectorWidth / 2f + bufferedProgress * (getMeasuredWidth() - selectorWidth);
+                if (bufRight > inactiveStart + 0.5f) {
+                    innerPaint1.setColor(getThemedColor(Theme.key_player_progressCachedBackground));
+                    rect.set(inactiveStart, top, bufRight, bottom);
+                    drawProgressBar(canvas, rect, innerPaint1);
+                }
+            }
+            // M3 Expressive end-stop dot
+            if (right - handleX > AndroidUtilities.dp(10)) {
+                int savedAlpha = outerPaint1.getAlpha();
+                outerPaint1.setAlpha((int) (savedAlpha * 0.5f));
+                canvas.drawCircle(right - AndroidUtilities.dpf2(2f), centerY, AndroidUtilities.dpf2(2f), outerPaint1);
+                outerPaint1.setAlpha(savedAlpha);
+            }
+
+            // Active progress track (LUT-accelerated wavy track while playing, crisp pill bar otherwise)
+            float activeEnd = Math.max(left, handleX - trackGap);
+            if (expressiveWaveAmp > 0.01f && activeEnd - left > AndroidUtilities.dp(6)) {
+                if (expressiveWavePath == null) {
+                    expressiveWavePath = new Path();
+                    expressiveWavePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                    expressiveWavePaint.setStyle(Paint.Style.STROKE);
+                    expressiveWavePaint.setStrokeCap(Paint.Cap.ROUND);
+                    expressiveWavePaint.setStrokeJoin(Paint.Join.ROUND);
+                }
+                expressiveWavePaint.setColor(outerPaint1.getColor());
+                expressiveWavePaint.setStrokeWidth(AndroidUtilities.dpf2(3.8f));
+                float ampPx = AndroidUtilities.dpf2(2.6f) * expressiveWaveAmp;
+                float wavelength = AndroidUtilities.dpf2(22f);
+                float lutStepPerPx = (6.2831853f / wavelength) * M3_LUT_PER_RAD;
+                float phaseLut = expressiveWavePhase * M3_LUT_PER_RAD;
+                float stepPx = AndroidUtilities.dpf2(4.0f);
+                float invEdgeFade = 1f / AndroidUtilities.dpf2(8f);
+                expressiveWavePath.rewind();
+                boolean started = false;
+                for (float x = left; x <= activeEnd; x += stepPx) {
+                    float dx = x - left;
+                    float distStart = Math.min(1f, dx * invEdgeFade);
+                    float distEnd = Math.min(1f, (activeEnd - x) * invEdgeFade);
+                    float envelope = distStart < distEnd ? distStart : distEnd;
+                    int lutIdx = ((int) (dx * lutStepPerPx - phaseLut)) & M3_SIN_LUT_MASK;
+                    float wy = centerY + M3_SIN_LUT[lutIdx] * ampPx * envelope;
+                    if (!started) {
+                        expressiveWavePath.moveTo(x, wy);
+                        started = true;
+                    } else {
+                        expressiveWavePath.lineTo(x, wy);
+                    }
+                }
+                expressiveWavePath.lineTo(activeEnd, centerY);
+                canvas.drawPath(expressiveWavePath, expressiveWavePaint);
+            } else if (activeEnd > left + 0.5f) {
+                rect.set(left, top, activeEnd, bottom);
+                drawProgressBar(canvas, rect, outerPaint1);
+            }
+
+            if (hoverDrawable != null) {
+                int dx = thumbX + selectorWidth / 2 - AndroidUtilities.dp(16);
+                int dy = y + thumbSize / 2 - AndroidUtilities.dp(16);
+                hoverDrawable.setBounds(dx, dy, dx + AndroidUtilities.dp(32), dy + AndroidUtilities.dp(32));
+                hoverDrawable.draw(canvas);
+            }
+
+            // M3 Expressive vertical pill handle
+            expressiveHandleRect.set(handleX - handleHalfW, centerY - handleHalfH, handleX + handleHalfW, centerY + handleHalfH);
+            canvas.drawRoundRect(expressiveHandleRect, handleHalfW, handleHalfW, outerPaint1);
+
+            drawTimestampLabel(canvas);
+            if (needInvalidate) {
+                postInvalidateOnAnimation();
+            }
+            return;
+        }
 
         rect.set(left, top, right, bottom);
         drawProgressBar(canvas, rect, innerPaint1);

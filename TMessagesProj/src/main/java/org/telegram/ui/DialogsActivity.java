@@ -3993,12 +3993,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
             viewPage.listView = new DialogsRecyclerView(context, viewPage);
             org.telegram.ui.lagram.LagramScrollEdgeController.attach(viewPage.listView, (rv, out) -> {
-                float top = actionBar != null ? actionBar.getBottom() : (AndroidUtilities.statusBarHeight + dp(56));
-                if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
-                    top = Math.max(top, filterTabsView.getBottom());
-                }
-                out[0] = Math.max(0f, top - rv.getTop());
-                out[1] = Math.max(out[0] + dp(120), rv.getHeight() - AndroidUtilities.navigationBarHeight);
+                float minTop = actionBar != null && actionBar.getHeight() > 0
+                        ? actionBar.getHeight()
+                        : (AndroidUtilities.statusBarHeight + dp(56));
+                float topVisible = rv.getPaddingTop() + scrollYOffset;
+                out[0] = Math.max(minTop, topVisible);
+                int bottomPad = calculateListViewPaddingBottom();
+                out[1] = Math.max(out[0] + dp(140), rv.getHeight() - bottomPad);
             });
             glassEngine.addScrolledView(viewPage.listView);
             viewPage.scroller = new RecyclerListViewScroller(viewPage.listView);
@@ -4006,6 +4007,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             viewPage.listView.setAccessibilityEnabled(false);
             viewPage.listView.setAnimateEmptyView(true, RecyclerListView.EMPTY_VIEW_ANIMATION_TYPE_ALPHA);
             viewPage.listView.setClipToPadding(false);
+            viewPage.listView.setItemViewCacheSize(12);
             viewPage.listView.setPivotY(0);
             if (initialDialogsType == DIALOGS_TYPE_BOT_REQUEST_PEER) {
                 ThemeBind.backgroundColor(viewPage.listView, Theme.key_windowBackgroundGray, getResourceProvider());

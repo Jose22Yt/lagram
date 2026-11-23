@@ -2499,15 +2499,6 @@ public class AndroidUtilities {
     }
 
     public static Typeface getTypeface(String assetPath) {
-        LagramConfig.ensureLoaded();
-        if (LagramConfig.useSystemFonts && assetPath != null && !assetPath.contains("mono")) {
-            boolean bold = assetPath.contains("medium") || assetPath.contains("rbold") || assetPath.contains("rextrabold");
-            boolean italic = assetPath.contains("italic");
-            if (bold && italic) return Typeface.defaultFromStyle(Typeface.BOLD_ITALIC);
-            if (bold) return Typeface.DEFAULT_BOLD;
-            if (italic) return Typeface.defaultFromStyle(Typeface.ITALIC);
-            return Typeface.DEFAULT;
-        }
         synchronized (typefaceCache) {
             if (!typefaceCache.containsKey(assetPath)) {
                 try {
@@ -6566,33 +6557,18 @@ public class AndroidUtilities {
     public static void vibrateCursor(View view) {
         try {
             if (view == null || view.getContext() == null) return;
-            LagramConfig.ensureLoaded();
-            if (LagramConfig.hapticsLevel == LagramConfig.HAPTICS_OFF) return;
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
             if (!((Vibrator) view.getContext().getSystemService(Context.VIBRATOR_SERVICE)).hasAmplitudeControl()) return;
-            int constant = LagramConfig.hapticsLevel == LagramConfig.HAPTICS_STRONG
-                    ? HapticFeedbackConstants.KEYBOARD_TAP
-                    : HapticFeedbackConstants.TEXT_HANDLE_MOVE;
-            view.performHapticFeedback(constant, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
+            view.performHapticFeedback(HapticFeedbackConstants.TEXT_HANDLE_MOVE, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
         } catch (Exception ignore) {}
     }
 
     public static void vibrate(View view) {
         try {
             if (view == null || view.getContext() == null) return;
-            LagramConfig.ensureLoaded();
-            if (LagramConfig.hapticsLevel == LagramConfig.HAPTICS_OFF) return;
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
             if (!((Vibrator) view.getContext().getSystemService(Context.VIBRATOR_SERVICE)).hasAmplitudeControl()) return;
-            int constant;
-            if (LagramConfig.hapticsLevel == LagramConfig.HAPTICS_SOFT) {
-                constant = HapticFeedbackConstants.TEXT_HANDLE_MOVE;
-            } else if (LagramConfig.hapticsLevel == LagramConfig.HAPTICS_STRONG) {
-                constant = HapticFeedbackConstants.LONG_PRESS;
-            } else {
-                constant = HapticFeedbackConstants.KEYBOARD_TAP;
-            }
-            view.performHapticFeedback(constant, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
+            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
         } catch (Exception ignore) {}
     }
 

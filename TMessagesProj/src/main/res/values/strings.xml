@@ -12013,4 +12013,8 @@
     <string name="LagramAutoTranslateChatsDesc">Automatically translate chats detected in another language</string>
     <string name="LagramClearTranslateCache">Clear translation cache</string>
     <string name="LagramTranslateCacheCleared">Translation cache cleared</string>
+    <string name="LagramChatHeaderSignature">Signature</string>
+    <string name="LagramChatHeaderFusion">Fusion</string>
+    <string name="LagramChatHeaderPortrait">Portrait Matte</string>
+    <string name="LagramChatHeaderFloating">Floating</string>
 </resources>

@@ -3525,17 +3525,45 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 .addUpdateListener((animation, value, velocity) -> {
                     int extraWidth;
                     if (parentWidth > parentHeight) {
-                        extraWidth = dp(48);
+                        extraWidth = dp(52);
                     } else {
                         extraWidth = 0;
                     }
 
-                    videoPlayerSeekbar.setSize((int) (getMeasuredWidth() - dp(2 + 14) - value - extraWidth), getMeasuredHeight());
+                    videoPlayerSeekbar.setSize(Math.max(dp(48), (int) (getMeasuredWidth() - dp(10 + 22) - value - extraWidth)), getMeasuredHeight());
                 });
+
+        private final Paint m3CapsuleFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint m3CapsuleStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final RectF m3CapsuleRect = new RectF();
 
         public VideoPlayerControlFrameLayout(@NonNull Context context) {
             super(context);
             setWillNotDraw(false);
+            m3CapsuleStrokePaint.setStyle(Paint.Style.STROKE);
+            m3CapsuleStrokePaint.setStrokeWidth(dpf2(0.85f));
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            float vis = progress * (videoPlayerSeekbar != null ? (1f - videoPlayerSeekbar.getTransitionProgress()) : 1f);
+            if (vis <= 0.02f || getMeasuredWidth() <= dp(32) || getMeasuredHeight() <= dp(12)) {
+                return;
+            }
+            boolean liquidGlassOn = LiteMode.isEnabled(LiteMode.FLAG_LIQUID_GLASS);
+            boolean scrubbing = videoPlayerSeekbar != null && videoPlayerSeekbar.isDragging();
+            float insetX = dp(8);
+            float insetY = dp(4);
+            m3CapsuleRect.set(insetX, insetY, getMeasuredWidth() - insetX, getMeasuredHeight() - insetY);
+            float radius = m3CapsuleRect.height() * 0.5f;
+            int fillAlpha = Math.round((liquidGlassOn ? 178 : 220) * vis);
+            int baseStroke = liquidGlassOn ? 56 : 36;
+            int strokeAlpha = Math.round((scrubbing ? baseStroke + 34 : baseStroke) * vis);
+            m3CapsuleFillPaint.setColor(Color.argb(fillAlpha, 18, 21, 27));
+            m3CapsuleStrokePaint.setColor(Color.argb(Math.min(255, strokeAlpha), 255, 255, 255));
+            canvas.drawRoundRect(m3CapsuleRect, radius, radius, m3CapsuleFillPaint);
+            canvas.drawRoundRect(m3CapsuleRect, radius, radius, m3CapsuleStrokePaint);
         }
 
         @Override
@@ -3543,9 +3571,10 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (progress < 1f) {
                 return false;
             }
-            if (videoPlayerSeekbar.onTouch(event.getAction(), event.getX() - dp(2), event.getY())) {
+            if (videoPlayerSeekbar.onTouch(event.getAction(), event.getX() - dp(10), event.getY())) {
                 getParent().requestDisallowInterceptTouchEvent(true);
                 videoPlayerSeekbarView.invalidate();
+                invalidate();
                 return true;
             }
             return true;
@@ -3576,14 +3605,14 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 if (exitFullscreenButton.getVisibility() != VISIBLE) {
                     exitFullscreenButton.setVisibility(VISIBLE);
                 }
-                extraWidth = dp(48);
-                layoutParams.rightMargin = dp(47);
+                extraWidth = dp(52);
+                layoutParams.rightMargin = dp(52);
             } else {
                 if (exitFullscreenButton.getVisibility() != INVISIBLE) {
                     exitFullscreenButton.setVisibility(INVISIBLE);
                 }
                 extraWidth = 0;
-                layoutParams.rightMargin = dp(12);
+                layoutParams.rightMargin = dp(20);
             }
             ignoreLayout = false;
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -3613,7 +3642,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 timeSpring.getSpring().setFinalPosition(size);
                 timeSpring.start();
             } else {
-                videoPlayerSeekbar.setSize(getMeasuredWidth() - dp(2 + 14) - size - extraWidth, getMeasuredHeight());
+                videoPlayerSeekbar.setSize(Math.max(dp(48), getMeasuredWidth() - dp(10 + 22) - size - extraWidth), getMeasuredHeight());
                 timeValue.setValue(size);
             }
             lastTimeWidth = size;
@@ -3658,6 +3687,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
                 videoPlayerSeekbarView.setAlpha(progress);
             }
+            invalidate();
         }
 
         public boolean isSeekBarTransitionEnabled() {
@@ -5948,12 +5978,28 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         });
 
         bottomLayout = new FrameLayout(activityContext) {
+            private final Paint scrimPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            private final LinearGradient scrimGradient = new LinearGradient(
+                    0, 0, 0, 1,
+                    new int[]{0x00000000, 0x990C0F14, 0xD80C0F14},
+                    new float[]{0f, 0.45f, 1f},
+                    Shader.TileMode.CLAMP);
+            private final Matrix scrimMatrix = new Matrix();
+
             @Override
             protected void dispatchDraw(Canvas canvas) {
+                int w = getMeasuredWidth();
+                int h = getMeasuredHeight();
+                if (w > 0 && h > 0) {
+                    scrimMatrix.setScale(1f, h);
+                    scrimGradient.setLocalMatrix(scrimMatrix);
+                    scrimPaint.setShader(scrimGradient);
+                    canvas.drawRect(0, 0, w, h, scrimPaint);
+                }
                 super.dispatchDraw(canvas);
             }
         };
-        bottomLayout.setBackgroundColor(0x7f000000);
+        bottomLayout.setWillNotDraw(false);
         containerView.addView(bottomLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.BOTTOM | Gravity.LEFT));
 
         navigationBar = new View(activityContext);
@@ -9529,7 +9575,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     private void updateVideoSeekPreviewPosition() {
-        int x = videoPlayerSeekbar.getThumbX() + dp(2) - videoPreviewFrame.getMeasuredWidth() / 2;
+        int x = videoPlayerSeekbar.getThumbX() + videoPlayerSeekbar.getHorizontalPadding() - videoPreviewFrame.getMeasuredWidth() / 2;
         int min = dp(10);
         int max = videoPlayerControlFrameLayout.getMeasuredWidth() - dp(10) - videoPreviewFrame.getMeasuredWidth() / 2;
         if (x < min) {
@@ -9631,6 +9677,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         videoPlayerSeekbarView = new View(containerView.getContext()) {
             @Override
             protected void onDraw(Canvas canvas) {
+                videoPlayerSeekbar.setPlaying(isPlaying && videoPlayer != null && videoPlayer.isPlaying());
                 videoPlayerSeekbar.draw(canvas, this);
             }
         };
@@ -9639,8 +9686,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         videoPlayerControlFrameLayout.addView(videoPlayerSeekbarView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         videoPlayerSeekbar = new VideoPlayerSeekBar(videoPlayerSeekbarView);
-        videoPlayerSeekbar.setHorizontalPadding(dp(2));
-        videoPlayerSeekbar.setColors(0x33ffffff, 0x33ffffff, Color.WHITE, Color.WHITE, Color.WHITE, 0x59ffffff);
+        videoPlayerSeekbar.setHorizontalPadding(dp(10));
+        videoPlayerSeekbar.setColors(0x3Dffffff, 0x4Dffffff, Color.WHITE, Color.WHITE, Color.WHITE, 0x66ffffff);
         videoPlayerSeekbar.setDelegate(seekBarDelegate);
 
         videoPreviewFrame = new VideoSeekPreviewImage(containerView.getContext(), () -> {
@@ -9667,10 +9714,11 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         videoPlayerTime = new SimpleTextView(containerView.getContext());
         videoPlayerTime.setTextColor(0xffffffff);
+        videoPlayerTime.setTypeface(AndroidUtilities.bold());
         videoPlayerTime.setGravity(Gravity.RIGHT | Gravity.TOP);
-        videoPlayerTime.setTextSize(14);
+        videoPlayerTime.setTextSize(13);
         videoPlayerTime.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-        videoPlayerControlFrameLayout.addView(videoPlayerTime, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.RIGHT | Gravity.TOP, 0, 15, 12, 0));
+        videoPlayerControlFrameLayout.addView(videoPlayerTime, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.RIGHT | Gravity.TOP, 0, 16, 20, 0));
 
         exitFullscreenButton = new ImageView(containerView.getContext());
         exitFullscreenButton.setImageResource(R.drawable.msg_minvideo);

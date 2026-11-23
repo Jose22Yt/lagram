@@ -15610,7 +15610,6 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
         String formattedTime = LocaleController.getInstance().getFormatterDay().format((long) (message.messageOwner.date) * 1000);
         if (org.telegram.messenger.LagramMessageHistoryDb.isMessageDeleted(current.currentAccount, current.getDialogId(), current.getId())) {
-            org.telegram.messenger.LagramConfig.ensureLoaded();
             String label = org.telegram.messenger.LagramConfig.getDeletedIconPrefix() + getString(R.string.LagramDeletedLabel);
             if (org.telegram.messenger.LagramConfig.showDeletedTime) {
                 return label + " • " + formattedTime;
@@ -17265,7 +17264,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             Theme.chat_msgTextCode2Paint.linkColor =
             Theme.chat_msgTextCode3Paint.linkColor = getThemedColor(Theme.key_chat_messageLinkIn);
         }
-        Theme.chat_msgTextPaint.setStrikeThruText(lagramIsDeleted && org.telegram.messenger.LagramConfig.deletedMessageStrike);
+        boolean wantStrike = lagramIsDeleted && org.telegram.messenger.LagramConfig.deletedMessageStrike;
+        if (Theme.chat_msgTextPaint.isStrikeThruText() != wantStrike) {
+            Theme.chat_msgTextPaint.setStrikeThruText(wantStrike);
+        }
 
         if (documentAttach != null) {
             if (documentAttachType == DOCUMENT_ATTACH_TYPE_AUDIO || documentAttachType == DOCUMENT_ATTACH_TYPE_ROUND) {

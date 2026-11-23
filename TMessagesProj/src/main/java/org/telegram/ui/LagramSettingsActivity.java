@@ -1,171 +1,72 @@
 package org.telegram.ui;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.TextUtils;
-import android.text.style.ForegroundColorSpan;
 import android.view.View;
-import android.widget.EditText;
 
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LagramConfig;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
-import org.telegram.messenger.browser.Browser;
-import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
-import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Cells.SettingsSearchCell;
 import org.telegram.ui.Components.BulletinFactory;
-import org.telegram.ui.Components.IconBackgroundColors;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalFragment;
-import org.telegram.ui.lagram.LagramAppearanceActivity;
-import org.telegram.ui.lagram.LagramChatsActivity;
-import org.telegram.ui.lagram.LagramGeneralActivity;
-import org.telegram.ui.lagram.LagramMediaActivity;
+import org.telegram.ui.lagram.LagramGlassBubbleEngine;
 import org.telegram.ui.lagram.LagramPrivacyActivity;
+import org.telegram.ui.lagram.LagramRealPreviews;
 import org.telegram.ui.lagram.LagramSettingsHeaderView;
+import org.telegram.ui.lagram.OpexgramStyleWidgets;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
+/**
+ * Ultra-clean, focused Lagram Settings containing ONLY the 4 requested core features:
+ * 1. Liquid Glass message bubbles (with live real wallpaper preview)
+ * 2. 3D Scroll animation (with live draggable preview)
+ * 3. Message tap focus animation + 3 menu styles (with live tappable preview)
+ * 4. Ghost Mode (quick toggle + full configuration screen)
+ */
 public class LagramSettingsActivity extends UniversalFragment {
 
-    private static final int ID_CAT_GENERAL = 1;
-    private static final int ID_CAT_APPEARANCE = 2;
-    private static final int ID_CAT_CHATS = 3;
-    private static final int ID_CAT_MEDIA = 4;
-    private static final int ID_CAT_PRIVACY = 5;
+    // 1. Liquid Glass
+    private static final int ID_PREVIEW_GLASS = 100;
+    private static final int ID_GLASS_MESSAGES = 101;
+    private static final int ID_GLASS_TINT = 102;
+    private static final int ID_GLASS_ALPHA = 103;
+    private static final int ID_GLASS_BLUR_LEVEL = 104;
+    private static final int ID_GLASS_BORDER = 105;
+    private static final int ID_GLASS_BORDER_OPACITY = 106;
+    private static final int ID_GLASS_HIGHLIGHTS = 107;
 
-    private static final int ID_GHOST_MASTER = 10;
-    private static final int ID_BACKUP_EXPORT = 20;
-    private static final int ID_BACKUP_IMPORT = 21;
-    private static final int ID_BACKUP_RESET = 22;
+    // 2. 3D Scroll Animation
+    private static final int ID_PREVIEW_SCROLL = 200;
+    private static final int ID_SCROLL_EDGE = 201;
+    private static final int ID_SCROLL_MODE = 202;
 
-    private static final int ID_LINK_GITHUB = 30;
-    private static final int ID_LINK_DEVELOPER = 31;
+    // 3. Message Tap Animation + 3 Menu Styles
+    private static final int ID_PREVIEW_MSG_MENU = 300;
+    private static final int ID_FOCUS_ENABLED = 301;
+    private static final int ID_FOCUS_BLUR = 302;
+    private static final int ID_FOCUS_STYLE = 303;
+
+    // 3b. Chat Header Styles (FlexyGram-inspired)
+    private static final int ID_PREVIEW_HEADER = 350;
+    private static final int ID_HEADER_STYLE = 351;
+
+    // 4. Ghost Mode
+    private static final int ID_GHOST_MASTER = 400;
+    private static final int ID_OPEN_GHOST_CONFIG = 401;
+
+    // Footer
+    private static final int ID_RESET = 500;
 
     private LagramSettingsHeaderView headerView;
-    private ActionBarMenuItem searchItem;
-    private String searchQuery;
-    private ArrayList<SearchEntry> cachedCatalog;
-    private final ArrayList<SearchEntry> searchResults = new ArrayList<>();
 
-    private static final class SearchEntry {
-        final int id;
-        final String title;
-        final String subtitle;
-        final String[] breadcrumbs;
-        final int iconResId;
-        final int targetCategory;
-
-        SearchEntry(int id, int titleRes, int subtitleRes, String categoryName, int iconResId, int targetCategory) {
-            this.id = id;
-            this.title = LocaleController.getString(titleRes);
-            this.subtitle = subtitleRes != 0 ? LocaleController.getString(subtitleRes) : null;
-            this.breadcrumbs = new String[]{LocaleController.getString(R.string.LagramSettings), categoryName};
-            this.iconResId = iconResId;
-            this.targetCategory = targetCategory;
-        }
-    }
-
-    private ArrayList<SearchEntry> getCatalog() {
-        if (cachedCatalog != null) {
-            return cachedCatalog;
-        }
-        ArrayList<SearchEntry> list = new ArrayList<>(64);
-        String catGeneral = LocaleController.getString(R.string.LagramCategoryGeneral);
-        String catAppearance = LocaleController.getString(R.string.LagramCategoryAppearance);
-        String catChats = LocaleController.getString(R.string.LagramCategoryChats);
-        String catMedia = LocaleController.getString(R.string.LagramCategoryMedia);
-        String catPrivacy = LocaleController.getString(R.string.LagramCategoryPrivacy);
-
-        // General
-        list.add(new SearchEntry(101, R.string.LagramHighRefreshRate, 0, catGeneral, R.drawable.msg_speed, ID_CAT_GENERAL));
-        list.add(new SearchEntry(102, R.string.LagramForcePerfClass, 0, catGeneral, R.drawable.msg_speed, ID_CAT_GENERAL));
-        list.add(new SearchEntry(103, R.string.LagramDisableSponsored, 0, catGeneral, R.drawable.msg_speed, ID_CAT_GENERAL));
-        list.add(new SearchEntry(104, R.string.LagramHideSimilarChannels, 0, catGeneral, R.drawable.msg_speed, ID_CAT_GENERAL));
-        list.add(new SearchEntry(105, R.string.LagramShowJoinDate, 0, catGeneral, R.drawable.msg_speed, ID_CAT_GENERAL));
-        list.add(new SearchEntry(106, R.string.LagramOpenArchiveOnPull, 0, catGeneral, R.drawable.msg_speed, ID_CAT_GENERAL));
-        list.add(new SearchEntry(107, R.string.LagramHapticsLevel, 0, catGeneral, R.drawable.msg_speed, ID_CAT_GENERAL));
-        list.add(new SearchEntry(108, R.string.LagramProfileNameSwitch, 0, catGeneral, R.drawable.msg_copy, ID_CAT_GENERAL));
-        list.add(new SearchEntry(109, R.string.LagramShowIdAndDc, 0, catGeneral, R.drawable.msg_info, ID_CAT_GENERAL));
-        list.add(new SearchEntry(110, R.string.LagramHidePhoneNumber, 0, catGeneral, R.drawable.msg_info, ID_CAT_GENERAL));
-        list.add(new SearchEntry(111, R.string.LagramHideStories, 0, catGeneral, R.drawable.msg_info, ID_CAT_GENERAL));
-
-        // Appearance (Liquid Glass, 3D Scroll, Shape & Cards)
-        list.add(new SearchEntry(200, R.string.LagramAppIconTitle, R.string.LagramAppIconHint, catAppearance, R.drawable.msg_palette, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(201, R.string.LagramGlassMessages, 0, catAppearance, R.drawable.msg_palette, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(202, R.string.LagramGlassTintMode, 0, catAppearance, R.drawable.msg_palette, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(203, R.string.LagramGlassBlurLevel, 0, catAppearance, R.drawable.msg_palette, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(204, R.string.LagramGlassBorderOpacity, 0, catAppearance, R.drawable.msg_palette, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(205, R.string.LagramGlassHighlights, 0, catAppearance, R.drawable.msg_palette, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(206, R.string.LagramPopupGlass, 0, catAppearance, R.drawable.msg_palette, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(207, R.string.LagramChatEdgeBlur, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(208, R.string.LagramShowBubbleTails, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(209, R.string.LagramRoundingPreset, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(210, R.string.LagramAvatarShape, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(211, R.string.LagramScrollEdgeScale, 0, catAppearance, R.drawable.msg_speed, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(212, R.string.LagramScrollEdgeMode, 0, catAppearance, R.drawable.msg_speed, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(213, R.string.LagramAnimationSpeed, 0, catAppearance, R.drawable.msg_speed, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(214, R.string.LagramM3Containers, R.string.LagramM3ContainersInfo, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(215, R.string.LagramM3SectionSpacing, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(216, R.string.LagramFolderTabsStyle, 0, catAppearance, R.drawable.msg_folders, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(217, R.string.LagramShowFolderCounters, 0, catAppearance, R.drawable.msg_folders, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(218, R.string.LagramAmoledSettings, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(219, R.string.LagramUseSystemFonts, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
-        list.add(new SearchEntry(220, R.string.LagramShowSeconds, 0, catAppearance, R.drawable.msg_theme, ID_CAT_APPEARANCE));
-
-        // Chats & Message Focus
-        list.add(new SearchEntry(300, R.string.LagramNagramTranslate, R.string.LagramNagramTranslateDesc, catChats, R.drawable.msg_translate, ID_CAT_CHATS));
-        list.add(new SearchEntry(299, R.string.LagramTranslateProvider, 0, catChats, R.drawable.msg_translate, ID_CAT_CHATS));
-        list.add(new SearchEntry(298, R.string.LagramTranslateKeepOriginal, R.string.LagramTranslateKeepOriginalDesc, catChats, R.drawable.msg_translate, ID_CAT_CHATS));
-        list.add(new SearchEntry(297, R.string.LagramAutoTranslateChats, R.string.LagramAutoTranslateChatsDesc, catChats, R.drawable.msg_translate, ID_CAT_CHATS));
-        list.add(new SearchEntry(301, R.string.LagramMessageFocus, R.string.LagramMessageFocusInfo, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
-        list.add(new SearchEntry(302, R.string.LagramMessageFocusBlur, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
-        list.add(new SearchEntry(303, R.string.LagramMessageFocusStyle, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
-        list.add(new SearchEntry(304, R.string.LagramChatHeaderStyle, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
-        list.add(new SearchEntry(305, R.string.LagramIos27BottomBar, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
-        list.add(new SearchEntry(306, R.string.LagramTextAnimHeader, R.string.LagramTextAnimInfo, catChats, R.drawable.msg_edit, ID_CAT_CHATS));
-        list.add(new SearchEntry(307, R.string.LagramDeleteEffect, 0, catChats, R.drawable.msg_delete, ID_CAT_CHATS));
-        list.add(new SearchEntry(308, R.string.LagramDoubleTapOutgoing, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
-        list.add(new SearchEntry(309, R.string.LagramDoubleTapIncoming, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
-        list.add(new SearchEntry(310, R.string.LagramStickerSize, 0, catChats, R.drawable.msg_sticker, ID_CAT_CHATS));
-        list.add(new SearchEntry(311, R.string.LagramGifSize, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
-        list.add(new SearchEntry(312, R.string.LagramBigReactions, 0, catChats, R.drawable.msg_reactions2, ID_CAT_CHATS));
-        list.add(new SearchEntry(313, R.string.LagramForwardWithoutQuote, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
-        list.add(new SearchEntry(314, R.string.LagramConfirmBeforeCall, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
-        list.add(new SearchEntry(315, R.string.LagramUnlimitedSelection, 0, catChats, R.drawable.msg_discussion, ID_CAT_CHATS));
-
-        // Media
-        list.add(new SearchEntry(401, R.string.LagramDownloadBoost, 0, catMedia, R.drawable.msg_photos, ID_CAT_MEDIA));
-        list.add(new SearchEntry(402, R.string.LagramTurboUploads, 0, catMedia, R.drawable.msg_photos, ID_CAT_MEDIA));
-        list.add(new SearchEntry(403, R.string.LagramSendPhotosHd, 0, catMedia, R.drawable.msg_photos, ID_CAT_MEDIA));
-        list.add(new SearchEntry(404, R.string.LagramRearCameraRound, 0, catMedia, R.drawable.msg_camera, ID_CAT_MEDIA));
-        list.add(new SearchEntry(405, R.string.LagramAutoplayVoice, 0, catMedia, R.drawable.msg_photos, ID_CAT_MEDIA));
-        list.add(new SearchEntry(406, R.string.LagramMediaGlow, 0, catMedia, R.drawable.msg_photos, ID_CAT_MEDIA));
-        list.add(new SearchEntry(407, R.string.LagramCompactRoundCamera, 0, catMedia, R.drawable.msg_camera, ID_CAT_MEDIA));
-
-        // Privacy & Ghost Mode
-        list.add(new SearchEntry(501, R.string.LagramGhostModeMaster, 0, catPrivacy, R.drawable.msg_secret, ID_CAT_PRIVACY));
-        list.add(new SearchEntry(502, R.string.LagramGhostDontReadMessages, 0, catPrivacy, R.drawable.msg_secret, ID_CAT_PRIVACY));
-        list.add(new SearchEntry(503, R.string.LagramGhostDontReadStories, 0, catPrivacy, R.drawable.msg_secret, ID_CAT_PRIVACY));
-        list.add(new SearchEntry(504, R.string.LagramGhostDontSendTyping, 0, catPrivacy, R.drawable.msg_secret, ID_CAT_PRIVACY));
-        list.add(new SearchEntry(505, R.string.LagramGhostDontSendOnline, 0, catPrivacy, R.drawable.msg_secret, ID_CAT_PRIVACY));
-        list.add(new SearchEntry(506, R.string.LagramSaveDeletedMessages, 0, catPrivacy, R.drawable.msg_delete, ID_CAT_PRIVACY));
-        list.add(new SearchEntry(507, R.string.LagramDeletedStyleHeader, 0, catPrivacy, R.drawable.msg_palette, ID_CAT_PRIVACY));
-        list.add(new SearchEntry(508, R.string.LagramSaveEditedMessages, 0, catPrivacy, R.drawable.msg_edit, ID_CAT_PRIVACY));
-        list.add(new SearchEntry(509, R.string.LagramAllowScreenshots, 0, catPrivacy, R.drawable.msg_secret, ID_CAT_PRIVACY));
-        list.add(new SearchEntry(510, R.string.LagramBypassNoForwards, 0, catPrivacy, R.drawable.msg_secret, ID_CAT_PRIVACY));
-
-        cachedCatalog = list;
-        return cachedCatalog;
+    @Override
+    protected CharSequence getTitle() {
+        return LocaleController.getString(R.string.LagramSettings);
     }
 
     @Override
@@ -175,204 +76,12 @@ public class LagramSettingsActivity extends UniversalFragment {
         View view = super.createView(context);
         listView.setSections();
         listView.setSectionsDrawBackground(true);
-        if (LagramConfig.amoledSettingsBackdrop && Theme.isCurrentThemeDark()) {
-            fragmentView.setBackgroundColor(0xFF000000);
-            listView.setBackgroundColor(0xFF000000);
-        }
-
-        searchItem = actionBar.createMenu()
-                .addItem(1, R.drawable.outline_header_search)
-                .setIsSearchField(true)
-                .setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
-                    @Override
-                    public void onSearchCollapse() {
-                        updateSearchQuery(null);
-                    }
-
-                    @Override
-                    public void onTextChanged(EditText editText) {
-                        updateSearchQuery(editText.getText().toString());
-                    }
-                });
-        searchItem.setSearchFieldHint(LocaleController.getString(R.string.Search));
-        searchItem.setContentDescription(LocaleController.getString(R.string.Search));
         return view;
     }
 
-    private void updateSearchQuery(String query) {
-        String trimmed = (query == null || TextUtils.isEmpty(query.trim())) ? null : query.trim();
-        if (TextUtils.equals(trimmed, searchQuery)) {
-            return;
-        }
-        searchQuery = trimmed;
-        searchResults.clear();
-        if (searchQuery != null) {
-            String[] tokens = searchQuery.toLowerCase(Locale.ROOT).split("\\s+");
-            ArrayList<SearchEntry> catalog = getCatalog();
-            for (int i = 0, n = catalog.size(); i < n; i++) {
-                SearchEntry entry = catalog.get(i);
-                String lowerTitle = entry.title.toLowerCase(Locale.ROOT);
-                String lowerSub = entry.subtitle != null ? entry.subtitle.toLowerCase(Locale.ROOT) : null;
-                boolean matchesAll = true;
-                for (String token : tokens) {
-                    if (!token.isEmpty() && !lowerTitle.contains(token) && (lowerSub == null || !lowerSub.contains(token))) {
-                        matchesAll = false;
-                        break;
-                    }
-                }
-                if (matchesAll) {
-                    searchResults.add(entry);
-                }
-            }
-        }
-        if (listView != null) {
+    private void refreshList() {
+        if (listView != null && listView.adapter != null) {
             listView.adapter.update(true);
-            listView.scrollToPosition(0);
-        }
-    }
-
-    private static UItem createCategoryItem(int id, IconBackgroundColors colors, int iconResId, int titleResId) {
-        return SettingsActivity.SettingCell.Factory.of(id, colors.top, colors.bottom, iconResId, LocaleController.getString(titleResId));
-    }
-
-    @Override
-    protected CharSequence getTitle() {
-        return LocaleController.getString(R.string.LagramSettings);
-    }
-
-    @Override
-    protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
-        LagramConfig.ensureLoaded();
-        if (searchQuery == null) {
-            items.add(UItem.asCustomShadow(headerView, 253));
-
-            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramQuickGhostHeader)));
-            items.add(org.telegram.ui.lagram.OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
-                    ID_GHOST_MASTER, 0,
-                    LagramConfig.withNewBadge(LocaleController.getString(R.string.LagramGhostModeMaster)),
-                    null,
-                    LagramConfig.ghostModeEnabled));
-            items.add(UItem.asShadow(-1, null));
-
-            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramCategoriesHeader)));
-            items.add(createCategoryItem(ID_CAT_GENERAL, IconBackgroundColors.BLUE, R.drawable.filled_profile_settings, R.string.LagramCategoryGeneral));
-            items.add(createCategoryItem(ID_CAT_APPEARANCE, IconBackgroundColors.PURPLE, R.drawable.msg_theme, R.string.LagramCategoryAppearance));
-            items.add(createCategoryItem(ID_CAT_CHATS, IconBackgroundColors.GREEN, R.drawable.settings_chat, R.string.LagramCategoryChats));
-            items.add(createCategoryItem(ID_CAT_MEDIA, IconBackgroundColors.ORANGE, R.drawable.filled_widget_music, R.string.LagramCategoryMedia));
-            items.add(createCategoryItem(ID_CAT_PRIVACY, IconBackgroundColors.BLUE_DEEP, R.drawable.msg_secret, R.string.LagramCategoryPrivacy));
-            items.add(UItem.asShadow(-2, null));
-
-            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramBackupHeader)));
-            items.add(UItem.asButton(ID_BACKUP_EXPORT, R.drawable.msg_copy, LocaleController.getString(R.string.LagramExportSettings)));
-            items.add(UItem.asButton(ID_BACKUP_IMPORT, R.drawable.msg_download, LocaleController.getString(R.string.LagramImportSettings)));
-            items.add(UItem.asButton(ID_BACKUP_RESET, R.drawable.msg_reset, LocaleController.getString(R.string.LagramResetSettings)).red());
-            items.add(UItem.asShadow(-3, null));
-
-            items.add(UItem.asHeader(LocaleController.getString(R.string.LagramLinksHeader)));
-            items.add(UItem.asSettingsCell(ID_LINK_GITHUB, R.drawable.msg_channel, LocaleController.getString(R.string.LagramRepoTitle), "GitHub"));
-            items.add(UItem.asSettingsCell(ID_LINK_DEVELOPER, R.drawable.msg_openprofile, LocaleController.getString(R.string.LagramDeveloperTitle), "@Jose22Yt"));
-            items.add(UItem.asCenterShadow(LagramSettingsHeaderView.getVersionString()));
-            return;
-        }
-
-        if (searchResults.isEmpty()) {
-            items.add(UItem.asCenterShadow(LocaleController.getString(R.string.NoResult)));
-            return;
-        }
-
-        int highlightColor = getThemedColor(Theme.key_windowBackgroundWhiteBlueText4);
-        String[] tokens = searchQuery.toLowerCase(Locale.ROOT).split("\\s+");
-        for (int i = 0, n = searchResults.size(); i < n; i++) {
-            SearchEntry entry = searchResults.get(i);
-            SpannableStringBuilder ssb = new SpannableStringBuilder(entry.title);
-            String lower = entry.title.toLowerCase(Locale.ROOT);
-            for (String token : tokens) {
-                if (!token.isEmpty()) {
-                    int idx = lower.indexOf(token);
-                    if (idx >= 0) {
-                        ssb.setSpan(new ForegroundColorSpan(highlightColor), idx, Math.min(ssb.length(), idx + token.length()), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    }
-                }
-            }
-            UItem item = SettingsSearchCell.Factory.of(ssb, (CharSequence[]) entry.breadcrumbs);
-            item.id = entry.targetCategory;
-            item.iconResId = entry.iconResId;
-            items.add(item);
-        }
-    }
-
-    @Override
-    protected void onClick(UItem item, View view, int position, float x, float y) {
-        switch (item.id) {
-            case ID_GHOST_MASTER: {
-                boolean enabled = LagramConfig.toggleGhostMode();
-                if (view instanceof org.telegram.ui.lagram.OpexgramStyleWidgets.OpexSwitchCell) {
-                    ((org.telegram.ui.lagram.OpexgramStyleWidgets.OpexSwitchCell) view).setChecked(enabled);
-                }
-                if (listView != null) {
-                    listView.adapter.update(true);
-                }
-                break;
-            }
-            case ID_CAT_GENERAL:
-                presentFragment(new LagramGeneralActivity());
-                break;
-            case ID_CAT_APPEARANCE:
-                presentFragment(new LagramAppearanceActivity());
-                break;
-            case ID_CAT_CHATS:
-                presentFragment(new LagramChatsActivity());
-                break;
-            case ID_CAT_MEDIA:
-                presentFragment(new LagramMediaActivity());
-                break;
-            case ID_CAT_PRIVACY:
-                presentFragment(new LagramPrivacyActivity());
-                break;
-            case ID_BACKUP_EXPORT: {
-                String json = LagramConfig.exportToJson();
-                AndroidUtilities.addToClipboard(json);
-                BulletinFactory.of(this).createSimpleBulletin(R.raw.copy, LocaleController.getString(R.string.LagramExportedToast)).show();
-                break;
-            }
-            case ID_BACKUP_IMPORT: {
-                if (getParentActivity() == null) return;
-                ClipboardManager cm = (ClipboardManager) getParentActivity().getSystemService(Context.CLIPBOARD_SERVICE);
-                String text = null;
-                if (cm != null && cm.hasPrimaryClip()) {
-                    ClipData clip = cm.getPrimaryClip();
-                    if (clip != null && clip.getItemCount() > 0 && clip.getItemAt(0).getText() != null) {
-                        text = clip.getItemAt(0).getText().toString();
-                    }
-                }
-                if (LagramConfig.importFromJson(text)) {
-                    if (listView != null) listView.adapter.update(true);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.contact_check, LocaleController.getString(R.string.LagramImportedToast)).show();
-                } else {
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.error, LocaleController.getString(R.string.LagramImportFailedToast)).show();
-                }
-                break;
-            }
-            case ID_BACKUP_RESET: {
-                if (getParentActivity() == null) return;
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                builder.setTitle(LocaleController.getString(R.string.LagramResetConfirmTitle));
-                builder.setMessage(LocaleController.getString(R.string.LagramResetConfirmMessage));
-                builder.setPositiveButton(LocaleController.getString(R.string.Reset), (dialog, which) -> {
-                    LagramConfig.resetToDefaults();
-                    if (listView != null) listView.adapter.update(true);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.ic_delete, LocaleController.getString(R.string.LagramResetToast)).show();
-                });
-                builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-                showDialog(builder.create());
-                break;
-            }
-            case ID_LINK_GITHUB:
-                Browser.openUrl(getContext(), "https://github.com/Jose22Yt/lagram");
-                break;
-            case ID_LINK_DEVELOPER:
-                Browser.openUrl(getContext(), "https://github.com/Jose22Yt");
-                break;
         }
     }
 
@@ -382,32 +91,223 @@ public class LagramSettingsActivity extends UniversalFragment {
     }
 
     @Override
-    public boolean onBackPressed(boolean invoked) {
-        if (actionBar != null && actionBar.isSearchFieldVisible()) {
-            if (invoked) {
-                actionBar.closeSearchField();
+    protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
+        LagramConfig.ensureLoaded();
+
+        items.add(UItem.asCustomShadow(headerView, 253));
+
+        // 1. Liquid Glass for Chat Bubbles
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramGlassBlurHeader)));
+        items.add(LagramRealPreviews.RealBubblesGlassPreviewCell.Factory.of(ID_PREVIEW_GLASS));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_GLASS_MESSAGES, 0,
+                LocaleController.getString(R.string.LagramGlassMessages),
+                null,
+                LagramConfig.glassMessages));
+        if (LagramConfig.glassMessages) {
+            items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
+                    ID_GLASS_TINT,
+                    LocaleController.getString(R.string.LagramGlassTintMode),
+                    new String[]{
+                            LocaleController.getString(R.string.LagramGlassTintTheme),
+                            LocaleController.getString(R.string.LagramGlassTintCrystal),
+                            LocaleController.getString(R.string.LagramGlassTintFrost),
+                            LocaleController.getString(R.string.LagramGlassTintSmoked)
+                    },
+                    LagramConfig.glassTintMode,
+                    idx -> {
+                        LagramConfig.setGlassTintMode(idx);
+                        refreshList();
+                    }));
+            items.add(OpexgramStyleWidgets.OpexSliderCell.Factory.of(
+                    ID_GLASS_ALPHA,
+                    LocaleController.getString(R.string.LagramGlassMessagesAlpha),
+                    15, 95, 52, LagramConfig.glassMessagesAlpha, "%",
+                    val -> {
+                        LagramConfig.setGlassMessagesAlpha(val);
+                        refreshList();
+                    }));
+            items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
+                    ID_GLASS_BLUR_LEVEL,
+                    LocaleController.getString(R.string.LagramGlassBlurLevel),
+                    new String[]{
+                            LocaleController.getString(R.string.LagramGlassBlurSoft),
+                            LocaleController.getString(R.string.LagramGlassBlurMedium),
+                            LocaleController.getString(R.string.LagramGlassBlurStrong)
+                    },
+                    LagramConfig.glassBlurLevel,
+                    idx -> {
+                        LagramConfig.setGlassBlurLevel(idx);
+                        LagramGlassBubbleEngine.invalidateCapture();
+                        refreshList();
+                    }));
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                    ID_GLASS_BORDER, 0,
+                    LocaleController.getString(R.string.LagramGlassMessagesBorder),
+                    null,
+                    LagramConfig.glassMessagesBorder));
+            if (LagramConfig.glassMessagesBorder) {
+                items.add(OpexgramStyleWidgets.OpexSliderCell.Factory.of(
+                        ID_GLASS_BORDER_OPACITY,
+                        LocaleController.getString(R.string.LagramGlassBorderOpacity),
+                        10, 100, 60, LagramConfig.glassBorderOpacity, "%",
+                        val -> {
+                            LagramConfig.setGlassBorderOpacity(val);
+                            refreshList();
+                        }));
             }
-            return false;
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                    ID_GLASS_HIGHLIGHTS, 0,
+                    LocaleController.getString(R.string.LagramGlassHighlights),
+                    null,
+                    LagramConfig.glassHighlights));
         }
-        return super.onBackPressed(invoked);
+        items.add(UItem.asShadow(-1, null));
+
+        // 2. 3D Scroll Animation
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramScrollAndMotionHeader)));
+        items.add(LagramRealPreviews.RealScrollEffectPreviewCell.Factory.of(ID_PREVIEW_SCROLL));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_SCROLL_EDGE, 0,
+                LocaleController.getString(R.string.LagramScrollEdgeScale),
+                null,
+                LagramConfig.scrollEdgeScale));
+        if (LagramConfig.scrollEdgeScale) {
+            items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
+                    ID_SCROLL_MODE,
+                    LocaleController.getString(R.string.LagramScrollEdgeMode),
+                    new String[]{
+                            LocaleController.getString(R.string.LagramScrollEdgeModeScale),
+                            LocaleController.getString(R.string.LagramScrollEdgeModeDrum)
+                    },
+                    LagramConfig.scrollEdgeMode,
+                    idx -> {
+                        LagramConfig.setScrollEdgeMode(idx);
+                        refreshList();
+                    }));
+        }
+        items.add(UItem.asShadow(-2, null));
+
+        // 3. Message Tap Focus Animation + 3 Menu Styles
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramMessageFocusHeader)));
+        items.add(LagramRealPreviews.RealMessageMenuPreviewCell.Factory.of(ID_PREVIEW_MSG_MENU));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_FOCUS_ENABLED, 0,
+                LocaleController.getString(R.string.LagramMessageFocus),
+                null,
+                LagramConfig.messageFocusEnabled));
+        if (LagramConfig.messageFocusEnabled) {
+            items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                    ID_FOCUS_BLUR, 0,
+                    LocaleController.getString(R.string.LagramMessageFocusBlur),
+                    null,
+                    LagramConfig.messageFocusBlur));
+            items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
+                    ID_FOCUS_STYLE,
+                    LocaleController.getString(R.string.LagramMessageFocusStyle),
+                    new String[]{
+                            LocaleController.getString(R.string.LagramFocusStyleList),
+                            LocaleController.getString(R.string.LagramFocusStyleTiles),
+                            LocaleController.getString(R.string.LagramFocusStyleCapsule)
+                    },
+                    LagramConfig.messageFocusStyle,
+                    idx -> {
+                        LagramConfig.setMessageFocusStyle(idx);
+                        refreshList();
+                    }));
+        }
+        items.add(UItem.asShadow(-3, null));
+
+        // 4. Chat Top Bar Styles (FlexyGram-inspired: Default, Signature, Fusion, Portrait Matte, Floating)
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramChatHeaderStyle)));
+        items.add(LagramRealPreviews.RealChatHeaderPreviewCell.Factory.of(ID_PREVIEW_HEADER));
+        items.add(OpexgramStyleWidgets.OpexCheckPillsCell.Factory.single(
+                ID_HEADER_STYLE,
+                null,
+                new String[]{
+                        LocaleController.getString(R.string.LagramChatHeaderDefault),
+                        LocaleController.getString(R.string.LagramChatHeaderSignature),
+                        LocaleController.getString(R.string.LagramChatHeaderFusion),
+                        LocaleController.getString(R.string.LagramChatHeaderPortrait),
+                        LocaleController.getString(R.string.LagramChatHeaderFloating)
+                },
+                LagramConfig.chatHeaderStyle,
+                idx -> {
+                    LagramConfig.setChatHeaderStyle(idx);
+                    refreshList();
+                }));
+        items.add(UItem.asShadow(-4, null));
+
+        // 5. Ghost Mode
+        items.add(UItem.asHeader(LocaleController.getString(R.string.LagramGhostModeHeader)));
+        items.add(OpexgramStyleWidgets.OpexSwitchCell.Factory.of(
+                ID_GHOST_MASTER, R.drawable.msg_secret,
+                LocaleController.getString(R.string.LagramGhostModeMaster),
+                null,
+                LagramConfig.ghostModeEnabled));
+        items.add(SettingsActivity.SettingCell.Factory.of(
+                ID_OPEN_GHOST_CONFIG,
+                IconBackgroundColors.BLUE_DEEP.top,
+                IconBackgroundColors.BLUE_DEEP.bottom,
+                R.drawable.msg_secret,
+                LocaleController.getString(R.string.LagramCategoryPrivacy)));
+        items.add(UItem.asShadow(-5, null));
+
+        // Reset & Version
+        items.add(UItem.asButton(ID_RESET, R.drawable.msg_reset, LocaleController.getString(R.string.LagramResetSettings)).red());
+        items.add(UItem.asCenterShadow(LagramSettingsHeaderView.getVersionString()));
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        if (headerView != null) {
-            headerView.setPaused(true);
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (listView != null) {
-            listView.adapter.update(true);
-        }
-        if (headerView != null) {
-            headerView.setPaused(false);
+    protected void onClick(UItem item, View view, int position, float x, float y) {
+        switch (item.id) {
+            case ID_GLASS_MESSAGES:
+                LagramConfig.toggleGlassMessages();
+                LagramGlassBubbleEngine.invalidateCapture();
+                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.didSetNewTheme, false);
+                refreshList();
+                break;
+            case ID_GLASS_BORDER:
+                LagramConfig.toggleGlassMessagesBorder();
+                refreshList();
+                break;
+            case ID_GLASS_HIGHLIGHTS:
+                LagramConfig.toggleGlassHighlights();
+                refreshList();
+                break;
+            case ID_SCROLL_EDGE:
+                LagramConfig.toggleScrollEdgeScale();
+                refreshList();
+                break;
+            case ID_FOCUS_ENABLED:
+                LagramConfig.toggleMessageFocusEnabled();
+                refreshList();
+                break;
+            case ID_FOCUS_BLUR:
+                LagramConfig.toggleMessageFocusBlur();
+                refreshList();
+                break;
+            case ID_GHOST_MASTER:
+                LagramConfig.toggleGhostMode();
+                refreshList();
+                break;
+            case ID_OPEN_GHOST_CONFIG:
+                presentFragment(new LagramPrivacyActivity());
+                break;
+            case ID_RESET:
+                if (getParentActivity() == null) return;
+                AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity(), getResourceProvider());
+                b.setTitle(LocaleController.getString(R.string.LagramResetSettings));
+                b.setMessage(LocaleController.getString(R.string.LagramResetConfirmMessage));
+                b.setPositiveButton(LocaleController.getString(R.string.Reset), (d, w) -> {
+                    LagramConfig.resetToDefaults();
+                    LagramGlassBubbleEngine.invalidateCapture();
+                    refreshList();
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.ic_delete, LocaleController.getString(R.string.LagramResetToast)).show();
+                });
+                b.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+                showDialog(b.create());
+                break;
         }
     }
 }

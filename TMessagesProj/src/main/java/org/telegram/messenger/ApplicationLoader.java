@@ -390,6 +390,7 @@ public class ApplicationLoader extends Application {
         super.onTrimMemory(level);
         if (level >= TRIM_MEMORY_UI_HIDDEN || level >= TRIM_MEMORY_RUNNING_LOW) {
             org.telegram.ui.lagram.LagramGlassBubbleEngine.clearCache();
+            LagramTranslateDb.trimMemory();
         }
     }
 

@@ -61,10 +61,10 @@ public final class LagramScrollEdgeController implements
     private int generation;
     private boolean dirty = true;
     private boolean scrolling = false;
+    private long lastLayoutSignature = Long.MIN_VALUE;
 
     // Critically damped spring state: [value, velocity]
     private final float[] masterSpring = new float[2];
-    private final View[] boundaryViews = new View[2];
 
     // Tracked transformed child state (12 floats per tracked view:
     // [0..4] = base scaleX, scaleY, alpha, translationY, rotationX
@@ -76,6 +76,7 @@ public final class LagramScrollEdgeController implements
     private float[] trackedState = new float[16 * STRIDE];
     private int[] trackedGen = new int[16];
     private boolean[] trackedPivotSet = new boolean[16];
+    private boolean[] trackedPivotTop = new boolean[16];
     private boolean[] trackedIdentity = new boolean[16];
 
     // Per-frame sorted visible children buffers (zero allocations)
@@ -107,10 +108,10 @@ public final class LagramScrollEdgeController implements
         this.recyclerView = recyclerView;
         this.edgeInsetsProvider = provider;
         float d = AndroidUtilities.density;
-        this.scaleZonePx = 80.0f * d;
-        this.drumZonePx = 92.0f * d;
+        this.scaleZonePx = 86.0f * d;
+        this.drumZonePx = 104.0f * d;
         this.maxScaleRefHeightPx = 136.0f * d;
-        this.cameraDistancePx = 5600.0f * d;
+        this.cameraDistancePx = 3000.0f * d;
         recyclerView.addOnScrollListener(scrollListener);
         recyclerView.addOnChildAttachStateChangeListener(this);
         recyclerView.addOnAttachStateChangeListener(this);
@@ -218,13 +219,11 @@ public final class LagramScrollEdgeController implements
         if (edgeInsetsProvider != null) {
             edgeInsetsProvider.getVisibleEdges(recyclerView, out);
         } else {
-            out[0] = Math.min(recyclerView.getPaddingTop(), rvH * 0.20f);
-            out[1] = rvH - Math.min(recyclerView.getPaddingBottom(), rvH * 0.20f);
+            out[0] = Math.min(recyclerView.getPaddingTop(), rvH * 0.35f);
+            out[1] = rvH - Math.min(recyclerView.getPaddingBottom(), rvH * 0.25f);
         }
-        // Strict safety guard: top edge is ALWAYS in the upper 28% and bottom edge in the lower 28%
-        // so the 3D effect NEVER drifts into the middle of the screen!
-        out[0] = Math.max(0f, Math.min(out[0], rvH * 0.28f));
-        out[1] = Math.max(rvH * 0.72f, Math.min(out[1], rvH));
+        out[0] = Math.max(0f, Math.min(out[0], rvH * 0.48f));
+        out[1] = Math.max(Math.min(rvH, out[0] + AndroidUtilities.dp(120)), Math.min(out[1], rvH));
     }
 
     private void collectSortedVisibleChildren() {
@@ -258,43 +257,48 @@ public final class LagramScrollEdgeController implements
         }
     }
 
-    private boolean isBoundaryItem(View view, boolean topEdge) {
-        RecyclerView.LayoutManager lm = recyclerView.getLayoutManager();
-        if (lm == null) {
-            return true;
-        }
-        int slot = topEdge ? 0 : 1;
-        int adapterPos = recyclerView.getChildAdapterPosition(view);
-        if (adapterPos != RecyclerView.NO_POSITION) {
-            boolean reverse = (lm instanceof LinearLayoutManager) && ((LinearLayoutManager) lm).getReverseLayout();
-            int targetPos = (topEdge == reverse) ? (lm.getItemCount() - 1) : 0;
-            boolean match = adapterPos == targetPos;
-            boundaryViews[slot] = match ? view : null;
-            return match;
-        }
-        return boundaryViews[slot] == view;
-    }
-
     private float computeTopReach(float topEdgeY, float zone) {
         if (visibleCount == 0) {
             return 0.0f;
         }
-        View first = visibleViews[0];
-        if (isBoundaryItem(first, true)) {
-            return clamp01((topEdgeY - first.getTop()) / zone);
+        // Find the topmost eligible child: if it is sitting at or below topEdgeY (rest position,
+        // including when DialogsActivity has hidden archive at adapterPos 0), topReach MUST be 0!
+        View firstEligible = null;
+        for (int i = 0; i < visibleCount; i++) {
+            if (isEligibleChild(visibleViews[i])) {
+                firstEligible = visibleViews[i];
+                break;
+            }
         }
-        return 1.0f;
+        if (firstEligible == null) {
+            return 0.0f;
+        }
+        float overflow = topEdgeY - firstEligible.getTop();
+        if (overflow <= 2.0f) {
+            return 0.0f;
+        }
+        return clamp01(overflow / (zone * 0.75f));
     }
 
     private float computeBottomReach(float bottomEdgeY, float zone) {
         if (visibleCount == 0) {
             return 0.0f;
         }
-        View last = visibleViews[visibleCount - 1];
-        if (isBoundaryItem(last, false)) {
-            return clamp01((last.getBottom() - bottomEdgeY) / zone);
+        View lastEligible = null;
+        for (int i = visibleCount - 1; i >= 0; i--) {
+            if (isEligibleChild(visibleViews[i])) {
+                lastEligible = visibleViews[i];
+                break;
+            }
         }
-        return 1.0f;
+        if (lastEligible == null) {
+            return 0.0f;
+        }
+        float overflow = lastEligible.getBottom() - bottomEdgeY;
+        if (overflow <= 2.0f) {
+            return 0.0f;
+        }
+        return clamp01(overflow / (zone * 0.75f));
     }
 
     private int findTrackedIndex(View view) {
@@ -313,11 +317,13 @@ public final class LagramScrollEdgeController implements
             trackedViews[idx] = trackedViews[last];
             trackedGen[idx] = trackedGen[last];
             trackedPivotSet[idx] = trackedPivotSet[last];
+            trackedPivotTop[idx] = trackedPivotTop[last];
             trackedIdentity[idx] = trackedIdentity[last];
             System.arraycopy(trackedState, last * STRIDE, trackedState, idx * STRIDE, STRIDE);
         }
         trackedViews[last] = null;
         trackedPivotSet[last] = false;
+        trackedPivotTop[last] = false;
         trackedIdentity[last] = false;
         trackedCount = last;
     }
@@ -372,6 +378,16 @@ public final class LagramScrollEdgeController implements
         if (!dirty && !scrolling && springSettled) {
             return true;
         }
+        int rawCount = recyclerView.getChildCount();
+        long sig = ((long) rawCount << 48)
+                ^ ((long) LagramConfig.scrollEdgeMode << 44)
+                ^ ((long) recyclerView.getPaddingTop() << 32)
+                ^ (rawCount > 0 ? (((long) recyclerView.getChildAt(0).getTop() & 0xFFFFL) << 16)
+                        | ((long) recyclerView.getChildAt(rawCount - 1).getBottom() & 0xFFFFL) : 0L);
+        if (!dirty && springSettled && sig == lastLayoutSignature) {
+            return true;
+        }
+        lastLayoutSignature = sig;
         dirty = false;
 
         long now = AnimationUtils.currentAnimationTimeMillis();
@@ -423,28 +439,30 @@ public final class LagramScrollEdgeController implements
             float edgeReach = nearTop ? topReach : bottomReach;
             float h = bottom - top;
             if (edgeReach > 0.0f && h > 0.0f && isEligibleChild(child)) {
-                float dist = nearTop ? distTop : distBottom;
-                // Smooth normalized penetration [0..1]: 0 at inner edge of zone, 1 at exact viewport edge (and beyond)
+                // Measure distance from the child's outer edge into the visible zone so items
+                // start curving smoothly as soon as they approach the top or bottom bar!
+                float dist = nearTop ? (top - topEdge) : (bottomEdge - bottom);
                 float t = clamp01(1.0f - (dist / zone)) * edgeReach;
                 if (t > 0.001f) {
                     float heightFactor = Math.min(1.0f, maxScaleRefHeightPx / Math.max(1.0f, h));
                     float ease = t * t;
                     if (drumMode) {
-                        // True 3D cylindrical drum curve: top tilts backward (+rotX), bottom tilts backward (-rotX)
-                        // using smooth sin/cos cylinder foreshortening — symmetric on TOP and BOTTOM!
-                        float angleDeg = (nearTop ? 24.0f : -24.0f) * ease * heightFactor;
-                        float sc = 1.0f - (0.14f * ease * heightFactor);
-                        float al = 1.0f - (0.42f * ease);
+                        // True edge-hinged 3D cylindrical drum curve:
+                        // Top items hinge on their bottom edge and tilt backward (+rotX).
+                        // Bottom items hinge on their top edge and tilt backward (-rotX).
+                        float angleDeg = (nearTop ? 30.0f : -30.0f) * ease * heightFactor;
+                        float sc = 1.0f - (0.12f * ease * heightFactor);
+                        float al = 1.0f - (0.46f * ease);
                         itemRotX[i] = angleDeg;
                         itemScale[i] = sc;
-                        itemAlpha[i] = Math.max(0.28f, al);
-                        itemShrinkH[i] = (1.0f - sc) * h * 0.85f;
+                        itemAlpha[i] = Math.max(0.24f, al);
+                        itemShrinkH[i] = (1.0f - sc) * h * 0.72f;
                     } else {
                         // Elastic Edge Scale mode
                         float sc = 1.0f - (0.15f * ease * heightFactor);
                         float al = 1.0f - (0.38f * ease);
                         itemScale[i] = sc;
-                        itemAlpha[i] = Math.max(0.32f, al);
+                        itemAlpha[i] = Math.max(0.30f, al);
                         itemShrinkH[i] = (1.0f - sc) * h;
                     }
                 }
@@ -474,6 +492,7 @@ public final class LagramScrollEdgeController implements
             float al = itemAlpha[i];
             float rx = itemRotX[i];
             float dy = itemShiftY[i];
+            boolean nearTop = itemIsTopEdge[i];
             int tidx = findTrackedIndex(child);
             boolean isIdentity = (sc == 1.0f && al == 1.0f && rx == 0.0f && dy == 0.0f);
 
@@ -496,6 +515,9 @@ public final class LagramScrollEdgeController implements
                     boolean[] np = new boolean[newCap];
                     System.arraycopy(trackedPivotSet, 0, np, 0, trackedCount);
                     trackedPivotSet = np;
+                    boolean[] npt = new boolean[newCap];
+                    System.arraycopy(trackedPivotTop, 0, npt, 0, trackedCount);
+                    trackedPivotTop = npt;
                     boolean[] ni = new boolean[newCap];
                     System.arraycopy(trackedIdentity, 0, ni, 0, trackedCount);
                     trackedIdentity = ni;
@@ -504,6 +526,7 @@ public final class LagramScrollEdgeController implements
                 trackedViews[tidx] = child;
                 child.addOnLayoutChangeListener(this);
                 trackedPivotSet[tidx] = false;
+                trackedPivotTop[tidx] = nearTop;
                 trackedIdentity[tidx] = false;
                 int b = tidx * STRIDE;
                 float sx = child.getScaleX();
@@ -529,11 +552,15 @@ public final class LagramScrollEdgeController implements
             trackedIdentity[tidx] = isIdentity;
             int base = tidx * STRIDE;
 
-            if (!isIdentity && !trackedPivotSet[tidx]) {
-                child.setCameraDistance(cameraDistancePx);
+            if (!isIdentity && (!trackedPivotSet[tidx] || trackedPivotTop[tidx] != nearTop)) {
+                if (!trackedPivotSet[tidx]) {
+                    child.setCameraDistance(cameraDistancePx);
+                }
                 child.setPivotX(computePivotX(child, drumMode));
-                child.setPivotY(child.getHeight() * 0.5f);
+                // Hinge on the inner edge for 3D drum so items bend seamlessly backward into the cylinder
+                child.setPivotY(drumMode ? (nearTop ? child.getHeight() : 0f) : child.getHeight() * 0.5f);
                 trackedPivotSet[tidx] = true;
+                trackedPivotTop[tidx] = nearTop;
             }
 
             float curSx = child.getScaleX();
@@ -641,8 +668,6 @@ public final class LagramScrollEdgeController implements
             restoreTrackedView(i);
             removeTracked(i);
         }
-        boundaryViews[0] = null;
-        boundaryViews[1] = null;
         masterSpring[0] = 0.0f;
         masterSpring[1] = 0.0f;
         lastFrameTimeMs = 0L;

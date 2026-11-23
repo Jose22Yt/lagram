@@ -6520,6 +6520,7 @@ public class ChatActivity extends BaseFragment implements
         chatListView.setVerticalScrollBarEnabled(!SharedConfig.chatBlurEnabled());
         chatListView.setAdapter(chatAdapter = new ChatActivityAdapter(context));
         chatListView.setClipToPadding(false);
+        chatListView.setItemViewCacheSize(14);
         if (ChatObject.isMonoForum(currentChat) || ChatObject.areTabsEnabled(currentChat)) {
             chatListView.setClipChildren(false);
         }
@@ -6903,7 +6904,6 @@ public class ChatActivity extends BaseFragment implements
                     if (searchOtherButton != null && searchOtherButton.getVisibility() == View.VISIBLE && isKeyboardVisible()) {
                         AndroidUtilities.hideKeyboard(getParentActivity().getCurrentFocus());
                     }
-                    org.telegram.messenger.LagramConfig.ensureLoaded();
                     if (org.telegram.messenger.LagramConfig.hideKeyboardOnScroll && newState == RecyclerView.SCROLL_STATE_DRAGGING && isKeyboardVisible() && getParentActivity() != null && getParentActivity().getCurrentFocus() != null) {
                         AndroidUtilities.hideKeyboard(getParentActivity().getCurrentFocus());
                     }
@@ -34486,24 +34486,33 @@ public class ChatActivity extends BaseFragment implements
             }
             case OPTION_EDIT_HISTORY: {
                 if (selectedObject != null && getParentActivity() != null) {
-                    ArrayList<org.telegram.messenger.LagramMessageHistoryDb.EditEntry> entries =
-                            org.telegram.messenger.LagramMessageHistoryDb.getEditHistory(currentAccount, selectedObject.getDialogId(), selectedObject.getId());
-                    StringBuilder sb = new StringBuilder();
-                    if (entries.isEmpty()) {
-                        sb.append(LocaleController.getString(R.string.LagramEditHistoryEmpty));
-                    } else {
-                        for (int idx = 0; idx < entries.size(); idx++) {
-                            org.telegram.messenger.LagramMessageHistoryDb.EditEntry entry = entries.get(idx);
-                            if (idx > 0) sb.append("\n\n");
-                            sb.append("[").append(LocaleController.formatDateTime(entry.date, true)).append("]\n");
-                            sb.append(entry.text);
+                    final int acc = currentAccount;
+                    final long dlgId = selectedObject.getDialogId();
+                    final int msgId = selectedObject.getId();
+                    Utilities.globalQueue.postRunnable(() -> {
+                        ArrayList<org.telegram.messenger.LagramMessageHistoryDb.EditEntry> entries =
+                                org.telegram.messenger.LagramMessageHistoryDb.getEditHistory(acc, dlgId, msgId);
+                        StringBuilder sb = new StringBuilder();
+                        if (entries.isEmpty()) {
+                            sb.append(LocaleController.getString(R.string.LagramEditHistoryEmpty));
+                        } else {
+                            for (int idx = 0; idx < entries.size(); idx++) {
+                                org.telegram.messenger.LagramMessageHistoryDb.EditEntry entry = entries.get(idx);
+                                if (idx > 0) sb.append("\n\n");
+                                sb.append("[").append(LocaleController.formatDateTime(entry.date, true)).append("]\n");
+                                sb.append(entry.text);
+                            }
                         }
-                    }
-                    new AlertDialog.Builder(getParentActivity(), themeDelegate)
-                            .setTitle(LocaleController.getString(R.string.LagramEditHistoryTitle))
-                            .setMessage(sb.toString())
-                            .setPositiveButton(LocaleController.getString(R.string.OK), null)
-                            .show();
+                        final String msgText = sb.toString();
+                        AndroidUtilities.runOnUIThread(() -> {
+                            if (getParentActivity() == null) return;
+                            new AlertDialog.Builder(getParentActivity(), themeDelegate)
+                                    .setTitle(LocaleController.getString(R.string.LagramEditHistoryTitle))
+                                    .setMessage(msgText)
+                                    .setPositiveButton(LocaleController.getString(R.string.OK), null)
+                                    .show();
+                        });
+                    });
                 }
                 break;
             }

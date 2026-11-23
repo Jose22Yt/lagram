@@ -82,10 +82,15 @@ public final class LagramConfig {
 
     // Chat header (top bar) styles
     public static final int CHAT_HEADER_DEFAULT = 0;
-    public static final int CHAT_HEADER_IOS = 1;
-    public static final int CHAT_HEADER_COMPACT = 2;
-    public static final int CHAT_HEADER_ADAPTIVE = 3;
-    public static final int CHAT_HEADER_EXPRESSIVE = 4;
+    public static final int CHAT_HEADER_SIGNATURE = 1;
+    public static final int CHAT_HEADER_FUSION = 2;
+    public static final int CHAT_HEADER_PORTRAIT = 3;
+    public static final int CHAT_HEADER_FLOATING = 4;
+    // Legacy aliases preserved for source compatibility
+    public static final int CHAT_HEADER_IOS = CHAT_HEADER_SIGNATURE;
+    public static final int CHAT_HEADER_COMPACT = CHAT_HEADER_FUSION;
+    public static final int CHAT_HEADER_ADAPTIVE = CHAT_HEADER_PORTRAIT;
+    public static final int CHAT_HEADER_EXPRESSIVE = CHAT_HEADER_FLOATING;
 
     // Chat box styles (Telegram / Expressive / Buttons / iOS Glass)
     public static final int CHAT_BOX_TELEGRAM = 0;
@@ -161,8 +166,8 @@ public final class LagramConfig {
     public static int glassBorderOpacity = 60;
     public static boolean glassMessagesBorder = true;
     public static boolean glassHighlights = true;
-    public static boolean popupGlass = true;
-    public static boolean chatEdgeBlur = true;
+    public static boolean popupGlass = false;
+    public static boolean chatEdgeBlur = false;
     public static int folderBarStyle = FOLDER_BAR_BUTTONS;
     public static int folderTabsStyle = FOLDER_TABS_ICON_AND_TEXT;
     public static boolean showFolderCounters = true;
@@ -175,10 +180,10 @@ public final class LagramConfig {
     public static boolean scrollEdgeScale = true;
     public static int scrollEdgeMode = SCROLL_EDGE_DRUM;
 
-    // Chats & Messages (including Opexgram Message Focus, Chat Header/Box, Per-Char Text Anim)
-    public static int chatHeaderStyle = CHAT_HEADER_EXPRESSIVE;
-    public static boolean chatHeaderExpressive = true;
-    public static int chatBoxStyle = CHAT_BOX_EXPRESSIVE;
+    // Chats & Messages (Message Focus & FlexyGram-inspired Chat Header Styles)
+    public static int chatHeaderStyle = CHAT_HEADER_DEFAULT;
+    public static boolean chatHeaderExpressive = false;
+    public static int chatBoxStyle = CHAT_BOX_DEFAULT;
     public static int chatBoxContrast = 55;
     public static boolean messageFocusEnabled = true;
     public static boolean messageFocusBlur = true;
@@ -293,28 +298,105 @@ public final class LagramConfig {
         }
         final SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
-        // Appearance & Liquid Glass
-        materialContainers = prefs.getBoolean("materialContainers", true);
-        sectionSpacingDp = prefs.getInt("sectionSpacingDp", 7);
+        // Clean native Telegram defaults for all removed features (zero overhead, zero visual conflicts)
+        materialContainers = true;
+        sectionSpacingDp = 7;
         materialControls = false;
         materialChatList = false;
         materialAppBar = false;
         appBarBackground = APP_BAR_BG_BLUR;
         materialProfileTabs = true;
-        ios27BottomBar = prefs.getBoolean("ios27BottomBar", true);
-        amoledSettingsBackdrop = prefs.getBoolean("amoledSettingsBackdrop", true);
-        animationSpeed = prefs.getInt("animationSpeed", ANIM_SPEED_FAST);
-        hideStories = prefs.getBoolean("hideStories", false);
-        hideStoriesInProfile = prefs.getBoolean("hideStoriesInProfile", false);
-        hideStoryPosting = prefs.getBoolean("hideStoryPosting", false);
-        hideAllChatsFolder = prefs.getBoolean("hideAllChatsFolder", false);
-        hidePhoneNumber = prefs.getBoolean("hidePhoneNumber", false);
-        hideTelegramBloat = prefs.getBoolean("hideTelegramBloat", false);
-        showSecondsInTime = prefs.getBoolean("showSecondsInTime", false);
-        showIdAndDc = prefs.getBoolean("showIdAndDc", true);
-        idFormatBotApi = prefs.getBoolean("idFormatBotApi", false);
-        useSystemFonts = prefs.getBoolean("useSystemFonts", false);
-        showBubbleTails = prefs.getBoolean("showBubbleTails", true);
+        ios27BottomBar = false;
+        amoledSettingsBackdrop = false;
+        animationSpeed = ANIM_SPEED_NORMAL;
+        hideStories = false;
+        hideStoriesInProfile = false;
+        hideStoryPosting = false;
+        hideAllChatsFolder = false;
+        hidePhoneNumber = false;
+        hideTelegramBloat = false;
+        showSecondsInTime = false;
+        showIdAndDc = false;
+        idFormatBotApi = false;
+        useSystemFonts = false;
+        showBubbleTails = true;
+        popupGlass = false;
+        chatEdgeBlur = false;
+        folderBarStyle = FOLDER_BAR_TELEGRAM;
+        folderTabsStyle = FOLDER_TABS_ICON_AND_TEXT;
+        showFolderCounters = true;
+        rememberLastFolder = false;
+        lastFolderTabId = -1;
+        roundingPreset = ROUNDING_DEFAULT;
+        sectionGap = SECTION_GAP_DEFAULT;
+        avatarShape = AVATAR_SHAPE_CIRCLE;
+        chatsHeaderCentered = false;
+
+        chatHeaderStyle = prefs.getInt("chatHeaderStyle", CHAT_HEADER_DEFAULT);
+        chatHeaderExpressive = chatHeaderStyle != CHAT_HEADER_DEFAULT;
+        chatBoxStyle = CHAT_BOX_DEFAULT;
+        chatBoxContrast = 55;
+        doubleTapAction = DOUBLE_TAP_REACTION;
+        doubleTapActionOutgoing = DOUBLE_TAP_REACTION;
+        doubleTapActionIncoming = DOUBLE_TAP_REACTION;
+        hideKeyboardOnScroll = false;
+        disableNextChannelJump = false;
+        confirmBeforeCall = false;
+        confirmBeforeSendSticker = false;
+        disableVoiceVideoToggle = false;
+        disableProximitySensor = false;
+        forwardWithoutQuote = false;
+        hideShareButtonInChannels = false;
+        stickerSize = 14;
+        gifSize = 14;
+        deleteEffect = DELETE_EFFECT_DEFAULT;
+        showPageUpButton = false;
+        unlimitedSelection = false;
+        fastSelection = false;
+        selectionScrollSpeed = 5;
+        showWeekdayInDate = false;
+        showForwardTime = false;
+        showPollPreview = false;
+        showStickerPackOwner = false;
+        showForwardsCounter = false;
+        textAppearAnimation = false;
+        textAnimBlur = false;
+        textAnimSlide = false;
+        textAnimScale = false;
+        textAnimRotate = false;
+        textAnimSpeed = TEXT_ANIM_SPEED_NORMAL;
+        bigReactions = false;
+
+        turboDownloads = false;
+        downloadSpeedBoost = DOWNLOAD_BOOST_OFF;
+        turboUploads = false;
+        sendPhotosInHd = false;
+        rearCameraForRoundVideo = false;
+        pauseVideoOnMinimize = false;
+        autoplayVoiceInRow = true;
+        autoplayRoundInRow = true;
+        autoplayMusicInRow = true;
+        mediaGlow = false;
+        mediaGlowVideos = false;
+        mediaGlowLevel = MEDIA_GLOW_MEDIUM;
+        compactRoundCamera = false;
+
+        highRefreshRateScroll = true;
+        disableSponsoredMessages = false;
+        hideSimilarChannels = false;
+        forcePerformanceClass = -1;
+        showJoinDate = false;
+        profileNameSwitch = false;
+        openArchiveOnPull = false;
+        lockArchive = false;
+        lockSecret = false;
+        lockSaved = false;
+        lockDelete = false;
+        hapticsLevel = HAPTICS_NORMAL;
+        allowScreenshots = false;
+        bypassNoForwards = false;
+
+        // 1. Liquid Glass for chat bubbles
         glassMessages = prefs.getBoolean("glassMessages", false);
         glassMessagesAlpha = prefs.getInt("glassMessagesAlpha", 52);
         glassBlurLevel = prefs.getInt("glassBlurLevel", GLASS_BLUR_MEDIUM);
@@ -322,89 +404,17 @@ public final class LagramConfig {
         glassBorderOpacity = prefs.getInt("glassBorderOpacity", 60);
         glassMessagesBorder = prefs.getBoolean("glassMessagesBorder", true);
         glassHighlights = prefs.getBoolean("glassHighlights", true);
-        popupGlass = prefs.getBoolean("popupGlass", true);
-        chatEdgeBlur = prefs.getBoolean("chatEdgeBlur", true);
-        folderBarStyle = FOLDER_BAR_TELEGRAM;
-        folderTabsStyle = prefs.getInt("folderTabsStyle", FOLDER_TABS_ICON_AND_TEXT);
-        showFolderCounters = prefs.getBoolean("showFolderCounters", true);
-        rememberLastFolder = prefs.getBoolean("rememberLastFolder", false);
-        lastFolderTabId = prefs.getInt("lastFolderTabId", -1);
-        roundingPreset = prefs.getInt("roundingPreset", ROUNDING_ROUND);
-        sectionGap = prefs.getInt("sectionGap", SECTION_GAP_DEFAULT);
-        avatarShape = prefs.getInt("avatarShape", AVATAR_SHAPE_CIRCLE);
-        chatsHeaderCentered = prefs.getBoolean("chatsHeaderCentered", false);
+
+        // 2. 3D Scroll animation
         scrollEdgeScale = prefs.getBoolean("scrollEdgeScale", true);
         scrollEdgeMode = prefs.getInt("scrollEdgeMode", SCROLL_EDGE_DRUM);
 
-        // Chats & Message Focus
-        chatHeaderExpressive = prefs.getBoolean("chatHeaderExpressive", true);
-        chatHeaderStyle = prefs.getInt("chatHeaderStyle", chatHeaderExpressive ? CHAT_HEADER_EXPRESSIVE : CHAT_HEADER_DEFAULT);
-        chatBoxStyle = prefs.getInt("chatBoxStyle", CHAT_BOX_EXPRESSIVE);
-        chatBoxContrast = prefs.getInt("chatBoxContrast", 55);
+        // 3. Message tap animation (Message Focus) + 3 menu styles
         messageFocusEnabled = prefs.getBoolean("messageFocusEnabled", true);
         messageFocusBlur = prefs.getBoolean("messageFocusBlur", true);
         messageFocusStyle = prefs.getInt("messageFocusStyle", FOCUS_STYLE_CAPSULE);
-        doubleTapAction = prefs.getInt("doubleTapAction", DOUBLE_TAP_REACTION);
-        doubleTapActionOutgoing = prefs.getInt("doubleTapActionOutgoing", doubleTapAction);
-        doubleTapActionIncoming = prefs.getInt("doubleTapActionIncoming", doubleTapAction);
-        hideKeyboardOnScroll = prefs.getBoolean("hideKeyboardOnScroll", false);
-        disableNextChannelJump = prefs.getBoolean("disableNextChannelJump", false);
-        confirmBeforeCall = prefs.getBoolean("confirmBeforeCall", true);
-        confirmBeforeSendSticker = prefs.getBoolean("confirmBeforeSendSticker", false);
-        disableVoiceVideoToggle = prefs.getBoolean("disableVoiceVideoToggle", false);
-        disableProximitySensor = prefs.getBoolean("disableProximitySensor", false);
-        forwardWithoutQuote = prefs.getBoolean("forwardWithoutQuote", false);
-        hideShareButtonInChannels = prefs.getBoolean("hideShareButtonInChannels", false);
-        stickerSize = prefs.getInt("stickerSize", 14);
-        gifSize = prefs.getInt("gifSize", 14);
-        deleteEffect = prefs.getInt("deleteEffect", DELETE_EFFECT_THANOS);
-        showPageUpButton = prefs.getBoolean("showPageUpButton", true);
-        unlimitedSelection = prefs.getBoolean("unlimitedSelection", true);
-        fastSelection = prefs.getBoolean("fastSelection", true);
-        selectionScrollSpeed = prefs.getInt("selectionScrollSpeed", 5);
-        showWeekdayInDate = prefs.getBoolean("showWeekdayInDate", true);
-        showForwardTime = prefs.getBoolean("showForwardTime", true);
-        showPollPreview = prefs.getBoolean("showPollPreview", true);
-        showStickerPackOwner = prefs.getBoolean("showStickerPackOwner", true);
-        showForwardsCounter = prefs.getBoolean("showForwardsCounter", true);
-        textAppearAnimation = prefs.getBoolean("textAppearAnimation", true);
-        textAnimBlur = prefs.getBoolean("textAnimBlur", true);
-        textAnimSlide = prefs.getBoolean("textAnimSlide", true);
-        textAnimScale = prefs.getBoolean("textAnimScale", true);
-        textAnimRotate = prefs.getBoolean("textAnimRotate", false);
-        textAnimSpeed = prefs.getInt("textAnimSpeed", TEXT_ANIM_SPEED_NORMAL);
-        bigReactions = prefs.getBoolean("bigReactions", false);
 
-        // Media & Network
-        turboDownloads = prefs.getBoolean("turboDownloads", true);
-        downloadSpeedBoost = prefs.getInt("downloadSpeedBoost", turboDownloads ? DOWNLOAD_BOOST_FAST : DOWNLOAD_BOOST_OFF);
-        turboUploads = prefs.getBoolean("turboUploads", true);
-        sendPhotosInHd = prefs.getBoolean("sendPhotosInHd", false);
-        rearCameraForRoundVideo = prefs.getBoolean("rearCameraForRoundVideo", false);
-        pauseVideoOnMinimize = prefs.getBoolean("pauseVideoOnMinimize", false);
-        autoplayVoiceInRow = prefs.getBoolean("autoplayVoiceInRow", true);
-        autoplayRoundInRow = prefs.getBoolean("autoplayRoundInRow", true);
-        autoplayMusicInRow = prefs.getBoolean("autoplayMusicInRow", true);
-        mediaGlow = prefs.getBoolean("mediaGlow", true);
-        mediaGlowVideos = prefs.getBoolean("mediaGlowVideos", true);
-        mediaGlowLevel = prefs.getInt("mediaGlowLevel", MEDIA_GLOW_MEDIUM);
-        compactRoundCamera = prefs.getBoolean("compactRoundCamera", false);
-
-        // Performance, General & Lock
-        highRefreshRateScroll = prefs.getBoolean("highRefreshRateScroll", true);
-        disableSponsoredMessages = prefs.getBoolean("disableSponsoredMessages", true);
-        hideSimilarChannels = prefs.getBoolean("hideSimilarChannels", false);
-        forcePerformanceClass = prefs.getInt("forcePerformanceClass", -1);
-        showJoinDate = prefs.getBoolean("showJoinDate", true);
-        profileNameSwitch = prefs.getBoolean("profileNameSwitch", true);
-        openArchiveOnPull = prefs.getBoolean("openArchiveOnPull", true);
-        lockArchive = prefs.getBoolean("lockArchive", false);
-        lockSecret = prefs.getBoolean("lockSecret", false);
-        lockSaved = prefs.getBoolean("lockSaved", false);
-        lockDelete = prefs.getBoolean("lockDelete", false);
-        hapticsLevel = prefs.getInt("hapticsLevel", HAPTICS_NORMAL);
-
-        // Privacy & Ghost Mode
+        // 4. Ghost Mode & deleted/edited message preservation
         ghostModeEnabled = prefs.getBoolean("ghostModeEnabled", false);
         ghostDontReadMessages = prefs.getBoolean("ghostDontReadMessages", true);
         ghostDontReadStories = prefs.getBoolean("ghostDontReadStories", true);
@@ -412,8 +422,6 @@ public final class LagramConfig {
         ghostDontSendOnline = prefs.getBoolean("ghostDontSendOnline", true);
         ghostSendOfflineAfterSend = prefs.getBoolean("ghostSendOfflineAfterSend", true);
         ghostMarkReadOnSend = prefs.getBoolean("ghostMarkReadOnSend", false);
-
-        // History & Anti-Restrictions
         saveDeletedMessages = prefs.getBoolean("saveDeletedMessages", false);
         saveEditedMessages = prefs.getBoolean("saveEditedMessages", false);
         deletedBubbleTintColor = prefs.getInt("deletedBubbleTintColor", 0);
@@ -422,13 +430,12 @@ public final class LagramConfig {
         deletedMessageDim = prefs.getBoolean("deletedMessageDim", false);
         deletedMessageStrike = prefs.getBoolean("deletedMessageStrike", false);
         showDeletedTime = prefs.getBoolean("showDeletedTime", true);
-        allowScreenshots = prefs.getBoolean("allowScreenshots", false);
-        bypassNoForwards = prefs.getBoolean("bypassNoForwards", false);
 
-        nagramTranslateEnabled = prefs.getBoolean("nagramTranslateEnabled", true);
-        translateProvider = prefs.getInt("translateProvider", TRANSLATE_PROVIDER_GOOGLE);
-        translateKeepOriginal = prefs.getBoolean("translateKeepOriginal", false);
-        autoTranslateChats = prefs.getBoolean("autoTranslateChats", false);
+        // Silent fast Nagram translator engine (works automatically when tapping Translate)
+        nagramTranslateEnabled = true;
+        translateProvider = TRANSLATE_PROVIDER_GOOGLE;
+        translateKeepOriginal = false;
+        autoTranslateChats = false;
 
         loaded = true;
         if (saveDeletedMessages || saveEditedMessages) {
