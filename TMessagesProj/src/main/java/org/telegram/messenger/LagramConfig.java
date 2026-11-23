@@ -183,7 +183,7 @@ public final class LagramConfig {
     // Chats & Messages (Message Focus & FlexyGram-inspired Chat Header Styles)
     public static int chatHeaderStyle = CHAT_HEADER_DEFAULT;
     public static boolean chatHeaderExpressive = false;
-    public static int chatBoxStyle = CHAT_BOX_DEFAULT;
+    public static int chatBoxStyle = CHAT_BOX_TELEGRAM;
     public static int chatBoxContrast = 55;
     public static boolean messageFocusEnabled = true;
     public static boolean messageFocusBlur = true;
@@ -334,7 +334,7 @@ public final class LagramConfig {
 
         chatHeaderStyle = prefs.getInt("chatHeaderStyle", CHAT_HEADER_DEFAULT);
         chatHeaderExpressive = chatHeaderStyle != CHAT_HEADER_DEFAULT;
-        chatBoxStyle = CHAT_BOX_DEFAULT;
+        chatBoxStyle = CHAT_BOX_TELEGRAM;
         chatBoxContrast = 55;
         doubleTapAction = DOUBLE_TAP_REACTION;
         doubleTapActionOutgoing = DOUBLE_TAP_REACTION;
