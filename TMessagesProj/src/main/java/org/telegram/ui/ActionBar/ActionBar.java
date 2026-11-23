@@ -2343,7 +2343,7 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
     }
 
     public void checkAvatarContainerWidth(boolean animated) {
-        if (chatAvatarContainer == null) {
+        if (chatAvatarContainer == null || getMeasuredWidth() <= 0) {
             return;
         }
 
@@ -2353,7 +2353,7 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
             //visualWidth = Math.max(visualWidth, dp(168));
         }
 
-        final int maxAvailablePillW = getMeasuredWidth() - dp(6 + 46 + 6 + 6 + 46 + 6);
+        final int maxAvailablePillW = Math.max(dp(96), getMeasuredWidth() - dp(6 + 46 + 6 + 6 + 46 + 6));
         final int width = Math.min(maxAvailablePillW, visualWidth);
         int rightOccupied = Math.max(dp(46 + 6), (menu != null && menu.getVisibility() == VISIBLE ? menu.getMeasuredWidth() : 0) + dp(6));
         int leftOccupied = (backButtonImageView != null && backButtonImageView.getVisibility() == VISIBLE) ? dp(46 + 6) : dp(6);
@@ -2500,6 +2500,9 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
                 final int widthDefault = rightDefault - leftDefault;
                 final int left, right;
                 if (chatAvatarContainer != null) {
+                    if (animatorAvatarContainerWidth.getFactor() <= 0f && getMeasuredWidth() > 0) {
+                        checkAvatarContainerWidth(false);
+                    }
                     final int width = lerp(Math.min(widthDefault, (int) animatorAvatarContainerWidth.getFactor() + p * 2), widthDefault, Math.max(searchFactor, actionModeFactor));
                     left = (rightDefault + leftDefault - width) / 2;
                     right = left + width;

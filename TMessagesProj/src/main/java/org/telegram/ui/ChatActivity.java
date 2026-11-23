@@ -4613,15 +4613,7 @@ public class ChatActivity extends BaseFragment implements
             glassBackgroundDrawableFactory.create(chatInputViewsContainer, blurredBackgroundColorProvider));
         chatInputViewsContainer.setUnderKeyboardBackgroundDrawable(
             glassBackgroundDrawableFactoryFrosted.create(chatInputViewsContainer, blurredBackgroundColorProvider));
-        if (actionBar != null) {
-            int hdrStyle = org.telegram.messenger.LagramConfig.chatHeaderStyle;
-            if (hdrStyle == org.telegram.messenger.LagramConfig.CHAT_HEADER_DEFAULT) {
-                actionBar.doNotDrawGlassMenu = true;
-            } else {
-                actionBar.doNotDrawGlassMenu = false;
-                actionBar.setCastShadows(false);
-            }
-        }
+        applyLagramChatHeaderStyle();
 
 
         chatInputBubbleContainer = chatInputViewsContainer.getInputIslandBubbleContainer();
@@ -30738,9 +30730,34 @@ public class ChatActivity extends BaseFragment implements
 
     Bulletin.Delegate bulletinDelegate;
 
+    private void applyLagramChatHeaderStyle() {
+        if (actionBar == null || avatarContainer == null || isReport() || startLoadFromDate != 0 || inPreviewMode) {
+            return;
+        }
+        org.telegram.messenger.LagramConfig.ensureLoaded();
+        final int hdrStyle = org.telegram.messenger.LagramConfig.chatHeaderStyle;
+        final boolean specialMode = chatMode == MODE_PINNED || chatMode == MODE_WELCOME_MESSAGES || isComments;
+        if (hdrStyle != org.telegram.messenger.LagramConfig.CHAT_HEADER_DEFAULT) {
+            actionBar.setChatAvatarContainer(avatarContainer);
+            avatarContainer.setActionBar(actionBar);
+            actionBar.setCastShadows(false);
+            actionBar.checkAvatarContainerWidth(false);
+        } else if (!specialMode) {
+            actionBar.setChatAvatarContainer(null);
+            avatarContainer.setActionBar(null);
+            avatarContainer.setTranslationX(0f);
+            avatarContainer.setPivotX(avatarContainer.getMeasuredWidth() * 0.5f);
+        }
+        avatarContainer.requestLayout();
+        avatarContainer.invalidate();
+        actionBar.requestLayout();
+        actionBar.invalidate();
+    }
+
     @Override
     public void onResume() {
         super.onResume();
+        applyLagramChatHeaderStyle();
         checkShowBlur(false);
         activityResumeTime = System.currentTimeMillis();
         if (openImport && getSendMessagesHelper().getImportingHistory(dialog_id) != null) {

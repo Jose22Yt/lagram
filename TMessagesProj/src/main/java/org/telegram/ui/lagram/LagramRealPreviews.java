@@ -1504,18 +1504,32 @@ public final class LagramRealPreviews {
             attachBtn.setColorFilter(new PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN));
 
             if (LagramConfig.ios27BottomBar) {
+                boolean liquidGlassOn = org.telegram.messenger.LiteMode.isEnabled(org.telegram.messenger.LiteMode.FLAG_LIQUID_GLASS);
+                int pillFill = liquidGlassOn
+                        ? ColorUtils.setAlphaComponent(isDark ? 0xFF1C2029 : Color.WHITE, isDark ? 196 : 216)
+                        : (Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider) | 0xFF000000);
+                int pillStroke = ColorUtils.setAlphaComponent(isDark ? Color.WHITE : Color.BLACK, isDark ? 34 : 20);
                 barContainer.setBackground(null);
-                barContainer.setPadding(dp(8), dp(6), dp(8), dp(2));
+                barContainer.setPadding(dp(8), dp(6), dp(8), dp(4));
+
+                GradientDrawable attachBg = new GradientDrawable();
+                attachBg.setShape(GradientDrawable.OVAL);
+                attachBg.setColor(pillFill);
+                attachBg.setStroke(dp(1), pillStroke);
+                attachBtn.setBackground(attachBg);
+
                 GradientDrawable gd = new GradientDrawable();
                 gd.setCornerRadius(dp(24));
-                gd.setColor(ColorUtils.setAlphaComponent(isDark ? 0xFF1C2029 : Color.WHITE, isDark ? 205 : 225));
-                gd.setStroke(dp(1), ColorUtils.setAlphaComponent(isDark ? Color.WHITE : Color.BLACK, isDark ? 36 : 20));
+                gd.setColor(pillFill);
+                gd.setStroke(dp(1), pillStroke);
                 inputCapsule.setBackground(gd);
-                actionBtn.setBackground(Theme.createCircleDrawable(dp(44), accent));
+
+                actionBtn.setBackground(Theme.createCircleDrawable(dp(42), accent));
                 actionBtn.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
             } else {
                 barContainer.setBackgroundColor(panelBg);
                 barContainer.setPadding(dp(6), dp(2), dp(6), dp(2));
+                attachBtn.setBackground(null);
                 inputCapsule.setBackground(null);
                 actionBtn.setBackground(null);
                 actionBtn.setColorFilter(new PorterDuffColorFilter(accent, PorterDuff.Mode.SRC_IN));

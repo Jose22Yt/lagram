@@ -306,7 +306,7 @@ public final class LagramConfig {
         materialAppBar = false;
         appBarBackground = APP_BAR_BG_BLUR;
         materialProfileTabs = true;
-        ios27BottomBar = false;
+        ios27BottomBar = prefs.getBoolean("ios27BottomBar", true);
         amoledSettingsBackdrop = false;
         animationSpeed = ANIM_SPEED_NORMAL;
         hideStories = false;

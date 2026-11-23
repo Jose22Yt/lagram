@@ -702,7 +702,16 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
             titleTextLargerCopyView.measure(MeasureSpec.makeMeasureSpec(largerAvailableWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24), MeasureSpec.AT_MOST));
         }
         lastWidth = width;
+        if (actionBar != null && org.telegram.messenger.LagramConfig.chatHeaderStyle != org.telegram.messenger.LagramConfig.CHAT_HEADER_DEFAULT) {
+            int visW = getVisualWidth();
+            if (visW != lagramLastMeasuredVisualWidth) {
+                lagramLastMeasuredVisualWidth = visW;
+                actionBar.checkAvatarContainerWidth(false);
+            }
+        }
     }
+
+    private int lagramLastMeasuredVisualWidth = -1;
 
     private void fadeOutToLessWidth(int largerWidth) {
         this.largerWidth = largerWidth;
