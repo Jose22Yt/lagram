@@ -2006,7 +2006,7 @@ public class ChatActivity extends BaseFragment implements
             }
             org.telegram.ui.lagram.LagramConfig.ensureLoaded();
             int doubleTapMode = org.telegram.ui.lagram.LagramConfig.doubleTapAction;
-            boolean noForwards = isChatNoForwards() || (messageObject.messageOwner != null && messageObject.messageOwner.noforwards);
+            boolean noForwards = isPeerNoForwards() || (messageObject.messageOwner != null && messageObject.messageOwner.noforwards);
             if (doubleTapMode == org.telegram.ui.lagram.LagramConfig.DOUBLE_TAP_REPLY) {
                 if (currentChat == null || ChatObject.canSendMessages(currentChat)) {
                     showFieldPanelForReply(messageObject);
