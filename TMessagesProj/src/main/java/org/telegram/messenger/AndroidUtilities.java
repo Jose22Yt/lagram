@@ -3139,17 +3139,7 @@ public class AndroidUtilities {
     }
 
     public static int getPhotoSize(boolean highQuality) {
-        if (highQuality) {
-            if (highQualityPhotoSize == null) {
-                highQualityPhotoSize = 2560;
-            }
-            return highQualityPhotoSize;
-        } else {
-            if (photoSize == null) {
-                photoSize = 1280;
-            }
-            return photoSize;
-        }
+        return org.telegram.ui.lagram.LagramConfig.getPhotoUploadMaxDimension(highQuality);
     }
 
     /*public static void clearCursorDrawable(EditText editText) {
@@ -6560,6 +6550,7 @@ public class AndroidUtilities {
 
     public static void vibrateCursor(View view) {
         try {
+            if (!org.telegram.ui.lagram.LagramConfig.hapticFeedbackEnabled) return;
             if (view == null || view.getContext() == null) return;
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
             if (!((Vibrator) view.getContext().getSystemService(Context.VIBRATOR_SERVICE)).hasAmplitudeControl()) return;
@@ -6569,6 +6560,7 @@ public class AndroidUtilities {
 
     public static void vibrate(View view) {
         try {
+            if (!org.telegram.ui.lagram.LagramConfig.hapticFeedbackEnabled) return;
             if (view == null || view.getContext() == null) return;
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
             if (!((Vibrator) view.getContext().getSystemService(Context.VIBRATOR_SERVICE)).hasAmplitudeControl()) return;

@@ -8999,6 +8999,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     } else {
                         maxHeight = maxWidth = (int) (Math.min(getParentWidth(), AndroidUtilities.displaySize.y) * 0.5f);
                     }
+                    float lagramStickerScale = Math.max(0.5f, Math.min(1.2f, org.telegram.ui.lagram.LagramThemeEngine.getStickerScaleFactor()));
+                    maxWidth = Math.max(dp(64), Math.round(maxWidth * lagramStickerScale));
+                    maxHeight = Math.max(dp(64), maxHeight * lagramStickerScale);
                     String filter;
                     if (messageObject.isAnimatedEmoji() || messageObject.isDice()) {
                         float zoom = MessagesController.getInstance(currentAccount).animatedEmojisZoom;

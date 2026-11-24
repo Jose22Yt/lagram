@@ -2487,41 +2487,46 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
             pinTop = dp(43);
             countTop = dp(42.33f);
             checkDrawTop = dp(13);
-            messageWidth = getMeasuredWidth() - dp(messagePaddingStart + 21);
+            int lagramAvatarDp = Math.max(org.telegram.ui.lagram.LagramConfig.MIN_AVATAR_SIZE_DP, Math.min(org.telegram.ui.lagram.LagramConfig.MAX_AVATAR_SIZE_DP, org.telegram.ui.lagram.LagramConfig.avatarSizeDp));
+            int lagramAvatarDeltaDp = lagramAvatarDp - 56;
+            avatarTop = Math.max(dp(4), avatarTop - dp(lagramAvatarDeltaDp / 2f));
+            messageWidth = getMeasuredWidth() - dp(messagePaddingStart + 21 + Math.max(0, lagramAvatarDeltaDp));
 
             if (LocaleController.isRTL) {
                 buttonLeft = typingLeft = messageLeft = messageNameLeft = dp(16);
-                avatarLeft = getMeasuredWidth() - dp(56 + avatarStart);
+                avatarLeft = getMeasuredWidth() - dp(lagramAvatarDp + avatarStart);
                 thumbLeft = avatarLeft - dp(13 + 18);
             } else {
-                buttonLeft = typingLeft = messageLeft = messageNameLeft = dp(messagePaddingStart + 6);
+                buttonLeft = typingLeft = messageLeft = messageNameLeft = dp(messagePaddingStart + 6 + Math.max(0, lagramAvatarDeltaDp));
                 avatarLeft = dp(avatarStart);
-                thumbLeft = avatarLeft + dp(56 + 13);
+                thumbLeft = avatarLeft + dp(lagramAvatarDp + 13);
             }
-            storyParams.originalAvatarRect.set(avatarLeft, avatarTop, avatarLeft + dp(56), avatarTop + dp(56));
+            storyParams.originalAvatarRect.set(avatarLeft, avatarTop, avatarLeft + dp(lagramAvatarDp), avatarTop + dp(lagramAvatarDp));
             for (int i = 0; i < thumbImage.length; ++i) {
                 thumbImage[i].setImageCoords(thumbLeft + (thumbSize + 2) * i, avatarTop + dp(31) + (twoLinesForName ? dp(20) : 0) - (!(useForceThreeLines || SharedConfig.useThreeLinesLayout) && tags != null && !tags.isEmpty() ? dp(9) : 0), dp(18), dp(18));
             }
         } else {
-            avatarTop = dp(9);
+            int lagramAvatarDp = Math.max(org.telegram.ui.lagram.LagramConfig.MIN_AVATAR_SIZE_DP, Math.min(org.telegram.ui.lagram.LagramConfig.MAX_AVATAR_SIZE_DP, org.telegram.ui.lagram.LagramConfig.avatarSizeDp));
+            int lagramAvatarDeltaDp = lagramAvatarDp - 52;
+            avatarTop = Math.max(dp(4), dp(9) - dp(lagramAvatarDeltaDp / 2f));
             messageNameTop = dp(31);
             timeTop = dp(16);
             errorTop = dp(38);
             pinTop = dp(39);
             countTop = isTopic ? dp(35f) : dp(38f);
             checkDrawTop = dp(17);
-            messageWidth = getMeasuredWidth() - dp(messagePaddingStart + 20 - (LocaleController.isRTL ? 0 : 12));
+            messageWidth = getMeasuredWidth() - dp(messagePaddingStart + 20 - (LocaleController.isRTL ? 0 : 12) + Math.max(0, lagramAvatarDeltaDp));
 
             if (LocaleController.isRTL) {
                 buttonLeft = typingLeft = messageLeft = messageNameLeft = dp(22);
-                avatarLeft = getMeasuredWidth() - dp(52 + avatarStart);
+                avatarLeft = getMeasuredWidth() - dp(lagramAvatarDp + avatarStart);
                 thumbLeft = avatarLeft - dp(11 + (thumbsCount * (thumbSize + 2) - 2));
             } else {
-                buttonLeft = typingLeft = messageLeft = messageNameLeft = dp(messagePaddingStart + 4);
+                buttonLeft = typingLeft = messageLeft = messageNameLeft = dp(messagePaddingStart + 4 + Math.max(0, lagramAvatarDeltaDp));
                 avatarLeft = dp(avatarStart);
-                thumbLeft = avatarLeft + dp(56 + 11);
+                thumbLeft = avatarLeft + dp(lagramAvatarDp + 15);
             }
-            storyParams.originalAvatarRect.set(avatarLeft, avatarTop, avatarLeft + dp(52), avatarTop + dp(52));
+            storyParams.originalAvatarRect.set(avatarLeft, avatarTop, avatarLeft + dp(lagramAvatarDp), avatarTop + dp(lagramAvatarDp));
             for (int i = 0; i < thumbImage.length; ++i) {
                 thumbImage[i].setImageCoords(thumbLeft + (thumbSize + 2) * i, avatarTop + dp(30) + (twoLinesForName ? dp(20) : 0) - (!(useForceThreeLines || SharedConfig.useThreeLinesLayout) && tags != null && !tags.isEmpty() ? dp(9) : 0), dp(thumbSize), dp(thumbSize));
             }
@@ -5460,57 +5465,75 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
 
                 canvas.save();
                 canvas.scale(scale * globalScale, scale * globalScale, rect.centerX(), rect.centerY());
-                if (drawBubble) {
-                    if (counterPath == null || counterPathRect == null || !counterPathRect.equals(rect)) {
-                        if (counterPathRect == null) {
-                            counterPathRect = new RectF(rect);
-                        } else {
-                            counterPathRect.set(rect);
-                        }
-                        if (counterPath == null) {
-                            counterPath = new Path();
-                        }
-                        BubbleCounterPath.addBubbleRect(counterPath, counterPathRect, dp(10.33f));
-                    }
-                    canvas.drawPath(counterPath, paint);
-                    if (outline) {
-                        canvas.drawPath(counterPath, counterPaintOutline);
-                    }
+                int lagramBadgeStyleAnim = org.telegram.ui.lagram.LagramConfig.unreadBadgeStyle;
+                if (lagramBadgeStyleAnim == org.telegram.ui.lagram.LagramConfig.UNREAD_BADGE_MINIMAL_DOT) {
+                    float dotX = LocaleController.isRTL ? (rect.left + dp(7)) : (rect.right - dp(7));
+                    canvas.drawCircle(dotX, rect.centerY(), dp(5), paint);
                 } else {
-                    canvas.drawRoundRect(rect, dp(11.5f), dp(11.5f), paint);
-                    if (outline) {
-                        canvas.drawRoundRect(rect, dp(11.5f), dp(11.5f), counterPaintOutline);
+                    boolean applyTonalAnim = lagramBadgeStyleAnim == org.telegram.ui.lagram.LagramConfig.UNREAD_BADGE_TONAL_PILL && !drawCounterMuted && currentDialogFolderId == 0;
+                    int savedPaintColorAnim = paint.getColor();
+                    int savedTextColorAnim = Theme.dialogs_countTextPaint2.getColor();
+                    if (applyTonalAnim) {
+                        org.telegram.ui.lagram.LagramThemeEngine.AccentColors ac = org.telegram.ui.lagram.LagramThemeEngine.getAccentColors();
+                        paint.setColor(Theme.isCurrentThemeDark() ? ac.containerDark : ac.containerLight);
+                        Theme.dialogs_countTextPaint2.setColor(ac.primary);
+                    }
+                    if (drawBubble) {
+                        if (counterPath == null || counterPathRect == null || !counterPathRect.equals(rect)) {
+                            if (counterPathRect == null) {
+                                counterPathRect = new RectF(rect);
+                            } else {
+                                counterPathRect.set(rect);
+                            }
+                            if (counterPath == null) {
+                                counterPath = new Path();
+                            }
+                            BubbleCounterPath.addBubbleRect(counterPath, counterPathRect, dp(10.33f));
+                        }
+                        canvas.drawPath(counterPath, paint);
+                        if (outline) {
+                            canvas.drawPath(counterPath, counterPaintOutline);
+                        }
+                    } else {
+                        canvas.drawRoundRect(rect, dp(11.5f), dp(11.5f), paint);
+                        if (outline) {
+                            canvas.drawRoundRect(rect, dp(11.5f), dp(11.5f), counterPaintOutline);
+                        }
+                    }
+                    if (countAnimationStableLayout != null) {
+                        canvas.save();
+                        canvas.translate(countLeft + dpf2(BADGE_TEXT_PADDING),  countTop + dpf2(3f));
+                        countAnimationStableLayout.draw(canvas);
+                        canvas.restore();
+                    }
+
+                    int textAlpha = Theme.dialogs_countTextPaint2.getAlpha();
+                    Theme.dialogs_countTextPaint2.setAlpha((int) (textAlpha * progressHalf));
+                    if (countAnimationInLayout != null) {
+                        canvas.save();
+                        canvas.translate(countLeft + dpf2(BADGE_TEXT_PADDING),  (countAnimationIncrement ? dp(BADGE_GAP) : -dp(BADGE_GAP)) * (1f - progressHalf) + countTop + dpf2(3f));
+                        countAnimationInLayout.draw(canvas);
+                        canvas.restore();
+                    } else if (countLayout != null) {
+                        canvas.save();
+                        canvas.translate(countLeft + dpf2(BADGE_TEXT_PADDING),  (countAnimationIncrement ? dp(BADGE_GAP) : -dp(BADGE_GAP)) * (1f - progressHalf) + countTop + dpf2(3f));
+                        countLayout.draw(canvas);
+                        canvas.restore();
+                    }
+
+                    if (countOldLayout != null) {
+                        Theme.dialogs_countTextPaint2.setAlpha((int) (textAlpha * (1f - progressHalf)));
+                        canvas.save();
+                        canvas.translate(countLeft + dpf2(BADGE_TEXT_PADDING), (countAnimationIncrement ? -dp(BADGE_GAP) : dp(BADGE_GAP)) * progressHalf + countTop + dpf2(3f));
+                        countOldLayout.draw(canvas);
+                        canvas.restore();
+                    }
+                    Theme.dialogs_countTextPaint2.setAlpha(textAlpha);
+                    if (applyTonalAnim) {
+                        paint.setColor(savedPaintColorAnim);
+                        Theme.dialogs_countTextPaint2.setColor(savedTextColorAnim);
                     }
                 }
-                if (countAnimationStableLayout != null) {
-                    canvas.save();
-                    canvas.translate(countLeft + dpf2(BADGE_TEXT_PADDING),  countTop + dpf2(3f));
-                    countAnimationStableLayout.draw(canvas);
-                    canvas.restore();
-                }
-
-                int textAlpha = Theme.dialogs_countTextPaint2.getAlpha();
-                Theme.dialogs_countTextPaint2.setAlpha((int) (textAlpha * progressHalf));
-                if (countAnimationInLayout != null) {
-                    canvas.save();
-                    canvas.translate(countLeft + dpf2(BADGE_TEXT_PADDING),  (countAnimationIncrement ? dp(BADGE_GAP) : -dp(BADGE_GAP)) * (1f - progressHalf) + countTop + dpf2(3f));
-                    countAnimationInLayout.draw(canvas);
-                    canvas.restore();
-                } else if (countLayout != null) {
-                    canvas.save();
-                    canvas.translate(countLeft + dpf2(BADGE_TEXT_PADDING),  (countAnimationIncrement ? dp(BADGE_GAP) : -dp(BADGE_GAP)) * (1f - progressHalf) + countTop + dpf2(3f));
-                    countLayout.draw(canvas);
-                    canvas.restore();
-                }
-
-                if (countOldLayout != null) {
-                    Theme.dialogs_countTextPaint2.setAlpha((int) (textAlpha * (1f - progressHalf)));
-                    canvas.save();
-                    canvas.translate(countLeft + dpf2(BADGE_TEXT_PADDING), (countAnimationIncrement ? -dp(BADGE_GAP) : dp(BADGE_GAP)) * progressHalf + countTop + dpf2(3f));
-                    countOldLayout.draw(canvas);
-                    canvas.restore();
-                }
-                Theme.dialogs_countTextPaint2.setAlpha(textAlpha);
                 canvas.restore();
             }
             if (restoreCountTextPaint) {

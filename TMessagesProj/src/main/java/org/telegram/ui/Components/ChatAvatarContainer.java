@@ -668,9 +668,9 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         final int width = MeasureSpec.getSize(widthMeasureSpec);
-        final int availableWidth = width - dp((avatarImageView.getVisibility() == VISIBLE ? 54 : 0) + 16);
         final int effectiveAvatarDp = Math.max(32, Math.min(48, org.telegram.ui.lagram.LagramConfig.chatHeaderAvatarSizeDp));
         final int effectiveAvatarPx = dp(effectiveAvatarDp) - 2;
+        final int availableWidth = Math.max(0, width - dp((avatarImageView.getVisibility() == VISIBLE ? (effectiveAvatarDp + 12) : 0) + 16));
         avatarImageView.setRoundRadius(Math.min(effectiveAvatarPx / 2, org.telegram.ui.lagram.LagramThemeEngine.computeAvatarRadiusPx(AndroidUtilities.density)));
         avatarImageView.measure(MeasureSpec.makeMeasureSpec(effectiveAvatarPx, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(effectiveAvatarPx, MeasureSpec.EXACTLY));
         titleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24 + 8), MeasureSpec.AT_MOST));

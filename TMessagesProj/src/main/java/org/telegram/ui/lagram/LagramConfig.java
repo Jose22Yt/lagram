@@ -213,63 +213,64 @@ public final class LagramConfig {
 
     private static volatile Storage storage;
     private static volatile boolean loaded;
+    private static volatile int batchDepth;
     private static final CopyOnWriteArrayList<ConfigListener> listeners = new CopyOnWriteArrayList<>();
 
     // --- Appearance ---
-    public static int chatListStyle = CHAT_LIST_M3_CARDS;
-    public static int avatarShape = AVATAR_SHAPE_CIRCLE;
-    public static int avatarCornerRadius = 26;
-    public static int avatarSizeDp = 52;
-    public static int folderTabsStyle = FOLDER_TABS_PILL_M3;
-    public static boolean hideAllChatsTab = false;
-    public static int unreadBadgeStyle = UNREAD_BADGE_TONAL_PILL;
-    public static int onlineStatusPosition = ONLINE_POS_BOTTOM_RIGHT;
-    public static int homeHeaderTitleMode = TITLE_LAGRAM;
-    public static int accentPalette = ACCENT_LAGRAM_BLUE;
-    public static boolean amoledPureBlack = false;
-    public static int fontFamily = FONT_SYSTEM;
-    public static int textScalePercent = 100;
-    public static int animationPreset = ANIM_FLUID_120HZ_M3;
-    public static boolean hapticFeedbackEnabled = true;
-    public static boolean bottomNavigationEnabled = true;
-    public static boolean profileBannerM3Enabled = true;
-    public static int drawerHeaderStyle = DRAWER_HEADER_DYNAMIC;
-    public static boolean drawerShowNewGroup = true;
-    public static boolean drawerShowContacts = true;
-    public static boolean drawerShowCalls = true;
-    public static boolean drawerShowSavedMessages = true;
-    public static boolean drawerShowSettings = true;
-    public static int appIconStyle = ICON_LAGRAM_DEFAULT;
+    public static volatile int chatListStyle = CHAT_LIST_M3_CARDS;
+    public static volatile int avatarShape = AVATAR_SHAPE_CIRCLE;
+    public static volatile int avatarCornerRadius = 26;
+    public static volatile int avatarSizeDp = 52;
+    public static volatile int folderTabsStyle = FOLDER_TABS_PILL_M3;
+    public static volatile boolean hideAllChatsTab = false;
+    public static volatile int unreadBadgeStyle = UNREAD_BADGE_TONAL_PILL;
+    public static volatile int onlineStatusPosition = ONLINE_POS_BOTTOM_RIGHT;
+    public static volatile int homeHeaderTitleMode = TITLE_LAGRAM;
+    public static volatile int accentPalette = ACCENT_LAGRAM_BLUE;
+    public static volatile boolean amoledPureBlack = false;
+    public static volatile int fontFamily = FONT_SYSTEM;
+    public static volatile int textScalePercent = 100;
+    public static volatile int animationPreset = ANIM_FLUID_120HZ_M3;
+    public static volatile boolean hapticFeedbackEnabled = true;
+    public static volatile boolean bottomNavigationEnabled = true;
+    public static volatile boolean profileBannerM3Enabled = true;
+    public static volatile int drawerHeaderStyle = DRAWER_HEADER_DYNAMIC;
+    public static volatile boolean drawerShowNewGroup = true;
+    public static volatile boolean drawerShowContacts = true;
+    public static volatile boolean drawerShowCalls = true;
+    public static volatile boolean drawerShowSavedMessages = true;
+    public static volatile boolean drawerShowSettings = true;
+    public static volatile int appIconStyle = ICON_LAGRAM_DEFAULT;
 
     // --- Chats ---
-    public static int bubbleCornerRadius = 17;
-    public static int bubbleTailStyle = TAIL_CLASSIC;
-    public static int messageVerticalSpacing = SPACING_NORMAL;
-    public static int stickerSizePercent = 100;
-    public static int inputBarStyle = INPUT_BAR_IOS_3_PILLS;
-    public static boolean hideInputGiftButton = false;
-    public static boolean hideInputBotCommandButton = false;
-    public static boolean hideInputQuickAudioVideoButton = false;
-    public static int chatHeaderAvatarSizeDp = 42;
-    public static boolean chatHeaderShowSubtitle = true;
-    public static boolean chatHeaderCleanQuickButtons = true;
-    public static int doubleTapAction = DOUBLE_TAP_REACT;
-    public static boolean quickForwardNoAuthor = true;
-    public static boolean copyCleanLink = true;
+    public static volatile int bubbleCornerRadius = 17;
+    public static volatile int bubbleTailStyle = TAIL_CLASSIC;
+    public static volatile int messageVerticalSpacing = SPACING_NORMAL;
+    public static volatile int stickerSizePercent = 100;
+    public static volatile int inputBarStyle = INPUT_BAR_IOS_3_PILLS;
+    public static volatile boolean hideInputGiftButton = false;
+    public static volatile boolean hideInputBotCommandButton = false;
+    public static volatile boolean hideInputQuickAudioVideoButton = false;
+    public static volatile int chatHeaderAvatarSizeDp = 42;
+    public static volatile boolean chatHeaderShowSubtitle = true;
+    public static volatile boolean chatHeaderCleanQuickButtons = true;
+    public static volatile int doubleTapAction = DOUBLE_TAP_REACT;
+    public static volatile boolean quickForwardNoAuthor = true;
+    public static volatile boolean copyCleanLink = true;
 
     // --- Media & Player ---
-    public static boolean playerWaveAnimation = true;
-    public static boolean playerDynamicCoverPalette = true;
-    public static boolean playerClassicMode = false;
-    public static boolean videoGesturesEnabled = true;
-    public static int photoUploadQuality = PHOTO_QUALITY_HIGH;
-    public static int videoUploadQuality = VIDEO_QUALITY_HD;
+    public static volatile boolean playerWaveAnimation = true;
+    public static volatile boolean playerDynamicCoverPalette = true;
+    public static volatile boolean playerClassicMode = false;
+    public static volatile boolean videoGesturesEnabled = true;
+    public static volatile int photoUploadQuality = PHOTO_QUALITY_HIGH;
+    public static volatile int videoUploadQuality = VIDEO_QUALITY_HD;
 
     // --- Privacy & Utilities ---
-    public static boolean parallelTranslatorEnabled = false;
-    public static boolean confirmBeforeCall = true;
-    public static boolean confirmBeforeSendSticker = false;
-    public static boolean hidePhoneNumber = false;
+    public static volatile boolean parallelTranslatorEnabled = false;
+    public static volatile boolean confirmBeforeCall = true;
+    public static volatile boolean confirmBeforeSendSticker = false;
+    public static volatile boolean hidePhoneNumber = false;
 
     private LagramConfig() {
     }
@@ -401,9 +402,43 @@ public final class LagramConfig {
     }
 
     private static void notifyChanged(String key) {
+        if (batchDepth > 0) {
+            return;
+        }
         for (ConfigListener listener : listeners) {
             listener.onLagramConfigChanged(key);
         }
+    }
+
+    /**
+     * Resolves target photo upload dimension in pixels based on Lagram photoUploadQuality.
+     */
+    public static int getPhotoUploadMaxDimension(boolean highQualityRequested) {
+        ensureLoaded();
+        if (highQualityRequested || photoUploadQuality == PHOTO_QUALITY_ULTRA) {
+            return 2560;
+        }
+        if (photoUploadQuality == PHOTO_QUALITY_HIGH) {
+            return 1920;
+        }
+        return 1280;
+    }
+
+    /**
+     * Resolves default video compression tier index for PhotoViewer based on Lagram videoUploadQuality.
+     */
+    public static int getVideoUploadCompressionTarget(int compressionsCount) {
+        ensureLoaded();
+        if (compressionsCount <= 1) {
+            return 0;
+        }
+        if (videoUploadQuality == VIDEO_QUALITY_FHD) {
+            return compressionsCount - 1;
+        }
+        if (videoUploadQuality == VIDEO_QUALITY_HD) {
+            return Math.min(2, compressionsCount - 1);
+        }
+        return Math.min(1, compressionsCount - 1);
     }
 
     private static int clamp(int value, int min, int max) {
@@ -484,6 +519,9 @@ public final class LagramConfig {
     public static void setAccentPalette(int v) {
         ensureLoaded();
         accentPalette = clamp(v, ACCENT_SYSTEM_MONET, ACCENT_AMOLED_MONO);
+        if (accentPalette == ACCENT_SYSTEM_MONET) {
+            LagramThemeEngine.invalidateMonetCache();
+        }
         getStorage().putInt("accentPalette", accentPalette);
         notifyChanged("accentPalette");
     }
@@ -585,29 +623,32 @@ public final class LagramConfig {
 
     public static void setAppIconStyle(int v) {
         ensureLoaded();
+        int prev = appIconStyle;
         appIconStyle = clamp(v, ICON_LAGRAM_DEFAULT, ICON_LAGRAM_MONET);
         getStorage().putInt("appIconStyle", appIconStyle);
-        try {
-            if (ApplicationLoader.applicationContext != null) {
-                org.telegram.ui.LauncherIconController.LauncherIcon target;
-                switch (appIconStyle) {
-                    case ICON_LAGRAM_DARK:
-                        target = org.telegram.ui.LauncherIconController.LauncherIcon.NOX;
-                        break;
-                    case ICON_LAGRAM_AMOLED:
-                        target = org.telegram.ui.LauncherIconController.LauncherIcon.TURBO;
-                        break;
-                    case ICON_LAGRAM_MONET:
-                        target = org.telegram.ui.LauncherIconController.LauncherIcon.AQUA;
-                        break;
-                    case ICON_LAGRAM_DEFAULT:
-                    default:
-                        target = org.telegram.ui.LauncherIconController.LauncherIcon.DEFAULT;
-                        break;
+        if (appIconStyle != prev) {
+            try {
+                if (ApplicationLoader.applicationContext != null) {
+                    org.telegram.ui.LauncherIconController.LauncherIcon target;
+                    switch (appIconStyle) {
+                        case ICON_LAGRAM_DARK:
+                            target = org.telegram.ui.LauncherIconController.LauncherIcon.NOX;
+                            break;
+                        case ICON_LAGRAM_AMOLED:
+                            target = org.telegram.ui.LauncherIconController.LauncherIcon.TURBO;
+                            break;
+                        case ICON_LAGRAM_MONET:
+                            target = org.telegram.ui.LauncherIconController.LauncherIcon.AQUA;
+                            break;
+                        case ICON_LAGRAM_DEFAULT:
+                        default:
+                            target = org.telegram.ui.LauncherIconController.LauncherIcon.DEFAULT;
+                            break;
+                    }
+                    org.telegram.ui.LauncherIconController.setIcon(target);
                 }
-                org.telegram.ui.LauncherIconController.setIcon(target);
+            } catch (Throwable ignored) {
             }
-        } catch (Throwable ignored) {
         }
         notifyChanged("appIconStyle");
     }
@@ -790,67 +831,78 @@ public final class LagramConfig {
     // --- Category Reset ---
     public static void resetCategory(String category) {
         ensureLoaded();
-        if (CATEGORY_APPEARANCE.equals(category)) {
-            setChatListStyle(CHAT_LIST_M3_CARDS);
-            setAvatarShape(AVATAR_SHAPE_CIRCLE);
-            setAvatarCornerRadius(26);
-            setAvatarSizeDp(52);
-            setFolderTabsStyle(FOLDER_TABS_PILL_M3);
-            setHideAllChatsTab(false);
-            setUnreadBadgeStyle(UNREAD_BADGE_TONAL_PILL);
-            setOnlineStatusPosition(ONLINE_POS_BOTTOM_RIGHT);
-            setHomeHeaderTitleMode(TITLE_LAGRAM);
-            setAccentPalette(ACCENT_LAGRAM_BLUE);
-            setAmoledPureBlack(false);
-            setFontFamily(FONT_SYSTEM);
-            setTextScalePercent(100);
-            setAnimationPreset(ANIM_FLUID_120HZ_M3);
-            setHapticFeedbackEnabled(true);
-            setBottomNavigationEnabled(true);
-            setProfileBannerM3Enabled(true);
-            setDrawerHeaderStyle(DRAWER_HEADER_DYNAMIC);
-            setDrawerShowNewGroup(true);
-            setDrawerShowContacts(true);
-            setDrawerShowCalls(true);
-            setDrawerShowSavedMessages(true);
-            setDrawerShowSettings(true);
-            setAppIconStyle(ICON_LAGRAM_DEFAULT);
-        } else if (CATEGORY_CHATS.equals(category)) {
-            setBubbleCornerRadius(17);
-            setBubbleTailStyle(TAIL_CLASSIC);
-            setMessageVerticalSpacing(SPACING_NORMAL);
-            setStickerSizePercent(100);
-            setInputBarStyle(INPUT_BAR_IOS_3_PILLS);
-            setHideInputGiftButton(false);
-            setHideInputBotCommandButton(false);
-            setHideInputQuickAudioVideoButton(false);
-            setChatHeaderAvatarSizeDp(42);
-            setChatHeaderShowSubtitle(true);
-            setChatHeaderCleanQuickButtons(true);
-            setDoubleTapAction(DOUBLE_TAP_REACT);
-            setQuickForwardNoAuthor(true);
-            setCopyCleanLink(true);
-        } else if (CATEGORY_MEDIA.equals(category)) {
-            setPlayerWaveAnimation(true);
-            setPlayerDynamicCoverPalette(true);
-            setPlayerClassicMode(false);
-            setVideoGesturesEnabled(true);
-            setPhotoUploadQuality(PHOTO_QUALITY_HIGH);
-            setVideoUploadQuality(VIDEO_QUALITY_HD);
-        } else if (CATEGORY_PRIVACY.equals(category)) {
-            setParallelTranslatorEnabled(false);
-            setConfirmBeforeCall(true);
-            setConfirmBeforeSendSticker(false);
-            setHidePhoneNumber(false);
+        batchDepth++;
+        try {
+            if (CATEGORY_APPEARANCE.equals(category)) {
+                setChatListStyle(CHAT_LIST_M3_CARDS);
+                setAvatarShape(AVATAR_SHAPE_CIRCLE);
+                setAvatarCornerRadius(26);
+                setAvatarSizeDp(52);
+                setFolderTabsStyle(FOLDER_TABS_PILL_M3);
+                setHideAllChatsTab(false);
+                setUnreadBadgeStyle(UNREAD_BADGE_TONAL_PILL);
+                setOnlineStatusPosition(ONLINE_POS_BOTTOM_RIGHT);
+                setHomeHeaderTitleMode(TITLE_LAGRAM);
+                setAccentPalette(ACCENT_LAGRAM_BLUE);
+                setAmoledPureBlack(false);
+                setFontFamily(FONT_SYSTEM);
+                setTextScalePercent(100);
+                setAnimationPreset(ANIM_FLUID_120HZ_M3);
+                setHapticFeedbackEnabled(true);
+                setBottomNavigationEnabled(true);
+                setProfileBannerM3Enabled(true);
+                setDrawerHeaderStyle(DRAWER_HEADER_DYNAMIC);
+                setDrawerShowNewGroup(true);
+                setDrawerShowContacts(true);
+                setDrawerShowCalls(true);
+                setDrawerShowSavedMessages(true);
+                setDrawerShowSettings(true);
+                setAppIconStyle(ICON_LAGRAM_DEFAULT);
+            } else if (CATEGORY_CHATS.equals(category)) {
+                setBubbleCornerRadius(17);
+                setBubbleTailStyle(TAIL_CLASSIC);
+                setMessageVerticalSpacing(SPACING_NORMAL);
+                setStickerSizePercent(100);
+                setInputBarStyle(INPUT_BAR_IOS_3_PILLS);
+                setHideInputGiftButton(false);
+                setHideInputBotCommandButton(false);
+                setHideInputQuickAudioVideoButton(false);
+                setChatHeaderAvatarSizeDp(42);
+                setChatHeaderShowSubtitle(true);
+                setChatHeaderCleanQuickButtons(true);
+                setDoubleTapAction(DOUBLE_TAP_REACT);
+                setQuickForwardNoAuthor(true);
+                setCopyCleanLink(true);
+            } else if (CATEGORY_MEDIA.equals(category)) {
+                setPlayerWaveAnimation(true);
+                setPlayerDynamicCoverPalette(true);
+                setPlayerClassicMode(false);
+                setVideoGesturesEnabled(true);
+                setPhotoUploadQuality(PHOTO_QUALITY_HIGH);
+                setVideoUploadQuality(VIDEO_QUALITY_HD);
+            } else if (CATEGORY_PRIVACY.equals(category)) {
+                setParallelTranslatorEnabled(false);
+                setConfirmBeforeCall(true);
+                setConfirmBeforeSendSticker(false);
+                setHidePhoneNumber(false);
+            }
+        } finally {
+            batchDepth--;
         }
         notifyChanged("reset:" + category);
     }
 
     public static void resetAll() {
-        resetCategory(CATEGORY_APPEARANCE);
-        resetCategory(CATEGORY_CHATS);
-        resetCategory(CATEGORY_MEDIA);
-        resetCategory(CATEGORY_PRIVACY);
+        batchDepth++;
+        try {
+            resetCategory(CATEGORY_APPEARANCE);
+            resetCategory(CATEGORY_CHATS);
+            resetCategory(CATEGORY_MEDIA);
+            resetCategory(CATEGORY_PRIVACY);
+        } finally {
+            batchDepth--;
+        }
+        notifyChanged("reset:all");
     }
 
     // --- Pure-Java JSON Export / Import ---
@@ -957,62 +1009,66 @@ public final class LagramConfig {
 
         ensureLoaded();
         boolean appliedAny = false;
+        batchDepth++;
+        try {
+            if (parsed.containsKey("chatListStyle")) { setChatListStyle(parseInt(parsed.get("chatListStyle"), chatListStyle)); appliedAny = true; }
+            if (parsed.containsKey("avatarShape")) {
+                avatarShape = clamp(parseInt(parsed.get("avatarShape"), avatarShape), AVATAR_SHAPE_CIRCLE, AVATAR_SHAPE_ROUNDED_SQUARE);
+                getStorage().putInt("avatarShape", avatarShape);
+                appliedAny = true;
+            }
+            if (parsed.containsKey("avatarCornerRadius")) { setAvatarCornerRadius(parseInt(parsed.get("avatarCornerRadius"), avatarCornerRadius)); appliedAny = true; }
+            if (parsed.containsKey("avatarSizeDp")) { setAvatarSizeDp(parseInt(parsed.get("avatarSizeDp"), avatarSizeDp)); appliedAny = true; }
+            if (parsed.containsKey("folderTabsStyle")) { setFolderTabsStyle(parseInt(parsed.get("folderTabsStyle"), folderTabsStyle)); appliedAny = true; }
+            if (parsed.containsKey("hideAllChatsTab")) { setHideAllChatsTab(parseBool(parsed.get("hideAllChatsTab"), hideAllChatsTab)); appliedAny = true; }
+            if (parsed.containsKey("unreadBadgeStyle")) { setUnreadBadgeStyle(parseInt(parsed.get("unreadBadgeStyle"), unreadBadgeStyle)); appliedAny = true; }
+            if (parsed.containsKey("onlineStatusPosition")) { setOnlineStatusPosition(parseInt(parsed.get("onlineStatusPosition"), onlineStatusPosition)); appliedAny = true; }
+            if (parsed.containsKey("homeHeaderTitleMode")) { setHomeHeaderTitleMode(parseInt(parsed.get("homeHeaderTitleMode"), homeHeaderTitleMode)); appliedAny = true; }
+            if (parsed.containsKey("accentPalette")) { setAccentPalette(parseInt(parsed.get("accentPalette"), accentPalette)); appliedAny = true; }
+            if (parsed.containsKey("amoledPureBlack")) { setAmoledPureBlack(parseBool(parsed.get("amoledPureBlack"), amoledPureBlack)); appliedAny = true; }
+            if (parsed.containsKey("fontFamily")) { setFontFamily(parseInt(parsed.get("fontFamily"), fontFamily)); appliedAny = true; }
+            if (parsed.containsKey("textScalePercent")) { setTextScalePercent(parseInt(parsed.get("textScalePercent"), textScalePercent)); appliedAny = true; }
+            if (parsed.containsKey("animationPreset")) { setAnimationPreset(parseInt(parsed.get("animationPreset"), animationPreset)); appliedAny = true; }
+            if (parsed.containsKey("hapticFeedbackEnabled")) { setHapticFeedbackEnabled(parseBool(parsed.get("hapticFeedbackEnabled"), hapticFeedbackEnabled)); appliedAny = true; }
+            if (parsed.containsKey("bottomNavigationEnabled")) { setBottomNavigationEnabled(parseBool(parsed.get("bottomNavigationEnabled"), bottomNavigationEnabled)); appliedAny = true; }
+            if (parsed.containsKey("profileBannerM3Enabled")) { setProfileBannerM3Enabled(parseBool(parsed.get("profileBannerM3Enabled"), profileBannerM3Enabled)); appliedAny = true; }
+            if (parsed.containsKey("drawerHeaderStyle")) { setDrawerHeaderStyle(parseInt(parsed.get("drawerHeaderStyle"), drawerHeaderStyle)); appliedAny = true; }
+            if (parsed.containsKey("drawerShowNewGroup")) { setDrawerShowNewGroup(parseBool(parsed.get("drawerShowNewGroup"), drawerShowNewGroup)); appliedAny = true; }
+            if (parsed.containsKey("drawerShowContacts")) { setDrawerShowContacts(parseBool(parsed.get("drawerShowContacts"), drawerShowContacts)); appliedAny = true; }
+            if (parsed.containsKey("drawerShowCalls")) { setDrawerShowCalls(parseBool(parsed.get("drawerShowCalls"), drawerShowCalls)); appliedAny = true; }
+            if (parsed.containsKey("drawerShowSavedMessages")) { setDrawerShowSavedMessages(parseBool(parsed.get("drawerShowSavedMessages"), drawerShowSavedMessages)); appliedAny = true; }
+            if (parsed.containsKey("drawerShowSettings")) { setDrawerShowSettings(parseBool(parsed.get("drawerShowSettings"), drawerShowSettings)); appliedAny = true; }
+            if (parsed.containsKey("appIconStyle")) { setAppIconStyle(parseInt(parsed.get("appIconStyle"), appIconStyle)); appliedAny = true; }
 
-        if (parsed.containsKey("chatListStyle")) { setChatListStyle(parseInt(parsed.get("chatListStyle"), chatListStyle)); appliedAny = true; }
-        if (parsed.containsKey("avatarShape")) {
-            avatarShape = clamp(parseInt(parsed.get("avatarShape"), avatarShape), AVATAR_SHAPE_CIRCLE, AVATAR_SHAPE_ROUNDED_SQUARE);
-            getStorage().putInt("avatarShape", avatarShape);
-            appliedAny = true;
+            if (parsed.containsKey("bubbleCornerRadius")) { setBubbleCornerRadius(parseInt(parsed.get("bubbleCornerRadius"), bubbleCornerRadius)); appliedAny = true; }
+            if (parsed.containsKey("bubbleTailStyle")) { setBubbleTailStyle(parseInt(parsed.get("bubbleTailStyle"), bubbleTailStyle)); appliedAny = true; }
+            if (parsed.containsKey("messageVerticalSpacing")) { setMessageVerticalSpacing(parseInt(parsed.get("messageVerticalSpacing"), messageVerticalSpacing)); appliedAny = true; }
+            if (parsed.containsKey("stickerSizePercent")) { setStickerSizePercent(parseInt(parsed.get("stickerSizePercent"), stickerSizePercent)); appliedAny = true; }
+            if (parsed.containsKey("inputBarStyle")) { setInputBarStyle(parseInt(parsed.get("inputBarStyle"), inputBarStyle)); appliedAny = true; }
+            if (parsed.containsKey("hideInputGiftButton")) { setHideInputGiftButton(parseBool(parsed.get("hideInputGiftButton"), hideInputGiftButton)); appliedAny = true; }
+            if (parsed.containsKey("hideInputBotCommandButton")) { setHideInputBotCommandButton(parseBool(parsed.get("hideInputBotCommandButton"), hideInputBotCommandButton)); appliedAny = true; }
+            if (parsed.containsKey("hideInputQuickAudioVideoButton")) { setHideInputQuickAudioVideoButton(parseBool(parsed.get("hideInputQuickAudioVideoButton"), hideInputQuickAudioVideoButton)); appliedAny = true; }
+            if (parsed.containsKey("chatHeaderAvatarSizeDp")) { setChatHeaderAvatarSizeDp(parseInt(parsed.get("chatHeaderAvatarSizeDp"), chatHeaderAvatarSizeDp)); appliedAny = true; }
+            if (parsed.containsKey("chatHeaderShowSubtitle")) { setChatHeaderShowSubtitle(parseBool(parsed.get("chatHeaderShowSubtitle"), chatHeaderShowSubtitle)); appliedAny = true; }
+            if (parsed.containsKey("chatHeaderCleanQuickButtons")) { setChatHeaderCleanQuickButtons(parseBool(parsed.get("chatHeaderCleanQuickButtons"), chatHeaderCleanQuickButtons)); appliedAny = true; }
+            if (parsed.containsKey("doubleTapAction")) { setDoubleTapAction(parseInt(parsed.get("doubleTapAction"), doubleTapAction)); appliedAny = true; }
+            if (parsed.containsKey("quickForwardNoAuthor")) { setQuickForwardNoAuthor(parseBool(parsed.get("quickForwardNoAuthor"), quickForwardNoAuthor)); appliedAny = true; }
+            if (parsed.containsKey("copyCleanLink")) { setCopyCleanLink(parseBool(parsed.get("copyCleanLink"), copyCleanLink)); appliedAny = true; }
+
+            if (parsed.containsKey("playerWaveAnimation")) { setPlayerWaveAnimation(parseBool(parsed.get("playerWaveAnimation"), playerWaveAnimation)); appliedAny = true; }
+            if (parsed.containsKey("playerDynamicCoverPalette")) { setPlayerDynamicCoverPalette(parseBool(parsed.get("playerDynamicCoverPalette"), playerDynamicCoverPalette)); appliedAny = true; }
+            if (parsed.containsKey("playerClassicMode")) { setPlayerClassicMode(parseBool(parsed.get("playerClassicMode"), playerClassicMode)); appliedAny = true; }
+            if (parsed.containsKey("videoGesturesEnabled")) { setVideoGesturesEnabled(parseBool(parsed.get("videoGesturesEnabled"), videoGesturesEnabled)); appliedAny = true; }
+            if (parsed.containsKey("photoUploadQuality")) { setPhotoUploadQuality(parseInt(parsed.get("photoUploadQuality"), photoUploadQuality)); appliedAny = true; }
+            if (parsed.containsKey("videoUploadQuality")) { setVideoUploadQuality(parseInt(parsed.get("videoUploadQuality"), videoUploadQuality)); appliedAny = true; }
+
+            if (parsed.containsKey("parallelTranslatorEnabled")) { setParallelTranslatorEnabled(parseBool(parsed.get("parallelTranslatorEnabled"), parallelTranslatorEnabled)); appliedAny = true; }
+            if (parsed.containsKey("confirmBeforeCall")) { setConfirmBeforeCall(parseBool(parsed.get("confirmBeforeCall"), confirmBeforeCall)); appliedAny = true; }
+            if (parsed.containsKey("confirmBeforeSendSticker")) { setConfirmBeforeSendSticker(parseBool(parsed.get("confirmBeforeSendSticker"), confirmBeforeSendSticker)); appliedAny = true; }
+            if (parsed.containsKey("hidePhoneNumber")) { setHidePhoneNumber(parseBool(parsed.get("hidePhoneNumber"), hidePhoneNumber)); appliedAny = true; }
+        } finally {
+            batchDepth--;
         }
-        if (parsed.containsKey("avatarCornerRadius")) { setAvatarCornerRadius(parseInt(parsed.get("avatarCornerRadius"), avatarCornerRadius)); appliedAny = true; }
-        if (parsed.containsKey("avatarSizeDp")) { setAvatarSizeDp(parseInt(parsed.get("avatarSizeDp"), avatarSizeDp)); appliedAny = true; }
-        if (parsed.containsKey("folderTabsStyle")) { setFolderTabsStyle(parseInt(parsed.get("folderTabsStyle"), folderTabsStyle)); appliedAny = true; }
-        if (parsed.containsKey("hideAllChatsTab")) { setHideAllChatsTab(parseBool(parsed.get("hideAllChatsTab"), hideAllChatsTab)); appliedAny = true; }
-        if (parsed.containsKey("unreadBadgeStyle")) { setUnreadBadgeStyle(parseInt(parsed.get("unreadBadgeStyle"), unreadBadgeStyle)); appliedAny = true; }
-        if (parsed.containsKey("onlineStatusPosition")) { setOnlineStatusPosition(parseInt(parsed.get("onlineStatusPosition"), onlineStatusPosition)); appliedAny = true; }
-        if (parsed.containsKey("homeHeaderTitleMode")) { setHomeHeaderTitleMode(parseInt(parsed.get("homeHeaderTitleMode"), homeHeaderTitleMode)); appliedAny = true; }
-        if (parsed.containsKey("accentPalette")) { setAccentPalette(parseInt(parsed.get("accentPalette"), accentPalette)); appliedAny = true; }
-        if (parsed.containsKey("amoledPureBlack")) { setAmoledPureBlack(parseBool(parsed.get("amoledPureBlack"), amoledPureBlack)); appliedAny = true; }
-        if (parsed.containsKey("fontFamily")) { setFontFamily(parseInt(parsed.get("fontFamily"), fontFamily)); appliedAny = true; }
-        if (parsed.containsKey("textScalePercent")) { setTextScalePercent(parseInt(parsed.get("textScalePercent"), textScalePercent)); appliedAny = true; }
-        if (parsed.containsKey("animationPreset")) { setAnimationPreset(parseInt(parsed.get("animationPreset"), animationPreset)); appliedAny = true; }
-        if (parsed.containsKey("hapticFeedbackEnabled")) { setHapticFeedbackEnabled(parseBool(parsed.get("hapticFeedbackEnabled"), hapticFeedbackEnabled)); appliedAny = true; }
-        if (parsed.containsKey("bottomNavigationEnabled")) { setBottomNavigationEnabled(parseBool(parsed.get("bottomNavigationEnabled"), bottomNavigationEnabled)); appliedAny = true; }
-        if (parsed.containsKey("profileBannerM3Enabled")) { setProfileBannerM3Enabled(parseBool(parsed.get("profileBannerM3Enabled"), profileBannerM3Enabled)); appliedAny = true; }
-        if (parsed.containsKey("drawerHeaderStyle")) { setDrawerHeaderStyle(parseInt(parsed.get("drawerHeaderStyle"), drawerHeaderStyle)); appliedAny = true; }
-        if (parsed.containsKey("drawerShowNewGroup")) { setDrawerShowNewGroup(parseBool(parsed.get("drawerShowNewGroup"), drawerShowNewGroup)); appliedAny = true; }
-        if (parsed.containsKey("drawerShowContacts")) { setDrawerShowContacts(parseBool(parsed.get("drawerShowContacts"), drawerShowContacts)); appliedAny = true; }
-        if (parsed.containsKey("drawerShowCalls")) { setDrawerShowCalls(parseBool(parsed.get("drawerShowCalls"), drawerShowCalls)); appliedAny = true; }
-        if (parsed.containsKey("drawerShowSavedMessages")) { setDrawerShowSavedMessages(parseBool(parsed.get("drawerShowSavedMessages"), drawerShowSavedMessages)); appliedAny = true; }
-        if (parsed.containsKey("drawerShowSettings")) { setDrawerShowSettings(parseBool(parsed.get("drawerShowSettings"), drawerShowSettings)); appliedAny = true; }
-        if (parsed.containsKey("appIconStyle")) { setAppIconStyle(parseInt(parsed.get("appIconStyle"), appIconStyle)); appliedAny = true; }
-
-        if (parsed.containsKey("bubbleCornerRadius")) { setBubbleCornerRadius(parseInt(parsed.get("bubbleCornerRadius"), bubbleCornerRadius)); appliedAny = true; }
-        if (parsed.containsKey("bubbleTailStyle")) { setBubbleTailStyle(parseInt(parsed.get("bubbleTailStyle"), bubbleTailStyle)); appliedAny = true; }
-        if (parsed.containsKey("messageVerticalSpacing")) { setMessageVerticalSpacing(parseInt(parsed.get("messageVerticalSpacing"), messageVerticalSpacing)); appliedAny = true; }
-        if (parsed.containsKey("stickerSizePercent")) { setStickerSizePercent(parseInt(parsed.get("stickerSizePercent"), stickerSizePercent)); appliedAny = true; }
-        if (parsed.containsKey("inputBarStyle")) { setInputBarStyle(parseInt(parsed.get("inputBarStyle"), inputBarStyle)); appliedAny = true; }
-        if (parsed.containsKey("hideInputGiftButton")) { setHideInputGiftButton(parseBool(parsed.get("hideInputGiftButton"), hideInputGiftButton)); appliedAny = true; }
-        if (parsed.containsKey("hideInputBotCommandButton")) { setHideInputBotCommandButton(parseBool(parsed.get("hideInputBotCommandButton"), hideInputBotCommandButton)); appliedAny = true; }
-        if (parsed.containsKey("hideInputQuickAudioVideoButton")) { setHideInputQuickAudioVideoButton(parseBool(parsed.get("hideInputQuickAudioVideoButton"), hideInputQuickAudioVideoButton)); appliedAny = true; }
-        if (parsed.containsKey("chatHeaderAvatarSizeDp")) { setChatHeaderAvatarSizeDp(parseInt(parsed.get("chatHeaderAvatarSizeDp"), chatHeaderAvatarSizeDp)); appliedAny = true; }
-        if (parsed.containsKey("chatHeaderShowSubtitle")) { setChatHeaderShowSubtitle(parseBool(parsed.get("chatHeaderShowSubtitle"), chatHeaderShowSubtitle)); appliedAny = true; }
-        if (parsed.containsKey("chatHeaderCleanQuickButtons")) { setChatHeaderCleanQuickButtons(parseBool(parsed.get("chatHeaderCleanQuickButtons"), chatHeaderCleanQuickButtons)); appliedAny = true; }
-        if (parsed.containsKey("doubleTapAction")) { setDoubleTapAction(parseInt(parsed.get("doubleTapAction"), doubleTapAction)); appliedAny = true; }
-        if (parsed.containsKey("quickForwardNoAuthor")) { setQuickForwardNoAuthor(parseBool(parsed.get("quickForwardNoAuthor"), quickForwardNoAuthor)); appliedAny = true; }
-        if (parsed.containsKey("copyCleanLink")) { setCopyCleanLink(parseBool(parsed.get("copyCleanLink"), copyCleanLink)); appliedAny = true; }
-
-        if (parsed.containsKey("playerWaveAnimation")) { setPlayerWaveAnimation(parseBool(parsed.get("playerWaveAnimation"), playerWaveAnimation)); appliedAny = true; }
-        if (parsed.containsKey("playerDynamicCoverPalette")) { setPlayerDynamicCoverPalette(parseBool(parsed.get("playerDynamicCoverPalette"), playerDynamicCoverPalette)); appliedAny = true; }
-        if (parsed.containsKey("playerClassicMode")) { setPlayerClassicMode(parseBool(parsed.get("playerClassicMode"), playerClassicMode)); appliedAny = true; }
-        if (parsed.containsKey("videoGesturesEnabled")) { setVideoGesturesEnabled(parseBool(parsed.get("videoGesturesEnabled"), videoGesturesEnabled)); appliedAny = true; }
-        if (parsed.containsKey("photoUploadQuality")) { setPhotoUploadQuality(parseInt(parsed.get("photoUploadQuality"), photoUploadQuality)); appliedAny = true; }
-        if (parsed.containsKey("videoUploadQuality")) { setVideoUploadQuality(parseInt(parsed.get("videoUploadQuality"), videoUploadQuality)); appliedAny = true; }
-
-        if (parsed.containsKey("parallelTranslatorEnabled")) { setParallelTranslatorEnabled(parseBool(parsed.get("parallelTranslatorEnabled"), parallelTranslatorEnabled)); appliedAny = true; }
-        if (parsed.containsKey("confirmBeforeCall")) { setConfirmBeforeCall(parseBool(parsed.get("confirmBeforeCall"), confirmBeforeCall)); appliedAny = true; }
-        if (parsed.containsKey("confirmBeforeSendSticker")) { setConfirmBeforeSendSticker(parseBool(parsed.get("confirmBeforeSendSticker"), confirmBeforeSendSticker)); appliedAny = true; }
-        if (parsed.containsKey("hidePhoneNumber")) { setHidePhoneNumber(parseBool(parsed.get("hidePhoneNumber"), hidePhoneNumber)); appliedAny = true; }
 
         if (appliedAny) {
             notifyChanged("import");

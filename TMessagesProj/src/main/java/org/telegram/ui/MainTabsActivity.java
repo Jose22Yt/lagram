@@ -379,7 +379,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             iBlur3SourceTabFrosted != null ? iBlur3SourceTabFrosted : iBlur3SourceColor,
             iBlur3SourceColor);
         iBlur3FactoryGlass.setSourceRootView(viewPositionWatcher, contentView);
-        iBlur3FactoryGlass.setLiquidGlassEffectAllowed(true);
+        iBlur3FactoryGlass.setLiquidGlassEffectAllowed(org.telegram.ui.lagram.LagramConfig.isLiquidGlassEnabled());
 
         tabsViewBackground = iBlur3FactoryGlass.create(tabsView, BlurredBackgroundProviderImpl.mainTabs(resourceProvider));
         tabsViewBackground.setRadius(dp(DialogsActivity.MAIN_TABS_HEIGHT / 2f));
@@ -1050,11 +1050,24 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             .addGlobal(NotificationCenter.appUpdateLoading)
             .addGlobal(NotificationCenter.needSetDayNightTheme);
 
+        org.telegram.ui.lagram.LagramConfig.addListener(lagramConfigListener);
         return super.onFragmentCreate();
     }
 
+    private final org.telegram.ui.lagram.LagramConfig.ConfigListener lagramConfigListener = key -> {
+        if ("bottomNavigationEnabled".equals(key) || "accentPalette".equals(key) || "amoledPureBlack".equals(key) || key.startsWith("reset:") || "import".equals(key)) {
+            AndroidUtilities.runOnUIThread(() -> {
+                if (tabsView != null) {
+                    checkUi_tabsPosition();
+                    checkUi_fadeView();
+                }
+            });
+        }
+    };
+
     @Override
     public void onFragmentDestroy() {
+        org.telegram.ui.lagram.LagramConfig.removeListener(lagramConfigListener);
         Bulletin.removeDelegate(this);
         Bulletin.removeDelegate(contentView);
 
@@ -1083,7 +1096,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         final float isProfile = 1f - MathUtils.clamp(Math.abs(POSITION_PROFILE - animatedPosition), 0, 1);
         final float hide = 1f - AndroidUtilities.getNavigationBarThirdButtonsFactor(0, 1f, navigationBarHeight);
         float alpha = (1f - isProfile * hide) * animatorTabsVisible.getFloatValue();
-        if (tabletLayout) {
+        if (tabletLayout || !org.telegram.ui.lagram.LagramConfig.bottomNavigationEnabled) {
             alpha = 0.0f;
         }
 

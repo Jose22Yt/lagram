@@ -448,13 +448,14 @@ public final class LagramPreviewViews {
             textPaint.setFakeBoldText(false);
 
             textPaint.setColor(0xFFB0B8C7);
-            textPaint.setTextSize(AndroidUtilities.dp(12));
-            String meta;
-            if (LagramConfig.playerWaveAnimation) {
-                meta = LagramConfig.videoGesturesEnabled ? "Onda activa · Gestos ON" : "Onda activa · Gestos OFF";
-            } else {
-                meta = LagramConfig.videoGesturesEnabled ? "Barra fija · Gestos ON" : "Barra fija · Gestos OFF";
-            }
+            textPaint.setTextSize(AndroidUtilities.dp(11.5f));
+            String photoTag = LagramConfig.photoUploadQuality == LagramConfig.PHOTO_QUALITY_ULTRA ? "Ultra"
+                    : (LagramConfig.photoUploadQuality == LagramConfig.PHOTO_QUALITY_HIGH ? "Alta" : "Std");
+            String videoTag = LagramConfig.videoUploadQuality == LagramConfig.VIDEO_QUALITY_FHD ? "FHD"
+                    : (LagramConfig.videoUploadQuality == LagramConfig.VIDEO_QUALITY_HD ? "HD" : "Std");
+            String meta = (LagramConfig.playerWaveAnimation ? "Onda ON" : "Barra fija")
+                    + (LagramConfig.videoGesturesEnabled ? " · Gestos ON" : " · Gestos OFF")
+                    + " · " + photoTag + "/" + videoTag;
             canvas.drawText(meta, tx, AndroidUtilities.dp(56), textPaint);
 
             // Waveform or straight progress bar

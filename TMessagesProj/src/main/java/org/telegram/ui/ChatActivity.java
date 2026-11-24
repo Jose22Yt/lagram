@@ -2006,10 +2006,16 @@ public class ChatActivity extends BaseFragment implements
             }
             org.telegram.ui.lagram.LagramConfig.ensureLoaded();
             int doubleTapMode = org.telegram.ui.lagram.LagramConfig.doubleTapAction;
+            boolean noForwards = isChatNoForwards() || (messageObject.messageOwner != null && messageObject.messageOwner.noforwards);
             if (doubleTapMode == org.telegram.ui.lagram.LagramConfig.DOUBLE_TAP_REPLY) {
-                showFieldPanelForReply(messageObject);
+                if (currentChat == null || ChatObject.canSendMessages(currentChat)) {
+                    showFieldPanelForReply(messageObject);
+                }
                 return;
             } else if (doubleTapMode == org.telegram.ui.lagram.LagramConfig.DOUBLE_TAP_COPY) {
+                if (noForwards) {
+                    return;
+                }
                 CharSequence textToCopy = messageObject.caption != null ? messageObject.caption : messageObject.messageText;
                 if (!TextUtils.isEmpty(textToCopy)) {
                     AndroidUtilities.addToClipboard(textToCopy);
@@ -2017,15 +2023,21 @@ public class ChatActivity extends BaseFragment implements
                 }
                 return;
             } else if (doubleTapMode == org.telegram.ui.lagram.LagramConfig.DOUBLE_TAP_SAVED) {
+                if (noForwards) {
+                    return;
+                }
                 ArrayList<MessageObject> list = new ArrayList<>();
                 list.add(messageObject);
                 getSendMessagesHelper().sendMessage(list, getUserConfig().getClientUserId(), org.telegram.ui.lagram.LagramConfig.quickForwardNoAuthor, false, true, 0, 0L);
                 BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.raw.saved_messages, getString(R.string.SavedMessages)).show();
                 return;
             } else if (doubleTapMode == org.telegram.ui.lagram.LagramConfig.DOUBLE_TAP_FORWARD) {
-                ArrayList<MessageObject> list = new ArrayList<>();
-                list.add(messageObject);
-                showFieldPanelForForward(true, list);
+                if (noForwards) {
+                    return;
+                }
+                selectedObject = messageObject;
+                selectedObjectGroup = getValidGroupedMessage(messageObject);
+                processSelectedOption(OPTION_FORWARD);
                 return;
             } else if (doubleTapMode == org.telegram.ui.lagram.LagramConfig.DOUBLE_TAP_TRANSLATE) {
                 selectedObject = messageObject;
@@ -4584,6 +4596,8 @@ public class ChatActivity extends BaseFragment implements
             glassBackgroundDrawableFactory,
             BlurredBackgroundProviderImpl.topPanelChatActivity(themeDelegate),
             ChatObject.isForum(currentChat));
+        org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+        actionBar.doNotDrawGlassMenu = !org.telegram.ui.lagram.LagramConfig.chatHeaderCleanQuickButtons;
         setupHeaderMenuOverlay(parentView);
 
         if (chatMode == MODE_PINNED) {

@@ -110,4 +110,51 @@ public class LagramThemeEngineTest {
         LagramConfig.setAmoledPureBlack(true);
         assertEquals(0xFF14161B, LagramThemeEngine.getChatRowCardColor(true));
     }
+
+    @Test
+    public void amoledPureBlackDoesNotOverrideLightModeAccentWhenDefaultPalette() {
+        LagramConfig.setAccentPalette(LagramConfig.ACCENT_LAGRAM_BLUE);
+        LagramConfig.setAmoledPureBlack(true);
+        int lightBaseAccent = 0xFF123456;
+        assertEquals(lightBaseAccent, LagramThemeEngine.resolveColorOverride(false, true, false, false, lightBaseAccent, false));
+        // Dark mode still gets AMOLED background & accent
+        assertEquals(0xFF000000, LagramThemeEngine.resolveColorOverride(true, false, false, false, 0xFF1E222A, true));
+    }
+
+    @Test
+    public void cleanTelegramLinkPreservesFragmentAnchor() {
+        LagramConfig.setCopyCleanLink(true);
+        assertEquals("https://example.com/post#section2", LagramThemeEngine.cleanTelegramLink("https://example.com/post?utm_source=tg&si=abc#section2"));
+        assertEquals("https://example.com/post?id=9#top", LagramThemeEngine.cleanTelegramLink("https://example.com/post?id=9&fbclid=xyz#top"));
+    }
+
+    @Test
+    public void parallelTranslatorFormatsOriginalAndTranslatedText() {
+        LagramConfig.setParallelTranslatorEnabled(false);
+        assertEquals("Hola Lagram", LagramThemeEngine.buildParallelTranslatedText("Hello Lagram", "Hola Lagram"));
+
+        LagramConfig.setParallelTranslatorEnabled(true);
+        String combined = LagramThemeEngine.buildParallelTranslatedText("Hello Lagram", "Hola Lagram");
+        assertEquals("Hello Lagram\n──────────\nHola Lagram", combined);
+        // Idempotent if already combined or identical
+        assertEquals(combined, LagramThemeEngine.buildParallelTranslatedText("Hello Lagram", combined));
+        assertEquals("Same text", LagramThemeEngine.buildParallelTranslatedText("Same text", "Same text"));
+    }
+
+    @Test
+    public void distinctFontFamiliesAndMonetCacheInvalidation() {
+        assertNotEquals(
+                LagramThemeEngine.getFontFamilySystemName(LagramConfig.FONT_ROUNDED),
+                LagramThemeEngine.getFontFamilySystemName(LagramConfig.FONT_SANS_MODERN)
+        );
+        assertNotEquals(
+                LagramThemeEngine.getFontFamilySystemName(LagramConfig.FONT_SERIF),
+                LagramThemeEngine.getFontFamilySystemName(LagramConfig.FONT_MONO)
+        );
+
+        LagramThemeEngine.AccentColors monet1 = LagramThemeEngine.getAccentColorsForPalette(LagramConfig.ACCENT_SYSTEM_MONET);
+        LagramThemeEngine.invalidateMonetCache();
+        LagramThemeEngine.AccentColors monet2 = LagramThemeEngine.getAccentColorsForPalette(LagramConfig.ACCENT_SYSTEM_MONET);
+        assertEquals(monet1.primary, monet2.primary);
+    }
 }

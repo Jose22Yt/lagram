@@ -83,19 +83,25 @@ public class LagramMediaSettingsActivity extends LagramBaseSettingsFragment {
         mediaCard.addView(LagramCardUi.createSegmentedSelectorRow(
                 context,
                 "Calidad de envío de fotos",
-                null,
+                "Resolución objetivo: Estándar 1280px · Alta 1920px · Ultra 2560px",
                 new String[]{"Estándar", "Alta", "Ultra HD"},
                 LagramConfig.photoUploadQuality,
-                LagramConfig::setPhotoUploadQuality
+                idx -> {
+                    LagramConfig.setPhotoUploadQuality(idx);
+                    refreshPreview();
+                }
         ));
         mediaCard.addView(LagramCardUi.createDivider(context));
         mediaCard.addView(LagramCardUi.createSegmentedSelectorRow(
                 context,
                 "Calidad de envío de video",
-                null,
+                "Compresión predeterminada al enviar videos",
                 new String[]{"Estándar", "HD 720p", "Full HD"},
                 LagramConfig.videoUploadQuality,
-                LagramConfig::setVideoUploadQuality
+                idx -> {
+                    LagramConfig.setVideoUploadQuality(idx);
+                    refreshPreview();
+                }
         ));
         addCardWithMargin(root, mediaCard);
 

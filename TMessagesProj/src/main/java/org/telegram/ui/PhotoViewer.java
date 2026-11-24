@@ -20779,6 +20779,41 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        if (videoPlayer != null && scale == 1.0f && e1 != null && e2 != null && org.telegram.ui.lagram.LagramConfig.videoGesturesEnabled && Math.abs(distanceY) > Math.abs(distanceX) * 1.6f) {
+            int width = getContainerViewWidth();
+            int height = Math.max(1, getContainerViewHeight());
+            float startX = e1.getX();
+            float delta = distanceY / (height * 0.65f);
+            if (startX < width * 0.35f && parentActivity != null && parentActivity.getWindow() != null) {
+                try {
+                    WindowManager.LayoutParams lp = parentActivity.getWindow().getAttributes();
+                    float current = lp.screenBrightness < 0f ? 0.5f : lp.screenBrightness;
+                    lp.screenBrightness = Math.max(0.05f, Math.min(1.0f, current + delta));
+                    parentActivity.getWindow().setAttributes(lp);
+                    return true;
+                } catch (Throwable ignored) {
+                }
+            } else if (startX > width * 0.65f && parentActivity != null) {
+                try {
+                    AudioManager am = (AudioManager) parentActivity.getSystemService(Context.AUDIO_SERVICE);
+                    if (am != null) {
+                        int maxVol = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                        if (maxVol > 0) {
+                            int curVol = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+                            int step = delta > 0.03f ? 1 : (delta < -0.03f ? -1 : 0);
+                            if (step != 0) {
+                                int nextVol = Math.max(0, Math.min(maxVol, curVol + step));
+                                if (nextVol != curVol) {
+                                    am.setStreamVolume(AudioManager.STREAM_MUSIC, nextVol, AudioManager.FLAG_SHOW_UI);
+                                }
+                            }
+                            return true;
+                        }
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        }
         return false;
     }
 
@@ -20788,7 +20823,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     public void onLongPress() {
-        if (videoPlayer != null && scale <= 1.35f) {
+        if (videoPlayer != null && scale <= 1.35f && org.telegram.ui.lagram.LagramConfig.videoGesturesEnabled) {
             long current = videoPlayer.getCurrentPosition();
             long total = videoPlayer.getDuration();
             if (current == C.TIME_UNSET || total < 8 * 1000) {
@@ -20948,6 +20983,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     private boolean canDoubleTapSeekVideo(MotionEvent e) {
+        if (!org.telegram.ui.lagram.LagramConfig.videoGesturesEnabled) {
+            return false;
+        }
         if (videoPlayer == null && !(photoViewerWebView != null && photoViewerWebView.isControllable())) {
             return false;
         }
@@ -21736,6 +21774,10 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         //1GB
         if (originalSize > 1024L * 1024L * 1000L) {
             return compressionsCount - 1;
+        }
+        org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+        if (compressionsCount > 0) {
+            return org.telegram.ui.lagram.LagramConfig.getVideoUploadCompressionTarget(compressionsCount);
         }
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         int compressionsCount = this.compressionsCount;

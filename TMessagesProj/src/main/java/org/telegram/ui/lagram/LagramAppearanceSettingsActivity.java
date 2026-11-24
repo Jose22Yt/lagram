@@ -217,13 +217,13 @@ public class LagramAppearanceSettingsActivity extends LagramBaseSettingsFragment
         ));
         addCardWithMargin(root, avatarCard);
 
-        // Card 4: Navegación y Perfiles
-        root.addView(LagramCardUi.createSectionHeader(context, "Navegación y Perfiles"));
+        // Card 4: Navegación, Menú lateral y Perfiles
+        root.addView(LagramCardUi.createSectionHeader(context, "Navegación, Menú y Perfiles"));
         LinearLayout navCard = LagramCardUi.createGraphiteCard(context);
         navCard.addView(LagramCardUi.createSwitchRow(
                 context,
                 "Barra inferior de navegación",
-                "Muestra u oculta la barra inferior principal de pestañas",
+                "Muestra u oculta la barra inferior M3 Expressive con resorte",
                 LagramConfig.bottomNavigationEnabled,
                 v -> {
                     LagramConfig.setBottomNavigationEnabled(v);
@@ -236,7 +236,59 @@ public class LagramAppearanceSettingsActivity extends LagramBaseSettingsFragment
                 "Cabecera de perfiles Banner M3",
                 "Píldoras segmentadas (Llamar, Silenciar, Buscar, Más) y tarjeta limpia",
                 LagramConfig.profileBannerM3Enabled,
-                LagramConfig::setProfileBannerM3Enabled
+                v -> {
+                    LagramConfig.setProfileBannerM3Enabled(v);
+                    refreshPreviewAndUi();
+                }
+        ));
+        navCard.addView(LagramCardUi.createDivider(context));
+        navCard.addView(LagramCardUi.createSegmentedSelectorRow(
+                context,
+                "Estilo de cabecera del menú",
+                "Diseño visual del encabezado en el menú principal",
+                new String[]{"Dinámico", "Compacto", "Minimalista"},
+                LagramConfig.drawerHeaderStyle,
+                LagramConfig::setDrawerHeaderStyle
+        ));
+        navCard.addView(LagramCardUi.createDivider(context));
+        navCard.addView(LagramCardUi.createSwitchRow(
+                context,
+                "Acceso: Nuevo grupo",
+                "Mostrar acceso directo en el menú principal",
+                LagramConfig.drawerShowNewGroup,
+                LagramConfig::setDrawerShowNewGroup
+        ));
+        navCard.addView(LagramCardUi.createDivider(context));
+        navCard.addView(LagramCardUi.createSwitchRow(
+                context,
+                "Acceso: Contactos",
+                null,
+                LagramConfig.drawerShowContacts,
+                LagramConfig::setDrawerShowContacts
+        ));
+        navCard.addView(LagramCardUi.createDivider(context));
+        navCard.addView(LagramCardUi.createSwitchRow(
+                context,
+                "Acceso: Llamadas",
+                null,
+                LagramConfig.drawerShowCalls,
+                LagramConfig::setDrawerShowCalls
+        ));
+        navCard.addView(LagramCardUi.createDivider(context));
+        navCard.addView(LagramCardUi.createSwitchRow(
+                context,
+                "Acceso: Mensajes guardados",
+                null,
+                LagramConfig.drawerShowSavedMessages,
+                LagramConfig::setDrawerShowSavedMessages
+        ));
+        navCard.addView(LagramCardUi.createDivider(context));
+        navCard.addView(LagramCardUi.createSwitchRow(
+                context,
+                "Acceso: Ajustes",
+                null,
+                LagramConfig.drawerShowSettings,
+                LagramConfig::setDrawerShowSettings
         ));
         addCardWithMargin(root, navCard);
 

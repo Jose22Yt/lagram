@@ -308,6 +308,17 @@ public class ProfileActionsView extends View {
                 continue;
             }
             int wasAlpha = paint.getAlpha();
+            int wasColor = paint.getColor();
+            if (org.telegram.ui.lagram.LagramConfig.profileBannerM3Enabled && action == firstAction) {
+                org.telegram.ui.lagram.LagramThemeEngine.AccentColors ac = org.telegram.ui.lagram.LagramThemeEngine.getAccentColors();
+                paint.setColor(Theme.isCurrentThemeDark() ? ac.containerDark : ac.primary);
+                paint.setAlpha((int) (action.getAlpha() * alphaFraction1 * 225));
+                paint.setShadowLayer(0, 0, 0, 0);
+                canvas.drawRoundRect(AndroidUtilities.rectTmp, r, r, paint);
+                paint.setColor(wasColor);
+                paint.setAlpha(wasAlpha);
+                continue;
+            }
             int newAlpha = (int) (action.getAlpha() * alphaFraction1 * wasAlpha);
             paint.setAlpha((int) (newAlpha * (radialGradient != null ? 0.1f : 1f)));
             paint.setShadowLayer(0, 0, 0, 0);
@@ -469,7 +480,7 @@ public class ProfileActionsView extends View {
     }
 
     public float getRoundRadius() {
-        return dp(16);
+        return org.telegram.ui.lagram.LagramConfig.profileBannerM3Enabled ? dp(22) : dp(16);
     }
 
     private Action hit = null;

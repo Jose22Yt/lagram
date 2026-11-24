@@ -118,6 +118,10 @@ public final class LagramThemeEngine {
         return getAccentColorsForPalette(LagramConfig.accentPalette);
     }
 
+    public static void invalidateMonetCache() {
+        cachedMonetPalette = null;
+    }
+
     public static AccentColors getAccentColorsForPalette(int palette) {
         switch (palette) {
             case LagramConfig.ACCENT_SYSTEM_MONET: {
@@ -189,8 +193,9 @@ public final class LagramThemeEngine {
             return 0xFF000000;
         }
 
-        // Only override accent keys when user chose a non-default palette or AMOLED mono
-        if (LagramConfig.accentPalette != LagramConfig.ACCENT_LAGRAM_BLUE || LagramConfig.amoledPureBlack) {
+        // Only override accent keys when user chose a non-default palette,
+        // or when AMOLED pure black is actively rendering in dark mode.
+        if (LagramConfig.accentPalette != LagramConfig.ACCENT_LAGRAM_BLUE || (LagramConfig.amoledPureBlack && isDark)) {
             AccentColors accent = getAccentColorsForPalette(LagramConfig.accentPalette);
             if (isAccentKey) {
                 return accent.primary;
@@ -208,7 +213,7 @@ public final class LagramThemeEngine {
     public static int computeAvatarRadiusDp() {
         int maxHalf = Math.max(1, LagramConfig.avatarSizeDp / 2);
         if (LagramConfig.avatarShape == LagramConfig.AVATAR_SHAPE_CIRCLE) {
-            return Math.min(maxHalf, Math.max(LagramConfig.avatarCornerRadius, maxHalf));
+            return maxHalf;
         }
         return Math.min(maxHalf, Math.max(0, LagramConfig.avatarCornerRadius));
     }
@@ -264,6 +269,22 @@ public final class LagramThemeEngine {
         }
     }
 
+    public static String getFontFamilySystemName(int family) {
+        switch (family) {
+            case LagramConfig.FONT_ROUNDED:
+                return "casual";
+            case LagramConfig.FONT_SANS_MODERN:
+                return "sans-serif-condensed";
+            case LagramConfig.FONT_SERIF:
+                return "serif";
+            case LagramConfig.FONT_MONO:
+                return "monospace";
+            case LagramConfig.FONT_SYSTEM:
+            default:
+                return null;
+        }
+    }
+
     public static Typeface resolveCustomTypeface(String assetPath) {
         int family = LagramConfig.fontFamily;
         if (family == LagramConfig.FONT_SYSTEM || family < 0 || family >= cachedTypefaces.length) {
@@ -285,8 +306,10 @@ public final class LagramThemeEngine {
                 created = Typeface.create(Typeface.MONOSPACE, style);
                 break;
             case LagramConfig.FONT_ROUNDED:
+                created = Typeface.create("casual", style);
+                break;
             case LagramConfig.FONT_SANS_MODERN:
-                created = Typeface.create(Typeface.SANS_SERIF, style);
+                created = Typeface.create("sans-serif-condensed", style);
                 break;
             default:
                 return null;
@@ -296,7 +319,26 @@ public final class LagramThemeEngine {
     }
 
     /**
-     * Strips tracking query parameters from Telegram and web URLs when clean link copy is enabled.
+     * Formats original + translated text side-by-side when parallel translation is enabled.
+     */
+    public static String buildParallelTranslatedText(String original, String translated) {
+        if (translated == null || translated.isEmpty()) {
+            return original != null ? original : "";
+        }
+        LagramConfig.ensureLoaded();
+        if (!LagramConfig.parallelTranslatorEnabled || original == null || original.isEmpty() || original.equals(translated)) {
+            return translated;
+        }
+        String separator = "\n──────────\n";
+        if (translated.startsWith(original + separator)) {
+            return translated;
+        }
+        return original + separator + translated;
+    }
+
+    /**
+     * Strips tracking query parameters from Telegram and web URLs when clean link copy is enabled,
+     * preserving any URL #fragment anchor.
      */
     public static String cleanTelegramLink(String url) {
         if (url == null || url.isEmpty()) {
@@ -306,12 +348,16 @@ public final class LagramThemeEngine {
         if (!LagramConfig.copyCleanLink) {
             return url;
         }
-        int qIdx = url.indexOf('?');
+        int hashIdx = url.indexOf('#');
+        String fragment = hashIdx >= 0 ? url.substring(hashIdx) : "";
+        String withoutFragment = hashIdx >= 0 ? url.substring(0, hashIdx) : url;
+
+        int qIdx = withoutFragment.indexOf('?');
         if (qIdx < 0) {
             return url;
         }
-        String base = url.substring(0, qIdx);
-        String query = url.substring(qIdx + 1);
+        String base = withoutFragment.substring(0, qIdx);
+        String query = withoutFragment.substring(qIdx + 1);
         String[] params = query.split("&");
         StringBuilder kept = new StringBuilder();
         for (String param : params) {
@@ -332,7 +378,7 @@ public final class LagramThemeEngine {
             }
             kept.append(param);
         }
-        return kept.length() > 0 ? base + "?" + kept : base;
+        return (kept.length() > 0 ? base + "?" + kept : base) + fragment;
     }
 
     public static String maskPhoneNumber(String phone) {

@@ -56,6 +56,7 @@ public class LagramAudioPlayerAlert extends BottomSheet implements NotificationC
     private final TextView shuffleBtn;
     private final TextView classicBtn;
 
+    private final int currentAccount;
     private int dynamicBgColor;
     private int dynamicAccentColor;
     private Bitmap lastCoverBitmap;
@@ -72,6 +73,7 @@ public class LagramAudioPlayerAlert extends BottomSheet implements NotificationC
     public LagramAudioPlayerAlert(Context context, Theme.ResourcesProvider resourcesProvider) {
         super(context, false, resourcesProvider);
         LagramConfig.ensureLoaded();
+        currentAccount = UserConfig.selectedAccount;
         LagramThemeEngine.AccentColors accent = LagramThemeEngine.getAccentColors();
         dynamicBgColor = LagramThemeEngine.getGraphiteCardColor(Theme.isCurrentThemeDark());
         dynamicAccentColor = accent.primary;
@@ -267,7 +269,7 @@ public class LagramAudioPlayerAlert extends BottomSheet implements NotificationC
 
         setCustomView(rootCard);
 
-        NotificationCenter nc = NotificationCenter.getInstance(UserConfig.selectedAccount);
+        NotificationCenter nc = NotificationCenter.getInstance(currentAccount);
         nc.addObserver(this, NotificationCenter.messagePlayingDidStart);
         nc.addObserver(this, NotificationCenter.messagePlayingPlayStateChanged);
         nc.addObserver(this, NotificationCenter.messagePlayingProgressDidChanged);
@@ -353,7 +355,7 @@ public class LagramAudioPlayerAlert extends BottomSheet implements NotificationC
             if (LagramConfig.playerDynamicCoverPalette && cover != lastCoverBitmap) {
                 lastCoverBitmap = cover;
                 Palette.from(cover).generate(palette -> {
-                    if (palette == null) {
+                    if (palette == null || !isShowing()) {
                         return;
                     }
                     int vibrant = palette.getVibrantColor(LagramThemeEngine.getAccentColors().primary);
@@ -424,7 +426,8 @@ public class LagramAudioPlayerAlert extends BottomSheet implements NotificationC
     @Override
     public void dismissInternal() {
         super.dismissInternal();
-        NotificationCenter nc = NotificationCenter.getInstance(UserConfig.selectedAccount);
+        lastCoverBitmap = null;
+        NotificationCenter nc = NotificationCenter.getInstance(currentAccount);
         nc.removeObserver(this, NotificationCenter.messagePlayingDidStart);
         nc.removeObserver(this, NotificationCenter.messagePlayingPlayStateChanged);
         nc.removeObserver(this, NotificationCenter.messagePlayingProgressDidChanged);
@@ -571,7 +574,7 @@ public class LagramAudioPlayerAlert extends BottomSheet implements NotificationC
             thumbRect.set(splitX - thumbW / 2f, cy - thumbH / 2f, splitX + thumbW / 2f, cy + thumbH / 2f);
             canvas.drawRoundRect(thumbRect, thumbW / 2f, thumbW / 2f, thumbPaint);
 
-            if (animateWave || Math.abs(targetAmp - waveAmplitude) > 0.2f) {
+            if (isAttachedToWindow() && (animateWave || Math.abs(targetAmp - waveAmplitude) > 0.2f)) {
                 postInvalidateOnAnimation();
             }
         }

@@ -3877,7 +3877,7 @@ public class MessageObject {
             if (type == TYPE_ARTICLE) {
                 generateLayout(null);
             } else if (translatedText != null) {
-                applyNewText(translatedText.text);
+                applyNewText(org.telegram.ui.lagram.LagramThemeEngine.buildParallelTranslatedText(messageOwner.message, translatedText.text));
                 generateCaption();
             }
             return replyUpdated || true;
@@ -7890,8 +7890,8 @@ public class MessageObject {
         } else if (messageOwner.translatedText != null && translated) {
             captionSummarized = false;
             captionTranslated = true;
-            text = messageOwner.translatedText.text;
-            entities = messageOwner.translatedText.entities;
+            text = org.telegram.ui.lagram.LagramThemeEngine.buildParallelTranslatedText(messageOwner.message, messageOwner.translatedText.text);
+            entities = org.telegram.ui.lagram.LagramConfig.parallelTranslatorEnabled ? new ArrayList<>() : messageOwner.translatedText.entities;
         } else {
             captionSummarized = false;
             captionTranslated = false;

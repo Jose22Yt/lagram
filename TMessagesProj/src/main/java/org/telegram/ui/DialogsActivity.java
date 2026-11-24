@@ -13402,16 +13402,33 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_NIGHT));
             });
         });
-        io.addGap();
-        io.add(R.drawable.outline_groups_24, getString(R.string.NewGroup), () -> {
-            Bundle args = new Bundle();
-            presentFragment(new GroupCreateActivity(args));
-        });
-        io.add(R.drawable.outline_saved_24, getString(R.string.SavedMessages), () -> {
-            Bundle args = new Bundle();
-            args.putLong("user_id", UserConfig.getInstance(currentAccount).getClientUserId());
-            presentFragment(new ChatActivity(args));
-        });
+        org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+        if (org.telegram.ui.lagram.LagramConfig.drawerHeaderStyle != org.telegram.ui.lagram.LagramConfig.DRAWER_HEADER_MINIMAL) {
+            io.addGap();
+        }
+        if (org.telegram.ui.lagram.LagramConfig.drawerShowNewGroup) {
+            io.add(R.drawable.outline_groups_24, getString(R.string.NewGroup), () -> {
+                Bundle args = new Bundle();
+                presentFragment(new GroupCreateActivity(args));
+            });
+        }
+        if (org.telegram.ui.lagram.LagramConfig.drawerShowContacts) {
+            io.add(R.drawable.msg_contacts, getString(R.string.Contacts), () -> {
+                presentFragment(new ContactsActivity(null));
+            });
+        }
+        if (org.telegram.ui.lagram.LagramConfig.drawerShowCalls) {
+            io.add(R.drawable.msg_calls, getString(R.string.Calls), () -> {
+                presentFragment(new CallLogActivity());
+            });
+        }
+        if (org.telegram.ui.lagram.LagramConfig.drawerShowSavedMessages) {
+            io.add(R.drawable.outline_saved_24, getString(R.string.SavedMessages), () -> {
+                Bundle args = new Bundle();
+                args.putLong("user_id", UserConfig.getInstance(currentAccount).getClientUserId());
+                presentFragment(new ChatActivity(args));
+            });
+        }
         if (ApplicationLoader.applicationLoaderInstance != null) {
             ApplicationLoader.applicationLoaderInstance.addItemOptions(io);
         }
@@ -13445,7 +13462,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             }
         }
-        if (getUserConfig().showCallsTab) {
+        if (org.telegram.ui.lagram.LagramConfig.drawerShowSettings && (getUserConfig().showCallsTab || !org.telegram.ui.lagram.LagramConfig.bottomNavigationEnabled)) {
             io.add(R.drawable.msg_settings_old, getString(R.string.Settings), () -> {
                 presentFragment(new SettingsActivity());
             });

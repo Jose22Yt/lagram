@@ -356,6 +356,7 @@ public class MessageDrawable extends Drawable {
         } else {
             newRad = dp(SharedConfig.bubbleRadius);
         }
+        newRad = (newRad & 0xFFFF) | (org.telegram.ui.lagram.LagramConfig.bubbleTailStyle << 16);
         int idx;
         if (isTopNear && isBottomNear) {
             idx = 3;
@@ -707,12 +708,17 @@ public class MessageDrawable extends Drawable {
         if (rad > heightHalf) {
             rad = heightHalf;
         }
+        int lagramTailStyle = org.telegram.ui.lagram.LagramConfig.bubbleTailStyle;
+        boolean lagramNoTail = lagramTailStyle == org.telegram.ui.lagram.LagramConfig.TAIL_MODERN_NONE;
+        boolean lagramShortTail = lagramTailStyle == org.telegram.ui.lagram.LagramConfig.TAIL_MINIMAL_SHORT;
         if (isOut) {
             // LEFT-BOTTOM <- RIGHT-BOTTOM
             if (drawFullBubble || currentType == TYPE_PREVIEW || customPaint || drawFullBottom) {
                 int radToUse = botButtonsBottom ? nearRad : rad;
-                if (currentType == TYPE_MEDIA) {
+                if (currentType == TYPE_MEDIA || lagramNoTail) {
                     path.moveTo(bounds.right - dp(8) - radToUse, bounds.bottom - padding);
+                } else if (lagramShortTail) {
+                    path.moveTo(bounds.right - dp(5.2f), bounds.bottom - padding);
                 } else {
                     path.moveTo(bounds.right - dp(2.6f), bounds.bottom - padding);
                 }
@@ -763,9 +769,21 @@ public class MessageDrawable extends Drawable {
                 }
             } else {
                 if (drawFullBubble || currentType == TYPE_PREVIEW || customPaint || drawFullBottom) {
-                    path.lineTo(bounds.right - dp(8), bounds.bottom - padding - smallRad - dp(3));
-                    rect.set(bounds.right - dp(8), bounds.bottom - padding - smallRad * 2 - dp(9), bounds.right - dp(7) + smallRad * 2, bounds.bottom - padding - dp(1));
-                    path.arcTo(rect, 180, -83, false);
+                    if (lagramNoTail) {
+                        int radToUse = isBottomNear || botButtonsBottom ? nearRad : rad;
+                        path.lineTo(bounds.right - dp(8), bounds.bottom - padding - radToUse);
+                        rect.set(bounds.right - dp(8) - radToUse * 2, bounds.bottom - padding - radToUse * 2, bounds.right - dp(8), bounds.bottom - padding);
+                        path.arcTo(rect, 0, 90, false);
+                    } else if (lagramShortTail) {
+                        int shortRad = Math.max(dp(3), smallRad / 2);
+                        path.lineTo(bounds.right - dp(8), bounds.bottom - padding - shortRad - dp(1.5f));
+                        rect.set(bounds.right - dp(8), bounds.bottom - padding - shortRad * 2 - dp(4), bounds.right - dp(7.5f) + shortRad * 2, bounds.bottom - padding - dp(0.5f));
+                        path.arcTo(rect, 180, -78, false);
+                    } else {
+                        path.lineTo(bounds.right - dp(8), bounds.bottom - padding - smallRad - dp(3));
+                        rect.set(bounds.right - dp(8), bounds.bottom - padding - smallRad * 2 - dp(9), bounds.right - dp(7) + smallRad * 2, bounds.bottom - padding - dp(1));
+                        path.arcTo(rect, 180, -83, false);
+                    }
                 } else {
                     path.lineTo(bounds.right - dp(8), top - topY + currentBackgroundHeight);
                 }
@@ -774,8 +792,10 @@ public class MessageDrawable extends Drawable {
             if (drawFullBubble || currentType == TYPE_PREVIEW || customPaint || drawFullBottom) {
                 int radToUse = botButtonsBottom ? nearRad : rad;
 
-                if (currentType == TYPE_MEDIA) {
+                if (currentType == TYPE_MEDIA || lagramNoTail) {
                     path.moveTo(bounds.left + dp(8) + radToUse, bounds.bottom - padding);
+                } else if (lagramShortTail) {
+                    path.moveTo(bounds.left + dp(5.2f), bounds.bottom - padding);
                 } else {
                     path.moveTo(bounds.left + dp(2.6f), bounds.bottom - padding);
                 }
@@ -820,9 +840,21 @@ public class MessageDrawable extends Drawable {
                 }
             } else {
                 if (drawFullBubble || currentType == TYPE_PREVIEW || customPaint || drawFullBottom) {
-                    path.lineTo(bounds.left + dp(8), bounds.bottom - padding - smallRad - dp(3));
-                    rect.set(bounds.left + dp(7) - smallRad * 2, bounds.bottom - padding - smallRad * 2 - dp(9), bounds.left + dp(8), bounds.bottom - padding - dp(1));
-                    path.arcTo(rect, 0, 83, false);
+                    if (lagramNoTail) {
+                        int radToUse = isBottomNear || botButtonsBottom ? nearRad : rad;
+                        path.lineTo(bounds.left + dp(8), bounds.bottom - padding - radToUse);
+                        rect.set(bounds.left + dp(8), bounds.bottom - padding - radToUse * 2, bounds.left + dp(8) + radToUse * 2, bounds.bottom - padding);
+                        path.arcTo(rect, 180, -90, false);
+                    } else if (lagramShortTail) {
+                        int shortRad = Math.max(dp(3), smallRad / 2);
+                        path.lineTo(bounds.left + dp(8), bounds.bottom - padding - shortRad - dp(1.5f));
+                        rect.set(bounds.left + dp(7.5f) - shortRad * 2, bounds.bottom - padding - shortRad * 2 - dp(4), bounds.left + dp(8), bounds.bottom - padding - dp(0.5f));
+                        path.arcTo(rect, 0, 78, false);
+                    } else {
+                        path.lineTo(bounds.left + dp(8), bounds.bottom - padding - smallRad - dp(3));
+                        rect.set(bounds.left + dp(7) - smallRad * 2, bounds.bottom - padding - smallRad * 2 - dp(9), bounds.left + dp(8), bounds.bottom - padding - dp(1));
+                        path.arcTo(rect, 0, 83, false);
+                    }
                 } else {
                     path.lineTo(bounds.left + dp(8), top - topY + currentBackgroundHeight);
                 }
@@ -892,11 +924,17 @@ public class MessageDrawable extends Drawable {
         Rect lastRect = new Rect();
         boolean lastDrawFullTop;
         boolean lastDrawFullBottom;
+        int lastBubbleTailStyle = -1;
+        int lastBubbleRadius = -1;
 
         public boolean invalidatePath(Rect bounds, boolean drawFullBottom, boolean drawFullTop) {
-            boolean invalidate = lastRect.isEmpty() || lastRect.top != bounds.top || lastRect.bottom != bounds.bottom || lastRect.right != bounds.right || lastRect.left != bounds.left || lastDrawFullTop != drawFullTop || lastDrawFullBottom != drawFullBottom || !drawFullTop || !drawFullBottom;
+            int curTail = org.telegram.ui.lagram.LagramConfig.bubbleTailStyle;
+            int curRad = SharedConfig.bubbleRadius;
+            boolean invalidate = lastRect.isEmpty() || lastRect.top != bounds.top || lastRect.bottom != bounds.bottom || lastRect.right != bounds.right || lastRect.left != bounds.left || lastDrawFullTop != drawFullTop || lastDrawFullBottom != drawFullBottom || lastBubbleTailStyle != curTail || lastBubbleRadius != curRad || !drawFullTop || !drawFullBottom;
             lastDrawFullTop = drawFullTop;
             lastDrawFullBottom = drawFullBottom;
+            lastBubbleTailStyle = curTail;
+            lastBubbleRadius = curRad;
             lastRect.set(bounds);
             return invalidate;
         }

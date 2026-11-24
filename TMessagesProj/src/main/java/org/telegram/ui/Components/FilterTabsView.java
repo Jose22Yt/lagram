@@ -132,8 +132,27 @@ public class FilterTabsView extends FrameLayout {
             this.noanimate = noanimate;
         }
 
+        public CharSequence getDisplayTitle() {
+            if (org.telegram.ui.lagram.LagramConfig.folderTabsStyle == org.telegram.ui.lagram.LagramConfig.FOLDER_TABS_COMPACT_ICONS) {
+                if (isDefault) {
+                    return "★";
+                }
+                if (!TextUtils.isEmpty(title)) {
+                    int cp = Character.codePointAt(title, 0);
+                    int charCount = Character.charCount(cp);
+                    if (charCount > 1 || cp > 0x2600) {
+                        return title.subSequence(0, Math.min(title.length(), charCount));
+                    }
+                    return String.valueOf(Character.toUpperCase((char) cp));
+                }
+                return "●";
+            }
+            return title;
+        }
+
         public int getWidth(boolean store) {
-            int width = titleWidth = (int) Math.ceil(HintView2.measureCorrectly(title, textPaint));
+            CharSequence effectiveTitle = getDisplayTitle();
+            int width = titleWidth = (int) Math.ceil(HintView2.measureCorrectly(effectiveTitle, textPaint));
             int c;
             if (store) {
                 c = delegate.getTabCounter(id);
@@ -393,8 +412,9 @@ public class FilterTabsView extends FrameLayout {
                 textX = textX * changeProgress + animateFromTextX * (1f - changeProgress);
             }
 
-            if (!TextUtils.equals(currentTab.title, currentText)) {
-                currentText = currentTab.title;
+            CharSequence displayTitle = currentTab.getDisplayTitle();
+            if (!TextUtils.equals(displayTitle, currentText)) {
+                currentText = displayTitle;
                 textLayout = new StaticLayout(currentText, textPaint, dp(400), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0, false);
                 textLayoutEmojis = AnimatedEmojiSpan.update(currentTab.noanimate ? AnimatedEmojiDrawable.CACHE_TYPE_NOANIMATE_FOLDER : AnimatedEmojiDrawable.CACHE_TYPE_MESSAGES, this, textLayoutEmojis, textLayout);
                 textHeight = textLayout.getHeight();

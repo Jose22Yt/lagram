@@ -200,6 +200,8 @@ public class MessagePreviewParams {
         this.isSecret = secret;
         this.noforwards = secret || noforwards;
         this.monoforum = monoforum;
+        org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+        this.hideForwardSendersName = org.telegram.ui.lagram.LagramConfig.quickForwardNoAuthor;
     }
 
     public void updateReply(MessageObject replyMessageObject, MessageObject.GroupedMessages group, long dialogId, ChatActivity.ReplyQuote replyQuote) {

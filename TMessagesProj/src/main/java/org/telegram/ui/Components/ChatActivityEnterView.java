@@ -12777,8 +12777,22 @@ public class ChatActivityEnterView extends FrameLayout implements
             parentFragment.showQuoteMessageUpdate();
             return;
         }
+        org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+        if (org.telegram.ui.lagram.LagramConfig.confirmBeforeSendSticker && parentActivity != null && scheduleDate == 0) {
+            new AlertDialog.Builder(parentActivity, resourcesProvider)
+                    .setTitle("Enviar sticker")
+                    .setMessage("¿Deseas enviar este sticker?")
+                    .setPositiveButton(LocaleController.getString(R.string.Send), (d, w) -> onStickerSelectedConfirmed(sticker, query, parent, sendAnimationData, clearsInputField, notify, scheduleDate, scheduleRepeatPeriod))
+                    .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                    .show();
+            return;
+        }
+        onStickerSelectedConfirmed(sticker, query, parent, sendAnimationData, clearsInputField, notify, scheduleDate, scheduleRepeatPeriod);
+    }
+
+    private void onStickerSelectedConfirmed(TLRPC.Document sticker, String query, Object parent, MessageObject.SendAnimationData sendAnimationData, boolean clearsInputField, boolean notify, int scheduleDate, int scheduleRepeatPeriod) {
         if (isInScheduleMode() && scheduleDate == 0) {
-            AlertsCreator.createScheduleDatePickerDialog(parentActivity, parentFragment.getDialogId(), (n, s, r) -> onStickerSelected(sticker, query, parent, sendAnimationData, clearsInputField, n, s, r), resourcesProvider);
+            AlertsCreator.createScheduleDatePickerDialog(parentActivity, parentFragment.getDialogId(), (n, s, r) -> onStickerSelectedConfirmed(sticker, query, parent, sendAnimationData, clearsInputField, n, s, r), resourcesProvider);
         } else {
             AlertsCreator.ensurePaidMessageConfirmation(currentAccount, dialog_id, 1, stars -> {
                 final Runnable runnable = () -> {

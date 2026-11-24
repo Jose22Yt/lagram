@@ -266,14 +266,46 @@ public class ChatInputViewsContainer extends FrameLayout implements Theme.Colora
 
         final int blurTop = getMeasuredHeight() - currentBlurredHeight;
 
-        tmpRect.set(
-            Math.round(inputBubbleOffsetLeft),
-            0,
-            getMeasuredWidth() - Math.round(inputBubbleOffsetRight),
-            inputBubbleHeightRound
-        );
-        tmpRect.inset(0, -dp(7));
-        tmpRect.offset(0, blurTop + (int) bubbleInputTranlationY);
+        int lagramInputStyle = org.telegram.ui.lagram.LagramConfig.inputBarStyle;
+        if (lagramInputStyle == org.telegram.ui.lagram.LagramConfig.INPUT_BAR_CLASSIC_TG) {
+            tmpRect.set(
+                0,
+                0,
+                getMeasuredWidth(),
+                inputBubbleHeightRound + dp(INPUT_BUBBLE_BOTTOM)
+            );
+            tmpRect.offset(0, blurTop + (int) bubbleInputTranlationY);
+            if (blurredBackgroundDrawable != null) {
+                blurredBackgroundDrawable.setRadius(0);
+                blurredBackgroundDrawable.setPadding(0);
+            }
+        } else if (lagramInputStyle == org.telegram.ui.lagram.LagramConfig.INPUT_BAR_M3_UNIFIED) {
+            tmpRect.set(
+                dp(4),
+                0,
+                getMeasuredWidth() - dp(4),
+                inputBubbleHeightRound
+            );
+            tmpRect.inset(0, -dp(7));
+            tmpRect.offset(0, blurTop + (int) bubbleInputTranlationY);
+            if (blurredBackgroundDrawable != null) {
+                blurredBackgroundDrawable.setRadius(dp(26));
+                blurredBackgroundDrawable.setPadding(dp(7));
+            }
+        } else {
+            tmpRect.set(
+                Math.round(inputBubbleOffsetLeft),
+                0,
+                getMeasuredWidth() - Math.round(inputBubbleOffsetRight),
+                inputBubbleHeightRound
+            );
+            tmpRect.inset(0, -dp(7));
+            tmpRect.offset(0, blurTop + (int) bubbleInputTranlationY);
+            if (blurredBackgroundDrawable != null) {
+                blurredBackgroundDrawable.setRadius(dp(INPUT_BUBBLE_RADIUS));
+                blurredBackgroundDrawable.setPadding(dp(7));
+            }
+        }
 
         blurredBackgroundDrawable.setBounds(tmpRect);
         if (drawInputBackground)

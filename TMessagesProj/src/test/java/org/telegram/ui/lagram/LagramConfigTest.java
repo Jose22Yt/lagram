@@ -134,4 +134,77 @@ public class LagramConfigTest {
             LagramConfig.removeListener(listener);
         }
     }
+
+    @Test
+    public void uploadQualityHelpersResolveExpectedTargets() {
+        LagramConfig.setPhotoUploadQuality(LagramConfig.PHOTO_QUALITY_STANDARD);
+        assertEquals(1280, LagramConfig.getPhotoUploadMaxDimension(false));
+        assertEquals(2560, LagramConfig.getPhotoUploadMaxDimension(true));
+
+        LagramConfig.setPhotoUploadQuality(LagramConfig.PHOTO_QUALITY_HIGH);
+        assertEquals(1920, LagramConfig.getPhotoUploadMaxDimension(false));
+
+        LagramConfig.setPhotoUploadQuality(LagramConfig.PHOTO_QUALITY_ULTRA);
+        assertEquals(2560, LagramConfig.getPhotoUploadMaxDimension(false));
+
+        LagramConfig.setVideoUploadQuality(LagramConfig.VIDEO_QUALITY_STANDARD);
+        assertEquals(1, LagramConfig.getVideoUploadCompressionTarget(4));
+
+        LagramConfig.setVideoUploadQuality(LagramConfig.VIDEO_QUALITY_HD);
+        assertEquals(2, LagramConfig.getVideoUploadCompressionTarget(4));
+
+        LagramConfig.setVideoUploadQuality(LagramConfig.VIDEO_QUALITY_FHD);
+        assertEquals(3, LagramConfig.getVideoUploadCompressionTarget(4));
+        assertEquals(0, LagramConfig.getVideoUploadCompressionTarget(1));
+    }
+
+    @Test
+    public void resetAndImportBatchListenerNotifications() {
+        List<String> events = new ArrayList<>();
+        LagramConfig.ConfigListener listener = events::add;
+        LagramConfig.addListener(listener);
+        try {
+            LagramConfig.resetCategory(LagramConfig.CATEGORY_APPEARANCE);
+            assertEquals(1, events.size());
+            assertEquals("reset:" + LagramConfig.CATEGORY_APPEARANCE, events.get(0));
+
+            events.clear();
+            LagramConfig.resetAll();
+            assertEquals(1, events.size());
+            assertEquals("reset:all", events.get(0));
+
+            events.clear();
+            String json = LagramConfig.exportToJson();
+            assertTrue(LagramConfig.importFromJson(json));
+            assertEquals(1, events.size());
+            assertEquals("import", events.get(0));
+        } finally {
+            LagramConfig.removeListener(listener);
+        }
+    }
+
+    @Test
+    public void drawerAndNavigationOptionsPersistAcrossJsonRoundTrip() {
+        LagramConfig.setDrawerHeaderStyle(LagramConfig.DRAWER_HEADER_MINIMAL);
+        LagramConfig.setDrawerShowNewGroup(false);
+        LagramConfig.setDrawerShowContacts(false);
+        LagramConfig.setDrawerShowCalls(false);
+        LagramConfig.setDrawerShowSavedMessages(false);
+        LagramConfig.setDrawerShowSettings(false);
+        LagramConfig.setBottomNavigationEnabled(false);
+        LagramConfig.setProfileBannerM3Enabled(false);
+
+        String exported = LagramConfig.exportToJson();
+        LagramConfig.setStorageForTesting(new LagramConfig.InMemoryStorage());
+        assertTrue(LagramConfig.importFromJson(exported));
+
+        assertEquals(LagramConfig.DRAWER_HEADER_MINIMAL, LagramConfig.drawerHeaderStyle);
+        assertFalse(LagramConfig.drawerShowNewGroup);
+        assertFalse(LagramConfig.drawerShowContacts);
+        assertFalse(LagramConfig.drawerShowCalls);
+        assertFalse(LagramConfig.drawerShowSavedMessages);
+        assertFalse(LagramConfig.drawerShowSettings);
+        assertFalse(LagramConfig.bottomNavigationEnabled);
+        assertFalse(LagramConfig.profileBannerM3Enabled);
+    }
 }

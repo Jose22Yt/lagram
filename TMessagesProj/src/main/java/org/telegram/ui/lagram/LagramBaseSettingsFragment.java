@@ -73,6 +73,8 @@ public abstract class LagramBaseSettingsFragment extends BaseFragment {
         }
         if (actionBar != null) {
             actionBar.setBackgroundColor(bgColor);
+            actionBar.setTitleColor(isDark ? LagramThemeEngine.GRAPHITE_TEXT_PRIMARY : 0xFF1A1D24);
+            actionBar.setItemsColor(isDark ? LagramThemeEngine.GRAPHITE_TEXT_PRIMARY : 0xFF1A1D24, false);
         }
         contentLayout.removeAllViews();
         buildContent(context, contentLayout);
