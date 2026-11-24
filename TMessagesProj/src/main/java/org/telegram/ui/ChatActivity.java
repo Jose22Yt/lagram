@@ -2004,6 +2004,35 @@ public class ChatActivity extends BaseFragment implements
             } else {
                 return;
             }
+            org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+            int doubleTapMode = org.telegram.ui.lagram.LagramConfig.doubleTapAction;
+            if (doubleTapMode == org.telegram.ui.lagram.LagramConfig.DOUBLE_TAP_REPLY) {
+                showFieldPanelForReply(messageObject);
+                return;
+            } else if (doubleTapMode == org.telegram.ui.lagram.LagramConfig.DOUBLE_TAP_COPY) {
+                CharSequence textToCopy = messageObject.caption != null ? messageObject.caption : messageObject.messageText;
+                if (!TextUtils.isEmpty(textToCopy)) {
+                    AndroidUtilities.addToClipboard(textToCopy);
+                    BulletinFactory.of(ChatActivity.this).createCopyBulletin(getString(R.string.MessageCopied)).show();
+                }
+                return;
+            } else if (doubleTapMode == org.telegram.ui.lagram.LagramConfig.DOUBLE_TAP_SAVED) {
+                ArrayList<MessageObject> list = new ArrayList<>();
+                list.add(messageObject);
+                getSendMessagesHelper().sendMessage(list, getUserConfig().getClientUserId(), org.telegram.ui.lagram.LagramConfig.quickForwardNoAuthor, false, true, 0, 0L);
+                BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.raw.saved_messages, getString(R.string.SavedMessages)).show();
+                return;
+            } else if (doubleTapMode == org.telegram.ui.lagram.LagramConfig.DOUBLE_TAP_FORWARD) {
+                ArrayList<MessageObject> list = new ArrayList<>();
+                list.add(messageObject);
+                showFieldPanelForForward(true, list);
+                return;
+            } else if (doubleTapMode == org.telegram.ui.lagram.LagramConfig.DOUBLE_TAP_TRANSLATE) {
+                selectedObject = messageObject;
+                processSelectedOption(OPTION_TRANSLATE);
+                return;
+            }
+
             if (messageObject.isSecret() || !messageObject.canSetReaction() || messageObject.isExpiredStory() || messageObject.type == MessageObject.TYPE_JOINED_CHANNEL) {
                 return;
             }
@@ -7375,7 +7404,7 @@ public class ChatActivity extends BaseFragment implements
                 TLRPC.TL_document document = (TLRPC.TL_document) object;
                 Object parent = mentionContainer.getAdapter().getItemParent(position);
                 String query = MessageObject.findAnimatedEmojiEmoticon(document);
-                AlertsCreator.ensurePaidMessageConfirmation(currentAccount, getDialogId(), 1, price -> {
+                Runnable doSendSticker = () -> AlertsCreator.ensurePaidMessageConfirmation(currentAccount, getDialogId(), 1, price -> {
                     if (chatMode == MODE_SCHEDULED) {
                         AlertsCreator.createScheduleDatePickerDialog(getParentActivity(), dialog_id, (notify, scheduleDate, scheduleRepeatPeriod) -> SendMessagesHelper.getInstance(currentAccount).sendSticker(document, query, dialog_id, replyingMessageObject, getThreadMessage(), null, replyingQuote, null, notify, scheduleDate, 0, false, parent, getMessageChatSendParams(), 0, getSendMonoForumPeerId(), getSendMessageSuggestionParams()), themeDelegate);
                     } else {
@@ -7385,6 +7414,17 @@ public class ChatActivity extends BaseFragment implements
                     chatActivityEnterView.addStickerToRecent(document);
                     chatActivityEnterView.setFieldText("");
                 });
+                org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+                if (org.telegram.ui.lagram.LagramConfig.confirmBeforeSendSticker && getParentActivity() != null) {
+                    new AlertDialog.Builder(getParentActivity())
+                            .setTitle("Enviar sticker")
+                            .setMessage("¿Deseas enviar este sticker?")
+                            .setPositiveButton(getString(R.string.Send), (d, w) -> doSendSticker.run())
+                            .setNegativeButton(getString(R.string.Cancel), null)
+                            .show();
+                } else {
+                    doSendSticker.run();
+                }
             } else if (object instanceof TLRPC.Chat) {
                 TLRPC.Chat chat = (TLRPC.Chat) object;
                 if (searchingForUser && searchContainer != null && searchContainer.getVisibility() == View.VISIBLE) {
@@ -34978,11 +35018,12 @@ public class ChatActivity extends BaseFragment implements
                     if (response != null) {
                         TLRPC.TL_exportedMessageLink exportedMessageLink = (TLRPC.TL_exportedMessageLink) response;
                         try {
+                            String lagramLink = org.telegram.ui.lagram.LagramThemeEngine.cleanTelegramLink(exportedMessageLink.link);
                             android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                            ClipData clip = ClipData.newPlainText("label", exportedMessageLink.link);
+                            ClipData clip = ClipData.newPlainText("label", lagramLink);
                             clipboard.setPrimaryClip(clip);
                             if (BulletinFactory.canShowBulletin(ChatActivity.this)) {
-                                BulletinFactory.of(ChatActivity.this).createCopyLinkBulletin(!isThreadChat() && exportedMessageLink.link.contains("/c/")).show();
+                                BulletinFactory.of(ChatActivity.this).createCopyLinkBulletin(!isThreadChat() && lagramLink.contains("/c/")).show();
                             }
                         } catch (Exception e) {
                             FileLog.e(e);
@@ -37662,7 +37703,7 @@ public class ChatActivity extends BaseFragment implements
                     cell.resetPressedLink(-1);
                 }
                 if (!messageObject.isVoice()) {
-                    showDialog(new AudioPlayerAlert(getContext(), themeDelegate));
+                    showDialog(org.telegram.ui.lagram.LagramAudioPlayerAlert.create(getContext(), themeDelegate));
                 }
             } else if (str.startsWith("tonaddress:")) {
                 didPressTonAddress(cell, url, str.substring(11));

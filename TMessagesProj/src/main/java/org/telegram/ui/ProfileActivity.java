@@ -3862,7 +3862,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     MediaController.getInstance().getPlaylist().clear();
                     MediaController.getInstance().getPlaylist().addAll(savedMusicList.list);
                     if (!sameList) MediaController.getInstance().playMessage(savedMusicList.list.get(0));
-                    showDialog(new AudioPlayerAlert(getContext(), getResourceProvider()));
+                    showDialog(org.telegram.ui.lagram.LagramAudioPlayerAlert.create(getContext(), getResourceProvider()));
                 }
             });
 
@@ -13661,7 +13661,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             text = PhoneFormat.getInstance().format("+" + vcardPhone);
                             phoneNumber = vcardPhone;
                         } else if (user != null && !TextUtils.isEmpty(user.phone)) {
-                            text = PhoneFormat.getInstance().format("+" + user.phone);
+                            text = org.telegram.ui.lagram.LagramThemeEngine.maskPhoneNumber(PhoneFormat.getInstance().format("+" + user.phone));
                             phoneNumber = user.phone;
                         } else {
                             text = LocaleController.getString(R.string.PhoneHidden);

@@ -3038,7 +3038,8 @@ public class ChatActivityEnterView extends FrameLayout implements
 
             @Override
             public void setVisibility(int visibility) {
-                super.setVisibility(visibility);
+                org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+                super.setVisibility(org.telegram.ui.lagram.LagramConfig.hideInputQuickAudioVideoButton ? GONE : visibility);
             }
 
             @Override
@@ -11132,7 +11133,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         final TLRPC.UserFull userInfo = getParentFragment() == null ? null : getParentFragment().getCurrentUserInfo();
         final TLRPC.UserFull myUserInfo = MessagesController.getInstance(currentAccount).getUserFull(UserConfig.getInstance(currentAccount).getClientUserId());
         final TLRPC.User user = getParentFragment() == null ? null : getParentFragment().getCurrentUser();
+        org.telegram.ui.lagram.LagramConfig.ensureLoaded();
         final boolean visible =
+            !org.telegram.ui.lagram.LagramConfig.hideInputGiftButton &&
             !MessagesController.getInstance(currentAccount).premiumPurchaseBlocked() &&
             getParentFragment() != null && user != null &&
             !BuildVars.IS_BILLING_UNAVAILABLE &&
@@ -11497,9 +11500,11 @@ public class ChatActivityEnterView extends FrameLayout implements
             animated = false;
         }
         boolean hasBotWebView = hasBotWebView();
-        boolean canShowBotsMenu = botMenuButtonType != BotMenuButtonType.NO_BUTTON && dialog_id > 0;
+        org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+        boolean hideBotBtn = org.telegram.ui.lagram.LagramConfig.hideInputBotCommandButton;
+        boolean canShowBotsMenu = !hideBotBtn && botMenuButtonType != BotMenuButtonType.NO_BUTTON && dialog_id > 0;
         boolean wasVisible = botButton != null && botButton.getVisibility() == VISIBLE;
-        if (hasBotWebView || hasBotCommands || hasQuickReplies || botReplyMarkup != null) {
+        if (!hideBotBtn && (hasBotWebView || hasBotCommands || hasQuickReplies || botReplyMarkup != null)) {
             if (botReplyMarkup != null) {
                 if (isPopupShowing() && currentPopupContentType == POPUP_CONTENT_BOT_KEYBOARD && botReplyMarkup.is_persistent) {
                     if (botButton != null && botButton.getVisibility() != GONE) {

@@ -112,6 +112,7 @@ dependencies {
     implementation 'com.google.android.recaptcha:recaptcha:18.7.1'
 
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+    testImplementation 'junit:junit:4.13.2'
 }
 
 android {
@@ -119,6 +120,9 @@ android {
     buildToolsVersion '36.0.0'
     ndkVersion "27.2.12479018"
 
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 
     externalNativeBuild {
         cmake {

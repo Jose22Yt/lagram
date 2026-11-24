@@ -113,7 +113,17 @@ public class VoIPHelper {
 				permissions.add(Manifest.permission.CAMERA);
 			}
 			if (permissions.isEmpty()) {
-				initiateCall(user, null, null, videoCall, canVideoCall, false, null, activity, null, accountInstance);
+				org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+				if (org.telegram.ui.lagram.LagramConfig.confirmBeforeCall && activity != null) {
+					new AlertDialog.Builder(activity)
+							.setTitle(videoCall ? LocaleController.getString(R.string.VideoCall) : LocaleController.getString(R.string.Call))
+							.setMessage("¿Deseas iniciar la llamada ahora?")
+							.setPositiveButton(LocaleController.getString(R.string.Call), (dialog, which) -> initiateCall(user, null, null, videoCall, canVideoCall, false, null, activity, null, accountInstance))
+							.setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+							.show();
+				} else {
+					initiateCall(user, null, null, videoCall, canVideoCall, false, null, activity, null, accountInstance);
+				}
 			} else {
 				activity.requestPermissions(permissions.toArray(new String[0]), videoCall ? 102 : 101);
 			}

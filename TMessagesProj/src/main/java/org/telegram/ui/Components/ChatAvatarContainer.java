@@ -669,7 +669,10 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         final int width = MeasureSpec.getSize(widthMeasureSpec);
         final int availableWidth = width - dp((avatarImageView.getVisibility() == VISIBLE ? 54 : 0) + 16);
-        avatarImageView.measure(MeasureSpec.makeMeasureSpec(dp(avatarSizeInDp) - 2, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(avatarSizeInDp) - 2, MeasureSpec.EXACTLY));
+        final int effectiveAvatarDp = Math.max(32, Math.min(48, org.telegram.ui.lagram.LagramConfig.chatHeaderAvatarSizeDp));
+        final int effectiveAvatarPx = dp(effectiveAvatarDp) - 2;
+        avatarImageView.setRoundRadius(Math.min(effectiveAvatarPx / 2, org.telegram.ui.lagram.LagramThemeEngine.computeAvatarRadiusPx(AndroidUtilities.density)));
+        avatarImageView.measure(MeasureSpec.makeMeasureSpec(effectiveAvatarPx, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(effectiveAvatarPx, MeasureSpec.EXACTLY));
         titleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24 + 8), MeasureSpec.AT_MOST));
         if (subtitleTextView != null) {
             subtitleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
@@ -775,17 +778,20 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         final int subtitleTop = viewTop + dp(glassMode ? 23.66f : 24);
 
         avatarImageView.layout(1 + leftPadding, 1 + viewTop, 1 + leftPadding + avatarImageView.getMeasuredWidth(), 1 + viewTop + avatarImageView.getMeasuredHeight());
-        int l = leftPadding + (avatarImageView.getVisibility() == VISIBLE ? dp(glassMode ? 49.66f : 55) : dp(glassMode ? 13 : 1)) + rightAvatarPadding;
+        int avatarSpace = avatarImageView.getVisibility() == VISIBLE ? (avatarImageView.getMeasuredWidth() + dp(glassMode ? 9.5f : 12f)) : dp(glassMode ? 13 : 1);
+        int l = leftPadding + avatarSpace + rightAvatarPadding;
         SimpleTextView titleTextLargerCopyView = this.titleTextLargerCopyView.get();
-        if (getSubtitleTextView().getVisibility() != GONE) {
+        boolean showSubtitle = org.telegram.ui.lagram.LagramConfig.chatHeaderShowSubtitle && getSubtitleTextView().getVisibility() != GONE;
+        if (showSubtitle) {
             titleTextView.layout(l, viewTop + dp(1.66f) - titleTextView.getPaddingTop(), l + titleTextView.getMeasuredWidth(), viewTop + titleTextView.getTextHeight() + dp(1.66f) - titleTextView.getPaddingTop() + titleTextView.getPaddingBottom());
             if (titleTextLargerCopyView != null) {
                 titleTextLargerCopyView.layout(l, viewTop + dp(1.66f), l + titleTextLargerCopyView.getMeasuredWidth(), viewTop + titleTextLargerCopyView.getTextHeight() + dp(1.66f));
             }
         } else {
-            titleTextView.layout(l, viewTop + dp(11) - titleTextView.getPaddingTop(), l + titleTextView.getMeasuredWidth(), viewTop + titleTextView.getTextHeight() + dp(11) - titleTextView.getPaddingTop() + titleTextView.getPaddingBottom());
+            int centeredTop = (actionBarHeight - titleTextView.getTextHeight()) / 2 + (occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
+            titleTextView.layout(l, centeredTop - titleTextView.getPaddingTop(), l + titleTextView.getMeasuredWidth(), centeredTop + titleTextView.getTextHeight() - titleTextView.getPaddingTop() + titleTextView.getPaddingBottom());
             if (titleTextLargerCopyView != null) {
-                titleTextLargerCopyView.layout(l, viewTop + dp(10), l + titleTextLargerCopyView.getMeasuredWidth(), viewTop + titleTextLargerCopyView.getTextHeight() + dp(10));
+                titleTextLargerCopyView.layout(l, centeredTop, l + titleTextLargerCopyView.getMeasuredWidth(), centeredTop + titleTextLargerCopyView.getTextHeight());
             }
         }
         if (communityItem != null) {
@@ -1001,14 +1007,16 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
 
 
     public void setSubtitle(CharSequence value) {
+        org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+        CharSequence effectiveValue = org.telegram.ui.lagram.LagramConfig.chatHeaderShowSubtitle ? value : "";
         if (lastSubtitle == null) {
             if (subtitleTextView != null) {
-                subtitleTextView.setText(value);
+                subtitleTextView.setText(effectiveValue);
             } else if (animatedSubtitleTextView != null) {
-                animatedSubtitleTextView.setText(value);
+                animatedSubtitleTextView.setText(effectiveValue);
             }
         } else {
-            lastSubtitle = value;
+            lastSubtitle = effectiveValue;
         }
         checkActionBar(true);
     }

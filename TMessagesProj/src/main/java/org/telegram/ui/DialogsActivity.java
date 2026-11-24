@@ -3441,9 +3441,19 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 // a new drawable (also when the view is recreated after a theme switch made elsewhere): remember its tint, the
                 // theme hook only recolors when the color differs from the last one applied
                 logoDrawable.setColorFilter(lastLogoDrawableColor = getThemedColor(Theme.key_telegram_color_dialogsLogo), PorterDuff.Mode.MULTIPLY);
-                SpannableStringBuilder ssb = new SpannableStringBuilder(getString(R.string.AppName));
-                ssb.setSpan(new ImageSpan(logoDrawable), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                actionBar.setTitle(ssb, statusDrawable);
+                org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+                if (org.telegram.ui.lagram.LagramConfig.homeHeaderTitleMode == org.telegram.ui.lagram.LagramConfig.TITLE_USERNAME) {
+                    TLRPC.User me = UserConfig.getInstance(currentAccount).getCurrentUser();
+                    String titleText = me != null && !TextUtils.isEmpty(me.username)
+                            ? "@" + me.username
+                            : (me != null ? ContactsController.formatName(me.first_name, me.last_name) : "Lagram");
+                    actionBar.setTitle(titleText, statusDrawable);
+                } else if (org.telegram.ui.lagram.LagramConfig.homeHeaderTitleMode == org.telegram.ui.lagram.LagramConfig.TITLE_ACTIVE_FOLDER) {
+                    actionBar.setTitle("Lagram", statusDrawable);
+                } else {
+                    SpannableStringBuilder ssb = new SpannableStringBuilder("Lagram");
+                    actionBar.setTitle(ssb, statusDrawable);
+                }
                 updateStatus(UserConfig.getInstance(currentAccount).getCurrentUser(), false);
             }
             if (folderId == 0) {
@@ -6751,6 +6761,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
 
         viewPages[a].dialogsAdapter.setDialogsType(viewPages[a].dialogsType);
+        org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+        if (org.telegram.ui.lagram.LagramConfig.homeHeaderTitleMode == org.telegram.ui.lagram.LagramConfig.TITLE_ACTIVE_FOLDER && actionBar != null && !onlySelect) {
+            actionBar.setTitle(filter.isDefault() ? "Lagram" : filter.name, statusDrawable);
+        }
         viewPages[a].layoutManager.scrollToPositionWithOffset(viewPages[a].dialogsType == DIALOGS_TYPE_DEFAULT && hasHiddenArchive() && viewPages[a].archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN ? 1 : 0, (int) scrollYOffset);
         checkListLoad(viewPages[a]);
     }
@@ -6799,9 +6813,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     selectWithStableId = true;
                 }
                 filterTabsView.removeTabs();
+                org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+                boolean skipAllChats = org.telegram.ui.lagram.LagramConfig.hideAllChatsTab && filters.size() > 1;
                 for (int a = 0, N = filters.size(); a < N; a++) {
                     if (filters.get(a).isDefault()) {
-                        filterTabsView.addTab(a, 0, LocaleController.getString(R.string.FilterAllChats), null, false, true, filters.get(a).locked);
+                        if (!skipAllChats) {
+                            filterTabsView.addTab(a, 0, LocaleController.getString(R.string.FilterAllChats), null, false, true, filters.get(a).locked);
+                        }
                     } else {
                         final MessagesController.DialogFilter filter = filters.get(a);
                         filterTabsView.addTab(a, filter.localId, filter.name, filter.entities, filter.title_noanimate, false, filters.get(a).locked);

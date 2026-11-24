@@ -743,7 +743,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
         Theme.createDialogsResources(context);
         drawMonoforumAvatar = false;
         drawCommunityAvatar = false;
-        avatarImage.setRoundRadius(dp(26));
+        avatarImage.setRoundRadius(org.telegram.ui.lagram.LagramThemeEngine.computeAvatarRadiusPx(AndroidUtilities.density));
         for (int i = 0; i < thumbImage.length; ++i) {
             thumbImage[i] = new ImageReceiver(this);
             thumbImage[i].ignoreNotifications = true;
@@ -1063,6 +1063,12 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
             }
         } else {
             height = getCollapsedHeight();
+        }
+        org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+        if (org.telegram.ui.lagram.LagramConfig.chatListStyle == org.telegram.ui.lagram.LagramConfig.CHAT_LIST_M3_CARDS) {
+            height += dp(6);
+        } else if (org.telegram.ui.lagram.LagramConfig.chatListStyle == org.telegram.ui.lagram.LagramConfig.CHAT_LIST_MINIMAL_SPACIOUS) {
+            height += dp(10);
         }
         return height;
     }
@@ -3755,7 +3761,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
             } else if (chat != null && chat.forum && currentDialogFolderId == 0 && !useFromUserAsAvatar || !isSavedDialog && user != null && user.self && MessagesController.getInstance(currentAccount).savedViewAsChats) {
                 avatarRadius = dp(16);
             } else {
-                avatarRadius = dp(28);
+                avatarRadius = org.telegram.ui.lagram.LagramThemeEngine.computeAvatarRadiusPx(AndroidUtilities.density);
             }
 
             avatarImage.setRoundRadius(avatarRadius);
@@ -3842,6 +3848,9 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
     private GradientDrawable archiveFadeGradientDrawable;
     private int archiveFadeGradientDrawableColor;
 
+    private final Paint lagramCardPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final RectF lagramCardRect = new RectF();
+
     @SuppressLint("DrawAllocation")
     @Override
     protected void onDraw(Canvas canvas) {
@@ -3850,6 +3859,12 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
         }
         if (!visibleOnScreen) {
             return;
+        }
+
+        if (org.telegram.ui.lagram.LagramConfig.chatListStyle == org.telegram.ui.lagram.LagramConfig.CHAT_LIST_M3_CARDS && !isTopic && currentDialogFolderId == 0) {
+            lagramCardPaint.setColor(org.telegram.ui.lagram.LagramThemeEngine.getChatRowCardColor(Theme.isCurrentThemeDark()));
+            lagramCardRect.set(dp(8), dp(3), getMeasuredWidth() - dp(8), getMeasuredHeight() - dp(3));
+            canvas.drawRoundRect(lagramCardRect, dp(16), dp(16), lagramCardPaint);
         }
 
         boolean needInvalidate = false;
@@ -4866,7 +4881,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
             canvas.restore();
         }
 
-        if (useSeparator) {
+        if (useSeparator && org.telegram.ui.lagram.LagramConfig.chatListStyle == org.telegram.ui.lagram.LagramConfig.CHAT_LIST_CLASSIC) {
             int left;
             if (fullSeparator || currentDialogFolderId != 0 && archiveHidden && !fullSeparator2 || fullSeparator2 && !archiveHidden) {
                 left = 0;
@@ -5160,10 +5175,16 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                 canvas.restore();
             }
             if (user != null && !MessagesController.isSupportUser(user) && !user.bot) {
+                org.telegram.ui.lagram.LagramConfig.ensureLoaded();
                 boolean isOnline = isOnline();
                 wasDrawnOnline = isOnline;
-                if (isOnline || onlineProgress != 0) {
-                    int top = (int) (storyParams.originalAvatarRect.bottom - dp(useForceThreeLines || SharedConfig.useThreeLinesLayout ? 6 : 8));
+                if ((isOnline || onlineProgress != 0) && org.telegram.ui.lagram.LagramConfig.onlineStatusPosition != org.telegram.ui.lagram.LagramConfig.ONLINE_POS_HIDDEN) {
+                    int top;
+                    if (org.telegram.ui.lagram.LagramConfig.onlineStatusPosition == org.telegram.ui.lagram.LagramConfig.ONLINE_POS_TOP_RIGHT) {
+                        top = (int) (storyParams.originalAvatarRect.top + dp(6));
+                    } else {
+                        top = (int) (storyParams.originalAvatarRect.bottom - dp(useForceThreeLines || SharedConfig.useThreeLinesLayout ? 6 : 8));
+                    }
                     int left;
                     if (LocaleController.isRTL) {
                         left = (int) (storyParams.originalAvatarRect.left + dp(useForceThreeLines || SharedConfig.useThreeLinesLayout ? 10 : 6));
@@ -5171,7 +5192,10 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                         left = (int) (storyParams.originalAvatarRect.right - dp(useForceThreeLines || SharedConfig.useThreeLinesLayout ? 10 : 6));
                     }
 
-                    Theme.dialogs_onlineCirclePaint.setColor(Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider));
+                    int haloColor = (org.telegram.ui.lagram.LagramConfig.chatListStyle == org.telegram.ui.lagram.LagramConfig.CHAT_LIST_M3_CARDS && !isTopic && currentDialogFolderId == 0)
+                            ? org.telegram.ui.lagram.LagramThemeEngine.getChatRowCardColor(Theme.isCurrentThemeDark())
+                            : Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider);
+                    Theme.dialogs_onlineCirclePaint.setColor(haloColor);
                     canvas.drawCircle(left, top, dp(7) * onlineProgress, Theme.dialogs_onlineCirclePaint);
                     Theme.dialogs_onlineCirclePaint.setColor(Theme.getColor(Theme.key_chats_onlineCircle, resourcesProvider));
                     canvas.drawCircle(left, top, dp(5) * onlineProgress, Theme.dialogs_onlineCirclePaint);
@@ -5366,33 +5390,51 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                     canvas.scale(progressFinal, progressFinal, rect.centerX(), rect.centerY());
                 }
 
-                if (drawBubble) {
-                    if (counterPath == null || counterPathRect == null || !counterPathRect.equals(rect)) {
-                        if (counterPathRect == null) {
-                            counterPathRect = new RectF(rect);
-                        } else {
-                            counterPathRect.set(rect);
-                        }
-                        if (counterPath == null) {
-                            counterPath = new Path();
-                        }
-                        BubbleCounterPath.addBubbleRect(counterPath, counterPathRect, dp(10.33f));
-                    }
-                    canvas.drawPath(counterPath, paint);
-                    if (outline) {
-                        canvas.drawPath(counterPath, counterPaintOutline);
-                    }
+                int lagramBadgeStyle = org.telegram.ui.lagram.LagramConfig.unreadBadgeStyle;
+                if (lagramBadgeStyle == org.telegram.ui.lagram.LagramConfig.UNREAD_BADGE_MINIMAL_DOT) {
+                    float dotX = LocaleController.isRTL ? (rect.left + dp(7)) : (rect.right - dp(7));
+                    canvas.drawCircle(dotX, rect.centerY(), dp(5), paint);
                 } else {
-                    canvas.drawRoundRect(rect, dp(11.5f), dp(11.5f), paint);
-                    if (outline) {
-                        canvas.drawRoundRect(rect, dp(11.5f), dp(11.5f), counterPaintOutline);
+                    boolean applyTonal = lagramBadgeStyle == org.telegram.ui.lagram.LagramConfig.UNREAD_BADGE_TONAL_PILL && !drawCounterMuted && currentDialogFolderId == 0;
+                    int savedPaintColor = paint.getColor();
+                    int savedTextColor = Theme.dialogs_countTextPaint2.getColor();
+                    if (applyTonal) {
+                        org.telegram.ui.lagram.LagramThemeEngine.AccentColors ac = org.telegram.ui.lagram.LagramThemeEngine.getAccentColors();
+                        paint.setColor(Theme.isCurrentThemeDark() ? ac.containerDark : ac.containerLight);
+                        Theme.dialogs_countTextPaint2.setColor(ac.primary);
                     }
-                }
-                if (drawLayout != null) {
-                    canvas.save();
-                    canvas.translate(countLeftLocal + dp(BADGE_TEXT_PADDING), countTop + dpf2(3));
-                    drawLayout.draw(canvas);
-                    canvas.restore();
+                    if (drawBubble) {
+                        if (counterPath == null || counterPathRect == null || !counterPathRect.equals(rect)) {
+                            if (counterPathRect == null) {
+                                counterPathRect = new RectF(rect);
+                            } else {
+                                counterPathRect.set(rect);
+                            }
+                            if (counterPath == null) {
+                                counterPath = new Path();
+                            }
+                            BubbleCounterPath.addBubbleRect(counterPath, counterPathRect, dp(10.33f));
+                        }
+                        canvas.drawPath(counterPath, paint);
+                        if (outline) {
+                            canvas.drawPath(counterPath, counterPaintOutline);
+                        }
+                    } else {
+                        canvas.drawRoundRect(rect, dp(11.5f), dp(11.5f), paint);
+                        if (outline) {
+                            canvas.drawRoundRect(rect, dp(11.5f), dp(11.5f), counterPaintOutline);
+                        }
+                    }
+                    if (drawLayout != null) {
+                        canvas.save();
+                        canvas.translate(countLeftLocal + dp(BADGE_TEXT_PADDING), countTop + dpf2(3));
+                        drawLayout.draw(canvas);
+                        canvas.restore();
+                    }
+                    if (applyTonal) {
+                        paint.setColor(savedPaintColor);
+                        Theme.dialogs_countTextPaint2.setColor(savedTextColor);
+                    }
                 }
 
                 canvas.restoreToCount(restoreToCount);

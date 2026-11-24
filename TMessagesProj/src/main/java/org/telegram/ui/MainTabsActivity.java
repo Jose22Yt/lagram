@@ -1102,10 +1102,12 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         final float scale = lerp(0.85f, 1f, factor);
 
         tabsViewWrapper.setTranslationY(lerp(hiddenY, normalY, factor));
-        tabsView.setClickable(factor > 1);
-        tabsView.setEnabled(factor > 1);
-        tabsView.setAlpha(factor);
-        tabsView.setVisibility(factor > 0 ? View.VISIBLE : View.GONE);
+        org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+        boolean lagramNavEnabled = org.telegram.ui.lagram.LagramConfig.bottomNavigationEnabled;
+        tabsView.setClickable(lagramNavEnabled && factor > 1);
+        tabsView.setEnabled(lagramNavEnabled && factor > 1);
+        tabsView.setAlpha(lagramNavEnabled ? factor : 0f);
+        tabsView.setVisibility(lagramNavEnabled && factor > 0 ? View.VISIBLE : View.GONE);
     }
 
     private void checkUi_callTabVisible(boolean callTabsVisible, boolean animated) {

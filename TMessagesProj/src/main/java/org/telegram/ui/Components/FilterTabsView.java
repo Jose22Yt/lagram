@@ -1508,8 +1508,18 @@ public class FilterTabsView extends FrameLayout {
             final float add = additionalTabWidth / 2f;
 
             final int y = height / 2 - dp(14);
-            selectorDrawable.setBounds((int) (indicatorX - dp(TAB_INTERNAL_PADDING) - add), y, (int) (indicatorX + indicatorWidth + dp(TAB_INTERNAL_PADDING) + add), y + dp(28));
-            selectorDrawable.setAlpha(31);
+            org.telegram.ui.lagram.LagramConfig.ensureLoaded();
+            int tabStyle = org.telegram.ui.lagram.LagramConfig.folderTabsStyle;
+            if (tabStyle == org.telegram.ui.lagram.LagramConfig.FOLDER_TABS_UNDERLINE) {
+                selectorDrawable.setBounds((int) (indicatorX - add), y + dp(25), (int) (indicatorX + indicatorWidth + add), y + dp(28));
+                selectorDrawable.setAlpha(255);
+            } else if (tabStyle == org.telegram.ui.lagram.LagramConfig.FOLDER_TABS_COMPACT_ICONS) {
+                selectorDrawable.setBounds((int) (indicatorX - dp(6) - add), y + dp(2), (int) (indicatorX + indicatorWidth + dp(6) + add), y + dp(26));
+                selectorDrawable.setAlpha(44);
+            } else {
+                selectorDrawable.setBounds((int) (indicatorX - dp(TAB_INTERNAL_PADDING) - add), y, (int) (indicatorX + indicatorWidth + dp(TAB_INTERNAL_PADDING) + add), y + dp(28));
+                selectorDrawable.setAlpha(46);
+            }
             selectorDrawable.draw(canvas);
             canvas.restore();
         }

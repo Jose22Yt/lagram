@@ -9165,7 +9165,7 @@ public class Theme {
                 } else if (key == key_chat_serviceBackgroundSelected) {
                     return serviceSelectedMessageColor;
                 }
-                return getDefaultColor(key);
+                return org.telegram.ui.lagram.LagramThemeEngine.resolveColorOverride(key, getDefaultColor(key), isCurrentThemeDark());
             }
         }
         int index = currentColors.indexOfKey(key);
@@ -9175,7 +9175,7 @@ public class Theme {
             if (fallbackKey != -1) {
                 int fallbackIndex = currentColors.indexOfKey(fallbackKey);
                 if (fallbackIndex >= 0) {
-                    return currentColors.valueAt(fallbackIndex);
+                    return org.telegram.ui.lagram.LagramThemeEngine.resolveColorOverride(key, currentColors.valueAt(fallbackIndex), isCurrentThemeDark());
                 }
             }
 
@@ -9187,14 +9187,14 @@ public class Theme {
             } else if (key == key_chat_serviceBackgroundSelected) {
                 return serviceSelectedMessageColor;
             }
-            return getDefaultColor(key);
+            return org.telegram.ui.lagram.LagramThemeEngine.resolveColorOverride(key, getDefaultColor(key), isCurrentThemeDark());
         } else {
             color = currentColors.valueAt(index);
         }
         if (key_windowBackgroundWhite == key || key_windowBackgroundGray == key || key_actionBarDefault == key || key_actionBarDefaultArchived == key) {
             color |= 0xff000000;
         }
-        return color;
+        return org.telegram.ui.lagram.LagramThemeEngine.resolveColorOverride(key, color, isCurrentThemeDark());
     }
 
     private static boolean isMyMessagesBubbles(int key) {

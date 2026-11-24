@@ -12181,9 +12181,12 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
         additionalPaddingHeight = Math.max(0, resultHeight - normHeight);
 
+        int lagramSpacingPx = dp(org.telegram.ui.lagram.LagramThemeEngine.getMessageVerticalSpacingExtraDp());
+        int finalMeasuredHeight = Math.max(dp(24), resultHeight + lagramSpacingPx);
+
         setMeasuredDimension(
             isWidthAdaptive() ? getBoundsRight() - getBoundsLeft() : MeasureSpec.getSize(widthMeasureSpec),
-            resultHeight
+            finalMeasuredHeight
         );
     }
 

@@ -2499,6 +2499,10 @@ public class AndroidUtilities {
     }
 
     public static Typeface getTypeface(String assetPath) {
+        Typeface lagramTypeface = org.telegram.ui.lagram.LagramThemeEngine.resolveCustomTypeface(assetPath);
+        if (lagramTypeface != null) {
+            return lagramTypeface;
+        }
         synchronized (typefaceCache) {
             if (!typefaceCache.containsKey(assetPath)) {
                 try {
